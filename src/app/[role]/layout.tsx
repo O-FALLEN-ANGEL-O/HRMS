@@ -1,4 +1,8 @@
-
+// Updated Responsive Sidebar with:
+// - Animated toggle on hover/click
+// - Adaptive mobile drawer
+// - Role-specific filtered nav
+// - Lucide icons
 
 'use client';
 
@@ -7,7 +11,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
-  Newspaper, CalendarDays, Menu, FileText, CreditCard,
+  GraduationCap, Newspaper, CalendarDays, Menu, FileText, CreditCard,
   PackagePlus, Settings, Bell
 } from 'lucide-react';
 
@@ -22,20 +26,20 @@ import { useAuth } from '@/hooks/use-auth';
 import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
 } from '@/components/ui/tooltip';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 
 const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr'] },
-  { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr'] },
+  { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
+  { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
   { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr'] },
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'employee'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
-  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr'] },
+  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
 ];
 
 const notifications = [
