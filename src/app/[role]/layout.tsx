@@ -71,9 +71,9 @@ function DashboardSidebar() {
   
   const getBasePath = (path: string) => {
     const segments = path.split('/');
-    // Assumes URL structure is /[role]/[page]
+    // Assumes URL structure is /[role]/[page] or /[role]/[page]/[subpage]
     // e.g., /admin/dashboard -> /dashboard
-    // e.g., /employee/leaves -> /leaves
+    // e.g., /employee/recruitment -> /recruitment
     return '/' + segments.slice(2).join('/');
   }
   const currentBasePath = getBasePath(pathname);
@@ -88,10 +88,10 @@ function DashboardSidebar() {
         <SidebarMenu>
           {navItems.map((item) => {
             const itemPath = item.href.startsWith('/') ? item.href : `/${item.href}`;
-             // Special case for dashboard
-            const isActive = currentBasePath === '/dashboard' && item.href === '/dashboard'
-                ? true
-                : item.href !== '/dashboard' && currentBasePath.startsWith(itemPath);
+             // Special case for dashboard vs other pages
+            const isActive = item.href === '/dashboard' 
+                ? currentBasePath === '/dashboard'
+                : currentBasePath.startsWith(itemPath) && item.href !== '/dashboard';
 
             return (
               <SidebarMenuItem key={item.href}>
@@ -111,7 +111,25 @@ function DashboardSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        {/* Footer content can go here if needed */}
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                    <Avatar className="h-9 w-9">
+                        <AvatarImage src={`https://placehold.co/100x100?text=A`} alt="User avatar" data-ai-hint="person avatar" />
+                        <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">Admin User</span>
+                </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start" className="w-56 mb-2 ml-2">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
@@ -184,16 +202,24 @@ export default function DashboardLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
 
   React.useEffect(() => {
     if (!loading && !user) {
       router.push('/');
+      return;
     }
     // Redirect if role in URL doesn't match user's role
     if (!loading && user && params.role !== user.role) {
-      router.push(`/${user.role}/dashboard`);
+      // Preserve the current page if it's not the dashboard
+      const pagePath = pathname.split('/').slice(2).join('/');
+      if (pagePath && pagePath !== 'dashboard') {
+         router.push(`/${user.role}/${pagePath}`);
+      } else {
+         router.push(`/${user.role}/dashboard`);
+      }
     }
-  }, [user, loading, router, params]);
+  }, [user, loading, router, params, pathname]);
 
   // Fallback for when params.role is not available on initial render
   const role = user?.role || params.role;
@@ -201,7 +227,10 @@ export default function DashboardLayout({
   if (loading || !role) {
     return (
         <div className="flex h-screen items-center justify-center bg-background">
-            <p>Loading...</p>
+            <div className="flex items-center gap-2">
+                <Logo />
+                <span>Loading...</span>
+            </div>
         </div>
     )
   }
@@ -211,7 +240,7 @@ export default function DashboardLayout({
       <DashboardSidebar />
       <SidebarInset>
         <DashboardHeader />
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-[#F5F5F5] dark:bg-muted/40">
           {children}
         </main>
       </SidebarInset>
