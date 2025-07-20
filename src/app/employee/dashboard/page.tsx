@@ -4,27 +4,19 @@
 import * as React from 'react';
 import {
   Activity,
-  Award,
-  BadgeCent,
-  Cake,
   Calendar,
-  ChevronDown,
-  Gift,
-  Heart,
-  Lightbulb,
-  MessageSquare,
   MoreHorizontal,
   ThumbsUp,
-  Users,
+  MessageSquare,
   Briefcase,
   CheckCircle,
+  Heart,
 } from "lucide-react"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -33,7 +25,6 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import Image from 'next/image'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -120,7 +111,7 @@ export default function EmployeeDashboardPage() {
     <div className="space-y-6">
       <Card className="bg-primary text-primary-foreground border-0">
         <CardContent className="p-6">
-          <h1 className="text-3xl font-bold font-headline">{greeting}, {userName}!</h1>
+          <h1 className="text-3xl font-bold font-headline">{greeting ? `${greeting}, ${userName}!` : `Welcome, ${userName}!`}</h1>
           <p className="text-primary-foreground/80">Here's what's happening today. Have a great and productive day.</p>
         </CardContent>
       </Card>

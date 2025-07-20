@@ -4,7 +4,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, FileText, BarChart, Briefcase, DollarSign, Calendar, AlertCircle } from 'lucide-react';
+import { Users, Briefcase, Calendar, AlertCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
