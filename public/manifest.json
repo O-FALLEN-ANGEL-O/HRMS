@@ -1,0 +1,22 @@
+{
+  "name": "OptiTalent HRMS",
+  "short_name": "OptiTalent",
+  "description": "A Next-Generation HRMS for modern businesses.",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#8A6FDF",
+  "background_color": "#A893E0",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

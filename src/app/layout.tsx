@@ -7,6 +7,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 export const metadata: Metadata = {
   title: 'OptiTalent HRMS',
   description: 'A Next-Generation HRMS for modern businesses.',
+  manifest: '/manifest.json',
 };
 
 const inter = Inter({
