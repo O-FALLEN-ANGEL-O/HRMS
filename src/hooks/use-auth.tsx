@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -5,6 +6,16 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface User {
   email: string;
   role: 'admin' | 'employee';
+  employeeId?: string;
+  // This would be expanded in a real app
+  profile?: {
+    name?: string;
+    department?: string;
+    profilePicture?: string;
+    language?: string;
+    resumeUrl?: string;
+    status?: string;
+  }
 }
 
 interface AuthContextType {
@@ -34,6 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (userData: User) => {
+    // In a real app, you'd fetch profile data from a DB here.
+    // For now, we'll mock some partial data for employees.
+    if (userData.role === 'employee' && !userData.profile) {
+      userData.profile = {
+          name: 'Alex Doe',
+          department: 'Technology',
+          status: 'Active'
+      };
+    }
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };

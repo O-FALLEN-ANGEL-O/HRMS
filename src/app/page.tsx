@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -8,8 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/logo";
 import { useAuth } from '@/hooks/use-auth';
-import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -30,27 +31,27 @@ function MicrosoftIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" fill="#0077B5" stroke="none" />
-      <rect x="2" y="9" width="4" height="12" fill="#0077B5" stroke="none"/>
-      <circle cx="4" cy="4" r="2" fill="#0077B5" stroke="none"/>
-    </svg>
-  );
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const emailRef = React.useRef<HTMLInputElement>(null);
-  const [role, setRole] = React.useState('admin');
+  const adminEmailRef = React.useRef<HTMLInputElement>(null);
+  const employeeIdRef = React.useRef<HTMLInputElement>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if(emailRef.current?.value) {
-      login({email: emailRef.current.value, role });
-      router.push(`/${role}/dashboard`);
+    if(adminEmailRef.current?.value) {
+      login({email: adminEmailRef.current.value, role: 'admin' });
+      router.push(`/admin/dashboard`);
+    }
+  };
+
+  const handleEmployeeLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(employeeIdRef.current?.value) {
+      // In a real app, you'd check if the employee ID is new or existing.
+      // Here, we'll simulate it for demo purposes.
+      login({email: `${employeeIdRef.current.value}@optitalent.com`, role: 'employee', employeeId: employeeIdRef.current.value });
+      router.push(`/employee/dashboard`);
     }
   };
 
@@ -61,61 +62,74 @@ export default function LoginPage() {
           <div className="mb-4 flex justify-center">
             <Logo />
           </div>
-          <CardTitle className="font-headline text-2xl">Welcome Back!</CardTitle>
-          <CardDescription>Sign in to access your OptiTalent dashboard.</CardDescription>
+          <CardTitle className="font-headline text-2xl">Welcome to OptiTalent</CardTitle>
+          <CardDescription>Sign in to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <Button variant="outline" className="w-full">
-                <GoogleIcon className="mr-2 h-5 w-5" />
-                Google
-              </Button>
-              <Button variant="outline" className="w-full">
-                <MicrosoftIcon className="mr-2 h-5 w-5" />
-                Microsoft
-              </Button>
-              <Button variant="outline" className="w-full">
-                <LinkedinIcon className="mr-2 h-5 w-5" />
-                LinkedIn
-              </Button>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
+          <Tabs defaultValue="employee" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="employee">Employee</TabsTrigger>
+              <TabsTrigger value="admin">Admin / Manager</TabsTrigger>
+            </TabsList>
+            <TabsContent value="employee" className="space-y-4">
+               <div className="relative mt-4">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Sign in with your Employee ID</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input ref={emailRef} id="email" type="email" placeholder="name@company.com" required defaultValue="admin@optitalent.com"/>
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger id="role">
-                        <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="admin">Admin / HR</SelectItem>
-                        <SelectItem value="employee">Employee</SelectItem>
-                    </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Sign In
-              </Button>
-            </form>
-          </div>
+              <form onSubmit={handleEmployeeLogin} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="employeeId">Employee ID</Label>
+                  <Input ref={employeeIdRef} id="employeeId" placeholder="e.g., OPT-12345" required defaultValue="EMP-007" />
+                </div>
+                {/* Logic for password can be added here based on whether user is new or existing */}
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  Continue
+                </Button>
+              </form>
+            </TabsContent>
+            <TabsContent value="admin" className="space-y-4">
+              <div className="relative mt-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or continue with SSO</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
+                    <Button variant="outline" className="w-full">
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Google
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                        <MicrosoftIcon className="mr-2 h-5 w-5" />
+                        Microsoft
+                    </Button>
+                </div>
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="adminEmail">Email Address</Label>
+                  <Input ref={adminEmailRef} id="adminEmail" type="email" placeholder="name@company.com" required defaultValue="admin@optitalent.com"/>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="adminPassword">Password</Label>
+                  <Input id="adminPassword" type="password" required defaultValue="password" />
+                </div>
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  Sign In
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter className="flex justify-center text-xs text-muted-foreground">
           <p>
             By signing in, you agree to our{' '}
-            <a href="#" className="underline hover:text-primary">Terms of Service</a> and{' '}
-            <a href="#" className="underline hover:text-primary">Privacy Policy</a>.
+            <a href="#" className="underline hover:text-primary">Terms of Service</a>.
           </p>
         </CardFooter>
       </Card>
