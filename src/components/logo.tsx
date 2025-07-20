@@ -1,10 +1,11 @@
+
 "use client";
 
 import React from 'react';
 import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
 
-export function Logo({ className, showText = true }: { className?: string, showText?: boolean }) {
+export function Logo({ className }: { className?: string }) {
   const iconVariants = {
     hidden: {
       pathLength: 0,
@@ -55,7 +56,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 }}
             />
         </motion.svg>
-        {showText && <span className="group-data-[collapsible=icon]:hidden">OptiTalent</span>}
+        <span className="group-data-[collapsible=icon]:hidden">OptiTalent</span>
     </div>
   );
 }

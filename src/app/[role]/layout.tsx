@@ -113,7 +113,7 @@ function AppSidebar() {
         `}
       >
         <div className={`flex items-center h-16 w-full px-4 shrink-0 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
-            <Logo className="text-white" showText={isExpanded} />
+            <Logo className="text-white" />
         </div>
         <SidebarNav/>
       </aside>
@@ -143,9 +143,12 @@ function AppHeader() {
                 </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-64 bg-slate-900 text-slate-200 border-none">
+                 <SheetHeader className="sr-only">
+                    <SheetTitle>Main Menu</SheetTitle>
+                    <SheetDescription>Navigation links for the application.</SheetDescription>
+                 </SheetHeader>
                  <div className="flex items-center justify-center h-16 w-full px-4 shrink-0">
                     <Logo className="text-white" />
-                    <span className="ml-2 font-bold text-white text-lg">OptiTalent</span>
                 </div>
                  <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
                     {navItems.map(item => (
