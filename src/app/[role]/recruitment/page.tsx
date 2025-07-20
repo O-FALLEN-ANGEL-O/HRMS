@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import Link from 'next/link';
-import { PlusCircle, MoreVertical, Bot, Search, Filter } from "lucide-react";
+import { PlusCircle, MoreVertical, Bot, Search, Filter, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,64 +64,78 @@ const initialApplicants: Applicant[] = [
 export default function RecruitmentPage() {
   const [applicants] = useState<Applicant[]>(initialApplicants);
   const params = useParams();
+  const { toast } = useToast();
   const role = params.role || 'admin';
 
-  return (
-     <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm">
-        <div className="flex items-center space-x-2">
-            <h1 className="text-3xl font-bold text-gray-800">HR</h1>
-            <h1 className="text-3xl font-bold text-primary">+</h1>
-        </div>
-        <h2 className="text-4xl font-bold text-gray-900 font-headline">Recruitment Tools</h2>
-        <p className="mt-2 text-lg text-gray-600">Streamline your hiring process with AI-powered tools.</p>
-        
-        <div className="mt-8">
-            <h3 className="text-2xl font-bold text-gray-900 font-headline">Applicants</h3>
-            <p className="mt-1 text-gray-600">Track and manage all candidates in your hiring pipeline.</p>
-            
-            <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-                <div className="relative flex-1 md:max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input className="w-full pl-10" placeholder="Search by name..." type="text" />
-                </div>
-                <div className="flex items-center gap-4">
-                    <Button variant="outline">
-                        <span>Filter by job...</span>
-                        <Filter className="ml-2 h-4 w-4" />
-                    </Button>
-                    <Link href={`/${role}/recruitment/parse`}>
-                        <Button>
-                            <Bot className="mr-2 h-4 w-4" /> Parse Resume
-                        </Button>
-                    </Link>
-                </div>
-            </div>
+  const handleCopyWalkinLink = () => {
+    const walkinUrl = `${window.location.origin}/walkin-drive`;
+    navigator.clipboard.writeText(walkinUrl);
+    toast({
+      title: "Link Copied!",
+      description: "The walk-in registration link has been copied to your clipboard.",
+    });
+  };
 
-            <div className="mt-4 flow-root">
-                <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                        <Table className="min-w-full divide-y divide-gray-200">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</TableHead>
-                                    <TableHead className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Applied For</TableHead>
-                                    <TableHead className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Applied Date</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody className="divide-y divide-gray-200 bg-white">
-                                {applicants.map((applicant) => (
-                                    <TableRow key={applicant.id}>
-                                        <TableCell className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{applicant.name}</TableCell>
-                                        <TableCell className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{applicant.role}</TableCell>
-                                        <TableCell className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{applicant.appliedDate}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+  return (
+     <div className="space-y-6">
+        <div>
+            <h1 className="text-3xl font-bold font-headline">Recruitment</h1>
+            <p className="text-muted-foreground">Manage your hiring pipeline and walk-in drives.</p>
+        </div>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>All Applicants</CardTitle>
+                <CardDescription>Track and manage all candidates in your hiring pipeline.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="relative flex-1 md:max-w-xs">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input className="w-full pl-10" placeholder="Search by name..." type="text" />
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Button variant="outline">
+                            <Filter className="mr-2 h-4 w-4" />
+                            <span>Filter by job</span>
+                        </Button>
+                        <Link href={`/${role}/recruitment/parse`}>
+                            <Button variant="outline">
+                                <Bot className="mr-2 h-4 w-4" /> Parse Resume
+                            </Button>
+                        </Link>
+                         <Button onClick={handleCopyWalkinLink}>
+                            <Link2 className="mr-2 h-4 w-4" /> Copy Walk-in Link
+                        </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                <div className="mt-4 flow-root">
+                    <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                        <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                            <Table className="min-w-full divide-y divide-gray-200">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</TableHead>
+                                        <TableHead className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Applied For</TableHead>
+                                        <TableHead className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Applied Date</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-y divide-gray-200 bg-white">
+                                    {applicants.map((applicant) => (
+                                        <TableRow key={applicant.id}>
+                                            <TableCell className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{applicant.name}</TableCell>
+                                            <TableCell className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{applicant.role}</TableCell>
+                                            <TableCell className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{applicant.appliedDate}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
     </div>
   );
 }
