@@ -102,7 +102,6 @@ function FeedPost({ avatar, name, team, time, content, image, likes, comments }:
 
 export default function EmployeeDashboardPage() {
   const { user } = useAuth();
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [greeting, setGreeting] = React.useState('');
 
   React.useEffect(() => {
@@ -114,7 +113,6 @@ export default function EmployeeDashboardPage() {
     };
     setGreeting(getGreeting());
   }, []);
-
 
   const userName = user?.profile?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
 
@@ -217,5 +215,3 @@ export default function EmployeeDashboardPage() {
     </div>
   );
 }
-
-    
