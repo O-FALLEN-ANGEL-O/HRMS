@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
@@ -31,7 +33,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 0.6, ease: "easeInOut" },
+                    default: { duration: 0.3, ease: "easeInOut" },
                 }}
             />
             <motion.path
@@ -40,7 +42,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 0.6, ease: "easeInOut", delay: 0.15 },
+                    default: { duration: 0.3, ease: "easeInOut", delay: 0.1 },
                 }}
             />
             <motion.path
@@ -49,7 +51,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 0.6, ease: "easeInOut", delay: 0.3 },
+                    default: { duration: 0.3, ease: "easeInOut", delay: 0.2 },
                 }}
             />
         </motion.svg>
