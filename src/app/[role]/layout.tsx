@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -30,6 +31,7 @@ import {
   BarChart,
   FileQuestion,
   GraduationCap,
+  Newspaper,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -55,12 +57,14 @@ const adminNavItems = [
   { href: "/performance", icon: BarChart, label: "Performance" },
   { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
   { href: "/assessments", icon: GraduationCap, label: "Assessments" },
+  { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
 ];
 
 const employeeNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/helpdesk", icon: FileQuestion, label: "My Tickets" },
   { href: "/assessments", icon: GraduationCap, label: "Assessments" },
+  { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
 ]
 
 function DashboardSidebar() {
