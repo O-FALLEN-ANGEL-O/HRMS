@@ -32,6 +32,7 @@ import {
   FileQuestion,
   GraduationCap,
   Newspaper,
+  CalendarDays,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -55,6 +56,7 @@ const adminNavItems = [
   { href: "/employees", icon: Users, label: "Employees" },
   { href: "/payroll", icon: CreditCard, label: "Payroll" },
   { href: "/performance", icon: BarChart, label: "Performance" },
+  { href: "/leaves", icon: CalendarDays, label: "Leaves" },
   { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
   { href: "/assessments", icon: GraduationCap, label: "Assessments" },
   { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
@@ -62,6 +64,7 @@ const adminNavItems = [
 
 const employeeNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/leaves", icon: CalendarDays, label: "My Leaves" },
   { href: "/helpdesk", icon: FileQuestion, label: "My Tickets" },
   { href: "/assessments", icon: GraduationCap, label: "Assessments" },
   { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
