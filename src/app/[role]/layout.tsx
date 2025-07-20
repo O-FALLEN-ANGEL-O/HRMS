@@ -1,5 +1,6 @@
 
 
+
 // Updated Responsive Sidebar with:
 // - Animated toggle on hover/click
 // - Adaptive mobile drawer
@@ -33,8 +34,8 @@ import { LeaderboardCard } from '@/components/leaderboard-card';
 import { Separator } from '@/components/ui/separator';
 
 const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
-  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr'] },
+  { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
+  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'employee'] },
   { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
   { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr'] },
@@ -77,7 +78,7 @@ function AppSidebar() {
     <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
         {navItems.map((item) => {
         const isActive = item.href === '/dashboard'
-            ? currentBasePath === '/dashboard' || currentBasePath === ''
+            ? currentBasePath === '/dashboard' || currentBasePath === '' || pathname === `/${role}`
             : currentBasePath.startsWith(item.href) && item.href !== '/dashboard';
 
         const linkContent = (

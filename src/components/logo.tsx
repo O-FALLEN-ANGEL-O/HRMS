@@ -30,6 +30,8 @@ export function Logo({ className }: { className?: string }) {
         >
             <motion.path
                 d="M12 2L2 7l10 5 10-5-10-5z"
+                strokeDasharray="1"
+                strokeDashoffset="0"
                 variants={iconVariants}
                 initial="hidden"
                 animate="visible"
@@ -39,6 +41,8 @@ export function Logo({ className }: { className?: string }) {
             />
             <motion.path
                 d="M2 17l10 5 10-5"
+                strokeDasharray="1"
+                strokeDashoffset="0"
                  variants={iconVariants}
                 initial="hidden"
                 animate="visible"
@@ -48,6 +52,8 @@ export function Logo({ className }: { className?: string }) {
             />
             <motion.path
                 d="M2 12l10 5 10-5"
+                strokeDasharray="1"
+                strokeDashoffset="0"
                  variants={iconVariants}
                 initial="hidden"
                 animate="visible"
