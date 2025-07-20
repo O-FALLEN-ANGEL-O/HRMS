@@ -1,5 +1,6 @@
 
 
+
 // Updated Responsive Sidebar with:
 // - Animated toggle on hover/click
 // - Adaptive mobile drawer
@@ -41,7 +42,7 @@ const allNavItems = [
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'admin'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
   { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
 ];
@@ -65,7 +66,7 @@ function AppSidebar() {
 
   const navItems = allNavItems.filter((item) => item.roles.includes(role));
 
-  const SidebarNav = () => (
+  const SidebarNav = ({ mobile = false }: { mobile?: boolean }) => (
     <TooltipProvider delayDuration={0}>
         <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
             {navItems.map((item) => {
@@ -73,23 +74,26 @@ function AppSidebar() {
                 ? currentBasePath === '/dashboard' || currentBasePath === ''
                 : currentBasePath.startsWith(item.href) && item.href !== '/dashboard';
 
+            const linkContent = (
+              <div className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors ${isActive ? 'bg-primary/80' : ''}`}>
+                  <item.icon className="h-5 w-5" />
+                  {(isExpanded || mobile) && <span className="text-sm">{item.label}</span>}
+              </div>
+            );
+
             return (
-                <Tooltip key={item.href}>
-                    <TooltipTrigger asChild>
-                        <Link
-                            href={`/${role}${item.href}`}
-                            className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors ${isActive ? 'bg-primary/80' : ''}`}
-                        >
-                            <item.icon className="h-5 w-5" />
-                            {(isExpanded) && <span className="text-sm">{item.label}</span>}
-                        </Link>
-                    </TooltipTrigger>
-                    {!isExpanded && (
-                        <TooltipContent side="right">
-                        <p>{item.label}</p>
-                        </TooltipContent>
-                    )}
-                </Tooltip>
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link href={`/${role}${item.href}`}>
+                    {linkContent}
+                  </Link>
+                </TooltipTrigger>
+                {!isExpanded && !mobile && (
+                  <TooltipContent side="right">
+                    <p>{item.label}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
             );
             })}
         </nav>
@@ -107,9 +111,9 @@ function AppSidebar() {
           ${isExpanded ? 'w-56' : 'w-20'}
         `}
       >
-        <div className="flex items-center justify-center h-16 w-full px-4 shrink-0">
-          <Logo className="text-white w-10 h-10" />
-          {isExpanded && <span className="ml-2 font-bold text-white">OptiTalent</span>}
+        <div className={`flex items-center h-16 w-full px-4 shrink-0 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
+          <Logo className="text-white" />
+          {isExpanded && <span className="ml-2 font-bold text-white text-lg">OptiTalent</span>}
         </div>
         <SidebarNav/>
       </aside>
@@ -127,6 +131,8 @@ function AppHeader() {
     logout();
     router.push('/');
   };
+  
+  const navItems = allNavItems.filter((item) => item.roles.includes(role));
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between md:justify-end gap-4">
@@ -138,11 +144,11 @@ function AppHeader() {
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-64 bg-slate-900 text-slate-200 border-none">
                  <div className="flex items-center justify-center h-16 w-full px-4 shrink-0">
-                    <Logo className="text-white w-10 h-10" />
-                    <span className="ml-2 font-bold text-white">OptiTalent</span>
+                    <Logo className="text-white" />
+                    <span className="ml-2 font-bold text-white text-lg">OptiTalent</span>
                 </div>
                  <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
-                    {allNavItems.filter(i => i.roles.includes(role)).map(item => (
+                    {navItems.map(item => (
                         <Link
                             key={item.href}
                             href={`/${role}${item.href}`}
@@ -256,7 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Logo className="text-primary" />
+          <Logo className="text-primary w-12 h-12" />
           <p className="text-muted-foreground">Loading your experience...</p>
         </div>
       </div>
