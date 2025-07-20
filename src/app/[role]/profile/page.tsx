@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useParams } from "next/navigation";
@@ -15,11 +16,13 @@ const MOCK_USERS = {
   Employee: { full_name: 'Employee User', email: 'employee@hrplus.com', avatar_url: '', id: 'PEP04', department: 'Marketing', title: 'Marketing Specialist' },
   Recruiter: { full_name: 'Recruiter User', email: 'recruiter@hrplus.com', avatar_url: '', id: 'PEP05', department: 'Human Resources', title: 'Talent Acquisition' },
   Guest: { full_name: 'Guest User', email: 'guest@hrplus.com', avatar_url: '', id: 'PEP06', department: 'N/A', title: 'Guest' },
+  'qa-analyst': { full_name: 'QA Analyst', email: 'qa@hrplus.com', avatar_url: '', id: 'PEP07', department: 'Quality', title: 'QA Analyst' },
+  'process-manager': { full_name: 'Process Manager', email: 'pm@hrplus.com', avatar_url: '', id: 'PEP08', department: 'Operations', title: 'Process Manager' },
 };
 
 export default function ProfilePage() {
     const params = useParams();
-    const role = (params.role as string).charAt(0).toUpperCase() + (params.role as string).slice(1) as keyof typeof MOCK_USERS;
+    const role = (params.role as string) as keyof typeof MOCK_USERS;
     const userData = MOCK_USERS[role] || MOCK_USERS['Guest'];
 
     const bonusHistory = [
@@ -165,3 +168,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
