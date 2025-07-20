@@ -29,6 +29,7 @@ import {
   Settings,
   Users,
   BarChart,
+  FileQuestion,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -52,6 +53,7 @@ const navItems = [
   { href: "/employees", icon: Users, label: "Employees" },
   { href: "/payroll", icon: CreditCard, label: "Payroll" },
   { href: "/performance", icon: BarChart, label: "Performance" },
+  { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
 ];
 
 function DashboardSidebar() {

@@ -9,3 +9,4 @@ import '@/ai/flows/predict-burnout.ts';
 import '@/ai/flows/score-resume.ts';
 import '@/ai/flows/generate-performance-review.ts';
 import '@/ai/flows/score-and-parse-resume.ts';
+import '@/ai/flows/categorize-ticket.ts';
