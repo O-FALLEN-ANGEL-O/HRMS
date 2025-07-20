@@ -74,7 +74,7 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const params = useParams();
   const { user } = useAuth();
-  const role = user?.role || 'employee';
+  const role = user?.role || params.role as string;
 
   const navItems = role === 'admin' ? adminNavItems : employeeNavItems;
 
@@ -87,14 +87,13 @@ function DashboardSidebar() {
         <SidebarMenu>
           {navItems.map((item) => {
             const itemPath = `/${role}${item.href}`;
-            const baseItemPath = itemPath.split('/')[2];
-            const currentBasePath = pathname.split('/')[2];
-
+            const currentBasePath = `/${pathname.split('/')[2]}`;
+            
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={baseItemPath === currentBasePath}
+                  isActive={item.href === currentBasePath}
                   tooltip={{ children: item.label }}
                 >
                   <Link href={itemPath}>
@@ -112,7 +111,7 @@ function DashboardSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={pathname === `/${role}/settings`}
+              isActive={pathname.endsWith('/settings')}
               tooltip={{ children: 'Settings' }}
             >
               <Link href={`/${role}/settings`}>
@@ -141,7 +140,8 @@ function DashboardSidebar() {
 function DashboardHeader() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const role = user?.role || 'employee';
+  const params = useParams();
+  const role = user?.role || params.role as string;
 
   const handleLogout = () => {
     logout();
@@ -215,16 +215,22 @@ export default function DashboardLayout({
     if (!loading && user && params.role !== user.role) {
       router.push(`/${user.role}/dashboard`);
     }
-  }, [user, loading, router, params.role]);
-  
-  if (loading || !user) {
+  }, [user, loading, router, params]);
+
+  // Fallback for when params.role is not available on initial render
+  const role = user?.role || params.role;
+
+  if (loading || !role) {
     return (
         <div className="flex h-screen items-center justify-center bg-background">
             <p>Loading...</p>
         </div>
     )
   }
-
+  
+  // This layout is now a wrapper. The actual content is in role-specific sub-layouts or pages.
+  // We need to ensure that the router has the correct `role` param to construct URLs.
+  
   return (
     <SidebarProvider>
       <DashboardSidebar />
