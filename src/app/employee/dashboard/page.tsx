@@ -102,14 +102,19 @@ function FeedPost({ avatar, name, team, time, content, image, likes, comments }:
 
 export default function EmployeeDashboardPage() {
   const { user } = useAuth();
-  const [date, setDate] = React.useState<Date | undefined>(new Date())
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [greeting, setGreeting] = React.useState('');
 
-  const getGreeting = () => {
-    const hours = new Date().getHours();
-    if (hours < 12) return "Good morning";
-    if (hours < 18) return "Good afternoon";
-    return "Good evening";
-  };
+  React.useEffect(() => {
+    const getGreeting = () => {
+      const hours = new Date().getHours();
+      if (hours < 12) return "Good morning";
+      if (hours < 18) return "Good afternoon";
+      return "Good evening";
+    };
+    setGreeting(getGreeting());
+  }, []);
+
 
   const userName = user?.profile?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
 
@@ -117,7 +122,7 @@ export default function EmployeeDashboardPage() {
     <div className="space-y-6">
       <Card className="bg-primary text-primary-foreground border-0">
         <CardContent className="p-6">
-          <h1 className="text-3xl font-bold font-headline">{getGreeting()}, {userName}!</h1>
+          <h1 className="text-3xl font-bold font-headline">{greeting}, {userName}!</h1>
           <p className="text-primary-foreground/80">Here's what's happening today. Have a great and productive day.</p>
         </CardContent>
       </Card>
