@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { TypingTest } from '@/components/typing-test';
 
 export default function TakeAssessmentPage() {
   const params = useParams();
@@ -24,6 +25,7 @@ export default function TakeAssessmentPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
+  const [typingResult, setTypingResult] = useState<{wpm: number, accuracy: number} | null>(null);
   
   const questions = useMemo(() => assessment?.sections.flatMap(s => s.questions) || [], [assessment]);
   const currentQuestion = questions[currentQuestionIndex];
@@ -51,7 +53,17 @@ export default function TakeAssessmentPage() {
   };
   
   const handleSubmit = () => {
-     // Calculate score
+    if(currentQuestion.type === 'typing' && typingResult) {
+       setScore(typingResult.wpm); // For typing, score is WPM
+       setIsFinished(true);
+       toast({
+         title: "Assessment Submitted!",
+         description: `Your typing speed is ${typingResult.wpm} WPM with ${typingResult.accuracy}% accuracy.`,
+       });
+       return;
+    }
+
+    // Calculate score for MCQs
     let correctAnswers = 0;
     questions.forEach(q => {
       if (q.correct_answer === answers[q.id]) {
@@ -74,6 +86,8 @@ export default function TakeAssessmentPage() {
   
   if (isFinished) {
     const passed = score >= assessment.passing_score;
+    const isTypingTest = currentQuestion.type === 'typing';
+
     return (
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
             <Card className="w-full max-w-lg text-center shadow-lg">
@@ -85,14 +99,28 @@ export default function TakeAssessmentPage() {
                     <CardDescription>{passed ? "You have successfully passed the assessment." : "You have completed the assessment."}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div>
-                        <p className="text-5xl font-bold font-headline text-primary">{score}%</p>
-                        <p className="text-muted-foreground">Your Score</p>
-                    </div>
+                    {isTypingTest && typingResult ? (
+                         <div className="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <p className="text-5xl font-bold font-headline text-primary">{typingResult.wpm}</p>
+                                <p className="text-muted-foreground">WPM</p>
+                            </div>
+                            <div>
+                                <p className="text-5xl font-bold font-headline text-primary">{typingResult.accuracy}%</p>
+                                <p className="text-muted-foreground">Accuracy</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div>
+                            <p className="text-5xl font-bold font-headline text-primary">{score}%</p>
+                            <p className="text-muted-foreground">Your Score</p>
+                        </div>
+                    )}
+                   
                     <p className="text-sm">
                         {passed 
                             ? "Your results have been recorded." 
-                            : `The passing score is ${assessment.passing_score}%. A reviewer will check your results.`}
+                            : `The passing score is ${assessment.passing_score}${isTypingTest ? ' WPM' : '%'}. A reviewer may check your results.`}
                     </p>
                 </CardContent>
                 <CardFooter>
@@ -119,12 +147,14 @@ export default function TakeAssessmentPage() {
                 <span>{assessment.duration} minutes</span>
              </div>
           </div>
-          <div className="pt-4">
-            <Progress value={((currentQuestionIndex + 1) / questions.length) * 100} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-2 text-right">
-                Question {currentQuestionIndex + 1} of {questions.length}
-            </p>
-          </div>
+          {questions.length > 1 && (
+            <div className="pt-4">
+              <Progress value={((currentQuestionIndex + 1) / questions.length) * 100} className="h-2" />
+              <p className="text-sm text-muted-foreground mt-2 text-right">
+                  Question {currentQuestionIndex + 1} of {questions.length}
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <div className="p-4 border rounded-lg min-h-[250px] flex flex-col justify-center">
@@ -139,38 +169,50 @@ export default function TakeAssessmentPage() {
                 ))}
               </RadioGroup>
             )}
+            {currentQuestion?.type === 'typing' && currentQuestion.typing_prompt && assessment.sections[0] &&(
+                 <TypingTest
+                    prompt={currentQuestion.typing_prompt}
+                    timeLimit={assessment.sections[0].time_limit * 60}
+                    onTestComplete={(results) => {
+                      setTypingResult(results);
+                      handleSubmit();
+                    }}
+                  />
+            )}
           </div>
         </CardContent>
+        {currentQuestion?.type !== 'typing' && (
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
-            Previous
-          </Button>
-          {currentQuestionIndex === questions.length - 1 ? (
-             <AlertDialog>
-                 <AlertDialogTrigger asChild>
-                    <Button disabled={!answers[currentQuestion.id]}>Submit</Button>
-                 </AlertDialogTrigger>
-                 <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            You cannot change your answers after submitting. Please review your answers before proceeding.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSubmit}>
-                            Submit Assessment
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                 </AlertDialogContent>
-             </AlertDialog>
-          ) : (
-            <Button onClick={handleNext} disabled={!answers[currentQuestion.id]}>
-                Next
+            <Button variant="outline" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
+                Previous
             </Button>
-          )}
+            {currentQuestionIndex === questions.length - 1 ? (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button disabled={!answers[currentQuestion.id]}>Submit</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You cannot change your answers after submitting. Please review your answers before proceeding.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleSubmit}>
+                                Submit Assessment
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            ) : (
+                <Button onClick={handleNext} disabled={!answers[currentQuestion.id]}>
+                    Next
+                </Button>
+            )}
         </CardFooter>
+        )}
       </Card>
     </div>
   );

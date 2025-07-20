@@ -7,6 +7,7 @@ export type Question = {
     correct_answer?: string;
     audio_prompt?: string;
     language?: 'english' | 'kannada' | 'hindi';
+    typing_prompt?: string;
   };
   
   export type AssessmentSection = {
@@ -145,6 +146,33 @@ export type Question = {
         passing_score: 70,
         created_by: 'admin-user-1',
         sections: [] // To be built out with voice/audio questions
+      },
+      {
+        id: 'asmt-004',
+        title: 'Typing Skill Test',
+        role: 'employee',
+        process_type: 'Chat Support',
+        duration: 5,
+        passing_score: 50, // WPM
+        created_by: 'admin-user-1',
+        sections: [
+            {
+                id: 'sec-04',
+                assessment_id: 'asmt-004',
+                section_type: 'typing',
+                title: 'Typing Speed and Accuracy',
+                time_limit: 5,
+                questions: [
+                    {
+                        id: 'q-005',
+                        section_id: 'sec-04',
+                        type: 'typing',
+                        question_text: 'Please type the following paragraph.',
+                        typing_prompt: 'The quick brown fox jumps over the lazy dog. This sentence contains all the letters of the alphabet, making it a perfect pangram for testing typing speed and accuracy. Fast, accurate typing is a critical skill for any professional in a digital-first world. Practice regularly to improve your words per minute and reduce errors. Focus on maintaining a steady rhythm and correct finger placement on the keyboard. Good luck!'
+                    }
+                ]
+            }
+        ]
       }
   ];
   
