@@ -5,22 +5,11 @@
  * @fileOverview Generates mock HR ticket summary data for the Process Manager dashboard.
  * 
  * - getTicketSummaryAction - A function that returns a structured set of ticket analytics data.
- * - TicketSummary - The return type for the getTicketSummaryAction function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { TicketDataSchema, type TicketData } from './get-ticket-summary-flow.types';
 
-const TicketSummarySchema = z.array(z.object({
-  category: z.string().describe('The name of the ticket category.'),
-  count: z.number().describe('The number of tickets in this category.'),
-}));
-
-export const TicketDataSchema = z.object({
-  ticketSummary: TicketSummarySchema,
-});
-
-export type TicketData = z.infer<typeof TicketDataSchema>;
 
 export async function getTicketSummaryAction(): Promise<TicketData> {
   return getTicketDataFlow();
