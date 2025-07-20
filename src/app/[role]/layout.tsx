@@ -179,7 +179,7 @@ function DashboardHeader() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{user ? user.email : 'My Account'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
+          <DropdownMenuItem onClick={() => router.push(`/${role}/profile`)}>
             <CircleUser className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
