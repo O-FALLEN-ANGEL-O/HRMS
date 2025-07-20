@@ -1,263 +1,255 @@
 
-"use client";
+'use client';
 
-import React, { useState } from 'react';
-import { PlusCircle, MoreHorizontal } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Calendar as CalendarIcon, Check, X, Calendar } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { leaveBalances, leaveRequests, LeaveRequest } from '@/lib/mock-data/leaves';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
+import { useParams, useRouter } from 'next/navigation';
 
-function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [leaveType, setLeaveType] = useState("");
-  const [date, setDate] = useState<Date>();
-  const [reason, setReason] = useState("");
-  const { toast } = useToast();
+const initialLeaveRequests = [
+  {
+    id: 'LR-001',
+    employee: 'Ravi Kumar',
+    leaveType: 'Sick Leave',
+    dates: '2023-11-10 to 2023-11-11',
+    days: 2,
+    status: 'Pending',
+    reason: 'Fever and cold.'
+  },
+  {
+    id: 'LR-002',
+    employee: 'Sunita Sharma',
+    leaveType: 'Casual Leave',
+    dates: '2023-11-15',
+    days: 1,
+    status: 'Approved',
+    reason: 'Personal appointment.'
+  },
+    {
+    id: 'LR-003',
+    employee: 'John Doe',
+    leaveType: 'Paid Time Off',
+    dates: '2023-12-20 to 2023-12-28',
+    days: 7,
+    status: 'Pending',
+    reason: 'Family vacation for the holidays.'
+  },
+  {
+    id: 'LR-004',
+    employee: 'Michael Johnson',
+    leaveType: 'Sick Leave',
+    dates: '2023-11-01',
+    days: 1,
+    status: 'Rejected',
+    reason: 'Did not provide medical certificate as per policy.'
+  },
+];
 
-  const handleApply = () => {
-    if (!leaveType || !date || !reason) {
-      toast({ title: "Missing Information", description: "Please fill out all fields.", variant: "destructive" });
-      return;
-    }
-    const newRequest: LeaveRequest = {
-      id: `LR-${Math.floor(Math.random() * 1000)}`,
-      leaveType,
-      date: date.toISOString().split('T')[0],
-      status: "Pending",
-      reason,
+export default function LeaveManagementPage() {
+    const [open, setOpen] = useState(false);
+    const [leaveRequests, setLeaveRequests] = useState(initialLeaveRequests);
+    const { toast } = useToast();
+    const params = useParams();
+    const router = useRouter();
+    const role = params.role as string;
+
+    const isManager = role === 'manager' || role === 'hr' || role === 'admin';
+
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+        case 'Approved':
+            return <Badge variant="default" className='bg-green-500 hover:bg-green-600'>Approved</Badge>;
+        case 'Pending':
+            return <Badge variant="secondary">Pending</Badge>;
+        case 'Rejected':
+            return <Badge variant="destructive">Rejected</Badge>;
+        default:
+            return <Badge>{status}</Badge>;
+        }
     };
-    onApply(newRequest);
-    setIsOpen(false);
-    setLeaveType("");
-    setDate(undefined);
-    setReason("");
-    toast({ title: "Leave Request Submitted", description: "Your request has been sent for approval." });
-  };
+
+    const handleAction = (id: string, newStatus: 'Approved' | 'Rejected') => {
+        setLeaveRequests(currentRequests =>
+            currentRequests.map(req =>
+                req.id === id ? { ...req, status: newStatus } : req
+            )
+        );
+        toast({
+            title: `Request ${newStatus}`,
+            description: `Leave request ${id} has been successfully ${newStatus.toLowerCase()}.`
+        });
+    };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button onClick={() => setIsOpen(true)}>
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Apply for Leave
-      </Button>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Apply for Leave</DialogTitle>
-          <DialogDescription>Fill in the details to submit your leave request.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label>Leave Type</Label>
-            <Select onValueChange={setLeaveType} value={leaveType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a leave type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Sick Leave">Sick Leave</SelectItem>
-                <SelectItem value="Casual Leave">Casual Leave</SelectItem>
-                <SelectItem value="Earned Leave">Earned Leave</SelectItem>
-                <SelectItem value="Comp Off">Comp Off</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+    <div className="space-y-6">
+       <div className="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 className="text-3xl font-headline tracking-tight">Leave Management</h1>
+            <p className="text-muted-foreground">Track and manage employee leave requests.</p>
+        </div>
+        <div className="flex gap-2">
+            {isManager && (
+                 <Button variant="outline" onClick={() => router.push(`/${role}/leaves/calendar`)}>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Team Calendar
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="reason">Reason</Label>
-            <Textarea id="reason" placeholder="Please provide a reason for your leave" value={reason} onChange={e => setReason(e.target.value)} />
-          </div>
+            )}
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Apply for Leave
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Apply for Leave</DialogTitle>
+                        <DialogDescription>Fill out the form to request time off.</DialogDescription>
+                    </DialogHeader>
+                     <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="leave-type">Leave Type</Label>
+                            <Select>
+                                <SelectTrigger id="leave-type">
+                                    <SelectValue placeholder="Select a leave type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="sick">Sick Leave</SelectItem>
+                                    <SelectItem value="casual">Casual Leave</SelectItem>
+                                    <SelectItem value="pto">Paid Time Off (PTO)</SelectItem>
+                                    <SelectItem value="wfh">Work From Home</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="from-date">From</Label>
+                                <Input id="from-date" type="date" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="to-date">To</Label>
+                                <Input id="to-date" type="date" />
+                            </div>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="reason">Reason</Label>
+                            <Textarea id="reason" placeholder="Please provide a reason for your leave." />
+                        </div>
+                     </div>
+                    <DialogFooter>
+                        <Button onClick={() => setOpen(false)}>Submit Request</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
-          <Button onClick={handleApply}>Submit Request</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-
-function EmployeeLeavesPage() {
-    const [requests, setRequests] = useState(leaveRequests);
-  
-    const handleApply = (newRequest: LeaveRequest) => {
-        setRequests(prev => [newRequest, ...prev]);
-    }
-  
-    const getStatusBadge = (status: string) => {
-      switch (status) {
-        case 'Approved':
-          return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">Approved</Badge>;
-        case 'Pending':
-          return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200">Pending</Badge>;
-        case 'Rejected':
-          return <Badge variant="destructive">Rejected</Badge>;
-        default:
-          return <Badge variant="secondary">{status}</Badge>
-      }
-    };
-  
-    return (
-        <div className="space-y-6">
-        <div className="flex items-center justify-between">
-            <div>
-            <h1 className="text-3xl font-bold font-headline">My Leaves</h1>
-            <p className="text-muted-foreground">Manage your leave requests and balances.</p>
-            </div>
-            <ApplyLeaveDialog onApply={handleApply}/>
-        </div>
-  
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {leaveBalances.map(balance => (
-            <Card key={balance.type}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{balance.type}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                <div className="text-2xl font-bold">{balance.balance}</div>
-                <p className="text-xs text-muted-foreground">days remaining</p>
-                </CardContent>
-            </Card>
-            ))}
-        </div>
-  
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-            <CardHeader>
-            <CardTitle>Leave History</CardTitle>
-            <CardDescription>A log of all your leave requests.</CardDescription>
-            </CardHeader>
-            <CardContent>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Request ID</TableHead>
-                    <TableHead>Leave Type</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead><span className="sr-only">Actions</span></TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {requests.map((request) => (
-                    <TableRow key={request.id}>
-                    <TableCell className="font-mono">{request.id}</TableCell>
-                    <TableCell>{request.leaveType}</TableCell>
-                    <TableCell>{request.date}</TableCell>
-                    <TableCell className="max-w-[250px] truncate">{request.reason}</TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell>
-                        <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost" disabled={request.status !== 'Pending'}>
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Cancel Request</DropdownMenuItem>
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Available Casual Leave</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8</div>
+            <p className="text-xs text-muted-foreground">out of 12 days remaining</p>
+          </CardContent>
         </Card>
-        </div>
-    )
-}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Available Sick Leave</CardTitle>
+             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">5</div>
+            <p className="text-xs text-muted-foreground">out of 7 days remaining</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Available PTO</CardTitle>
+             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">15</div>
+             <p className="text-xs text-muted-foreground">out of 20 days remaining</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{leaveRequests.filter(r => r.status === 'Pending').length}</div>
+             <p className="text-xs text-muted-foreground">waiting for approval</p>
+          </CardContent>
+        </Card>
+      </div>
 
-function AdminLeavesPage() {
-    return (
-        <div className="space-y-6">
-             <div>
-                <h1 className="text-3xl font-bold font-headline">Leave Management</h1>
-                <p className="text-muted-foreground">Approve requests, manage policies, and view team calendars.</p>
-            </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Admin Leave Dashboard</CardTitle>
-                    <CardDescription>This area is for managing company-wide leave policies and requests.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <p className="text-muted-foreground">The admin dashboard for leave management is under construction.</p>
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
-
-export default function LeavesPage() {
-    const { user } = useAuth();
-    
-    if (user?.role === 'employee') {
-        return <EmployeeLeavesPage />;
-    }
-    
-    // Default to Admin view
-    return <AdminLeavesPage />;
+      <Card>
+        <CardHeader>
+          <CardTitle>Leave Requests</CardTitle>
+          <CardDescription>{isManager ? "All leave requests from your team." : "Your leave request history."}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{isManager ? 'Employee' : 'Request ID'}</TableHead>
+                <TableHead>Leave Type</TableHead>
+                <TableHead>Dates</TableHead>
+                <TableHead className="text-center">Days</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Status</TableHead>
+                {isManager && <TableHead className="text-right">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {leaveRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell className="font-medium">{isManager ? request.employee : request.id}</TableCell>
+                  <TableCell>{request.leaveType}</TableCell>
+                  <TableCell>{request.dates}</TableCell>
+                  <TableCell className="text-center">{request.days}</TableCell>
+                  <TableCell className="max-w-xs truncate">{request.reason}</TableCell>
+                  <TableCell>{getStatusBadge(request.status)}</TableCell>
+                  {isManager && (
+                    <TableCell className="text-right">
+                      {request.status === 'Pending' ? (
+                          <div className='flex gap-2 justify-end'>
+                              <Button variant="outline" size="icon" className='border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600' onClick={() => handleAction(request.id, 'Approved')}><Check className="h-4 w-4" /></Button>
+                              <Button variant="outline" size="icon" className='border-red-500 text-red-500 hover:bg-red-100 hover:text-red-600' onClick={() => handleAction(request.id, 'Rejected')}><X className="h-4 w-4" /></Button>
+                          </div>
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
