@@ -131,114 +131,108 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="space-y-4">
-        <div>
-            <h1 className="text-3xl font-bold font-headline">Attendance</h1>
-            <p className="text-muted-foreground">Biometric check-in and check-out.</p>
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+    <Card className="lg:col-span-2">
+        <CardHeader>
+        <CardTitle>Live Check-in / Check-out</CardTitle>
+        <CardDescription>
+            Your identity will be verified using your profile picture. Look at the camera and click the appropriate button.
+        </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <div className="relative aspect-square w-full max-w-sm mx-auto bg-muted rounded-lg overflow-hidden border">
+                <video ref={videoRef} className="h-full w-full object-cover scale-x-[-1]" autoPlay muted playsInline />
+                {!hasCameraPermission && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4">
+                    <CameraOff className="h-12 w-12 mb-4" />
+                    <h3 className="text-lg font-semibold">Camera Access Denied</h3>
+                    <p className="text-center text-sm">Please enable camera permissions in your browser settings to use this feature.</p>
+                </div>
+                )}
+            </div>
+            <div className="relative aspect-square w-full max-w-sm mx-auto bg-muted rounded-lg overflow-hidden border flex flex-col items-center justify-center">
+                <Image src={MOCK_PROFILE_IMAGE_URI} alt="Profile" width={400} height={400} className="h-full w-full object-cover" data-ai-hint="person face" />
+                <Badge variant="secondary" className="absolute bottom-2">Your Profile Picture</Badge>
+            </div>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
-        <Card className="lg:col-span-2">
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+            size="lg"
+            onClick={() => handleAction('check-in')}
+            disabled={isProcessing || status === 'Checked In' || !hasCameraPermission}
+            className="h-14 text-lg"
+            >
+            {isProcessing && status === 'Checked Out' ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <LogIn className="mr-2 h-6 w-6" />} 
+            Check In
+            </Button>
+            <Button
+            size="lg"
+            variant="destructive"
+            onClick={() => handleAction('check-out')}
+            disabled={isProcessing || status === 'Checked Out' || !hasCameraPermission}
+            className="h-14 text-lg"
+            >
+            {isProcessing && status === 'Checked In' ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <LogOut className="mr-2 h-6 w-6" />}
+            Check Out
+            </Button>
+        </div>
+        <Alert variant="destructive">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertTitle>Security Notice</AlertTitle>
+                <AlertDescription>
+                Your image is captured for identity verification and is not stored. This action is logged for security purposes.
+                </AlertDescription>
+            </Alert>
+        </CardContent>
+    </Card>
+
+    <div className="space-y-6">
+        <Card>
+        <CardHeader>
+            <CardTitle>Current Status</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className={`p-4 rounded-md text-center ${status === 'Checked In' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
+                <p className={`text-2xl font-bold ${status === 'Checked In' ? 'text-green-700 dark:text-green-200' : 'text-red-700 dark:text-red-200'}`}>
+                    {status}
+                </p>
+                {lastActionTime && <p className="text-sm text-muted-foreground">at {lastActionTime}</p>}
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 mr-2" />
+            <span>Location: Bangalore, India (Approx.)</span>
+            </div>
+        </CardContent>
+        </Card>
+        
+        <Card>
             <CardHeader>
-            <CardTitle>Live Check-in / Check-out</CardTitle>
-            <CardDescription>
-                Your identity will be verified using your profile picture. Look at the camera and click the appropriate button.
-            </CardDescription>
+                <CardTitle>Today's Log</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                <div className="relative aspect-square w-full max-w-sm mx-auto bg-muted rounded-lg overflow-hidden border">
-                    <video ref={videoRef} className="h-full w-full object-cover scale-x-[-1]" autoPlay muted playsInline />
-                    {!hasCameraPermission && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4">
-                        <CameraOff className="h-12 w-12 mb-4" />
-                        <h3 className="text-lg font-semibold">Camera Access Denied</h3>
-                        <p className="text-center text-sm">Please enable camera permissions in your browser settings to use this feature.</p>
-                    </div>
-                    )}
-                </div>
-                <div className="relative aspect-square w-full max-w-sm mx-auto bg-muted rounded-lg overflow-hidden border flex flex-col items-center justify-center">
-                    <Image src={MOCK_PROFILE_IMAGE_URI} alt="Profile" width={400} height={400} className="h-full w-full object-cover" data-ai-hint="person face" />
-                    <Badge variant="secondary" className="absolute bottom-2">Your Profile Picture</Badge>
-                </div>
-            </div>
-            <canvas ref={canvasRef} className="hidden" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button
-                size="lg"
-                onClick={() => handleAction('check-in')}
-                disabled={isProcessing || status === 'Checked In' || !hasCameraPermission}
-                className="h-14 text-lg"
-                >
-                {isProcessing && status === 'Checked Out' ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <LogIn className="mr-2 h-6 w-6" />} 
-                Check In
-                </Button>
-                <Button
-                size="lg"
-                variant="destructive"
-                onClick={() => handleAction('check-out')}
-                disabled={isProcessing || status === 'Checked Out' || !hasCameraPermission}
-                className="h-14 text-lg"
-                >
-                {isProcessing && status === 'Checked In' ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <LogOut className="mr-2 h-6 w-6" />}
-                Check Out
-                </Button>
-            </div>
-            <Alert variant="destructive">
-                    <ShieldAlert className="h-4 w-4" />
-                    <AlertTitle>Security Notice</AlertTitle>
-                    <AlertDescription>
-                    Your image is captured for identity verification and is not stored. This action is logged for security purposes.
-                    </AlertDescription>
-                </Alert>
+            <CardContent>
+                {attendanceLog.length > 0 ? (
+                    <ul className="space-y-3">
+                        {attendanceLog.map((log, index) => (
+                            <li key={index} className="flex items-center justify-between text-sm">
+                                <div className='flex items-center gap-3'>
+                                    {log.type === 'check-in' ? <LogIn className='h-4 w-4 text-green-500'/> : <LogOut className='h-4 w-4 text-red-500'/>}
+                                    <span className='font-medium'>{log.type === 'check-in' ? 'Checked In' : 'Checked Out'}</span>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    {log.verified && <Badge variant="outline" className="text-green-600 border-green-600"><UserCheck className="h-3 w-3 mr-1"/>Verified</Badge>}
+                                    <span className='text-muted-foreground'>{log.time}</span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">No activity yet for today.</p>
+                )}
             </CardContent>
         </Card>
-
-        <div className="space-y-6">
-            <Card>
-            <CardHeader>
-                <CardTitle>Current Status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className={`p-4 rounded-md text-center ${status === 'Checked In' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
-                    <p className={`text-2xl font-bold ${status === 'Checked In' ? 'text-green-700 dark:text-green-200' : 'text-red-700 dark:text-red-200'}`}>
-                        {status}
-                    </p>
-                    {lastActionTime && <p className="text-sm text-muted-foreground">at {lastActionTime}</p>}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 mr-2" />
-                <span>Location: Bangalore, India (Approx.)</span>
-                </div>
-            </CardContent>
-            </Card>
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle>Today's Log</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {attendanceLog.length > 0 ? (
-                        <ul className="space-y-3">
-                            {attendanceLog.map((log, index) => (
-                                <li key={index} className="flex items-center justify-between text-sm">
-                                    <div className='flex items-center gap-3'>
-                                        {log.type === 'check-in' ? <LogIn className='h-4 w-4 text-green-500'/> : <LogOut className='h-4 w-4 text-red-500'/>}
-                                        <span className='font-medium'>{log.type === 'check-in' ? 'Checked In' : 'Checked Out'}</span>
-                                    </div>
-                                    <div className='flex items-center gap-2'>
-                                        {log.verified && <Badge variant="outline" className="text-green-600 border-green-600"><UserCheck className="h-3 w-3 mr-1"/>Verified</Badge>}
-                                        <span className='text-muted-foreground'>{log.time}</span>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-sm text-muted-foreground text-center py-4">No activity yet for today.</p>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
-        </div>
+    </div>
     </div>
   );
 }
