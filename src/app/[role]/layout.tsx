@@ -28,7 +28,7 @@ import { useAuth } from '@/hooks/use-auth';
 import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
 } from '@/components/ui/tooltip';
-import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
 
 
 const allNavItems = [
@@ -41,7 +41,7 @@ const allNavItems = [
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
   { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
 ];
@@ -255,9 +255,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex items-center gap-2">
-          <Logo />
-          <span>Loading...</span>
+        <div className="flex flex-col items-center gap-4">
+          <Logo className="text-primary" />
+          <p className="text-muted-foreground">Loading your experience...</p>
         </div>
       </div>
     );
