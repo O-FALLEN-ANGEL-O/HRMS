@@ -7,10 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreVertical, Users, ClipboardList, TrendingUp, CheckCircle, ThumbsUp, MessageSquare, Heart } from "lucide-react";
 import Image from "next/image";
-
-type PageProps = {
-  params: { role: string };
-};
+import { useParams } from "next/navigation";
 
 // --- MOCK DATA ---
 const teamMembers = [
@@ -216,15 +213,15 @@ const StandardDashboardView = () => (
 
 
 // --- MAIN DASHBOARD PAGE ---
-export default function DashboardPage({ params }: PageProps) {
-  const role = params.role.toLowerCase();
+export default function DashboardPage() {
+  const params = useParams();
+  const role = (params.role as string || 'employee').toLowerCase();
 
   // Define which roles see which sections
   const showManagerView = role === 'manager' || role === 'hr' || role === 'admin';
   const showRecruiterView = role === 'recruiter' || role === 'hr' || role === 'admin';
-  const showEmployeeView = role === 'employee';
   
-  const greetingRole = params.role.charAt(0).toUpperCase() + params.role.slice(1);
+  const greetingRole = (params.role as string).charAt(0).toUpperCase() + (params.role as string).slice(1);
 
   return (
     <div className="space-y-6">
@@ -279,7 +276,7 @@ export default function DashboardPage({ params }: PageProps) {
         </div>
       
         <div className="grid grid-cols-1 gap-6">
-            {(showEmployeeView || showManagerView) && <ProfileCompletionCard />}
+            <ProfileCompletionCard />
             {showManagerView && <ManagerTeamView />}
             {showRecruiterView && <RecruiterView />}
             <StandardDashboardView />
