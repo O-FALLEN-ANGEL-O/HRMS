@@ -1,6 +1,5 @@
 
 
-
 // Updated Responsive Sidebar with:
 // - Animated toggle on hover/click
 // - Adaptive mobile drawer
@@ -32,6 +31,7 @@ import {
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
 import { LeaderboardCard } from '@/components/leaderboard-card';
 import { Separator } from '@/components/ui/separator';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
@@ -152,7 +152,7 @@ function AppHeader() {
   const navItems = allNavItems.filter((item) => item.roles.includes(role));
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between md:justify-end gap-4">
+    <header className="bg-card border-b px-6 py-3 flex items-center justify-between md:justify-end gap-4">
         <Sheet>
             <SheetTrigger asChild>
                 <Button size="icon" variant="outline" className="md:hidden">
@@ -182,7 +182,8 @@ function AppHeader() {
             </SheetContent>
         </Sheet>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Sheet>
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="relative">
@@ -290,7 +291,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-background">
       <AppSidebar />
       <div className="flex-1 flex flex-col md:ml-20">
          <AppHeader/>
