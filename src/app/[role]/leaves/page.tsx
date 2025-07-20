@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Calendar as CalendarIcon, Check, X, Calendar } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, Check, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -108,7 +108,7 @@ export default function LeaveManagementPage() {
         <div className="flex gap-2">
             {isManager && (
                  <Button variant="outline" onClick={() => router.push(`/${role}/leaves/calendar`)}>
-                    <Calendar className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4" />
                     Team Calendar
                 </Button>
             )}

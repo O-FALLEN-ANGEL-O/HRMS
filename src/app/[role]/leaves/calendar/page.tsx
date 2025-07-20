@@ -95,7 +95,7 @@ export default function LeaveCalendarPage() {
             </CardHeader>
             <CardContent>
                  {holidays.length > 0 ? (
-                    <ul className="space-y-3">
+                    <ul className="space-y-4">
                         {holidays.map((holiday, index) => (
                             <li key={index} className="flex items-center justify-between text-sm">
                                 <span className='font-medium'>{holiday.name}</span>
