@@ -32,6 +32,7 @@ import { scoreResume } from "@/ai/flows/score-resume";
 import { suggestInterviewQuestions } from "@/ai/flows/suggest-interview-questions";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { useParams } from "next/navigation";
 
 type Applicant = {
   id: string;
@@ -219,6 +220,8 @@ function KanbanColumn({ title, applicants }: { title: typeof columns[number]; ap
 
 export default function RecruitmentPage() {
   const [applicants] = useState<Applicant[]>(initialApplicants);
+  const params = useParams();
+  const role = params.role || 'admin';
 
   return (
     <div className="flex flex-col h-full">
@@ -228,7 +231,7 @@ export default function RecruitmentPage() {
           <p className="text-muted-foreground">Manage your hiring pipeline efficiently.</p>
         </div>
         <div className="flex gap-2">
-            <Link href="/dashboard/recruitment/parse">
+            <Link href={`/${role}/recruitment/parse`}>
                 <Button variant="outline">
                     <Bot className="mr-2 h-4 w-4" /> Parse Resume
                 </Button>

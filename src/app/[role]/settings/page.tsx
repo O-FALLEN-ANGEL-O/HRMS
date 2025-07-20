@@ -40,7 +40,7 @@ export default function SettingsPage() {
   };
   
   const handleNotificationChange = (name: string) => {
-    setNotifications(prev => ({ ...prev, [name]: !prev[name as keyof typeof notifications]}));
+    setNotifications(prev => ({ ...prev, [name as keyof typeof notifications]}));
   };
 
   const handleSaveChanges = () => {

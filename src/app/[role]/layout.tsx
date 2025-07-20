@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -47,16 +47,17 @@ import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
-  { href: "/dashboard/recruitment", icon: Briefcase, label: "Recruitment" },
-  { href: "/dashboard/onboarding", icon: PackagePlus, label: "Onboarding" },
-  { href: "/dashboard/employees", icon: Users, label: "Employees" },
-  { href: "/dashboard/payroll", icon: CreditCard, label: "Payroll" },
-  { href: "/dashboard/performance", icon: BarChart, label: "Performance" },
+  { href: "/recruitment", icon: Briefcase, label: "Recruitment" },
+  { href: "/onboarding", icon: PackagePlus, label: "Onboarding" },
+  { href: "/employees", icon: Users, label: "Employees" },
+  { href: "/payroll", icon: CreditCard, label: "Payroll" },
+  { href: "/performance", icon: BarChart, label: "Performance" },
 ];
 
 function DashboardSidebar() {
   const pathname = usePathname();
-  const { open } = useSidebar();
+  const params = useParams();
+  const role = params.role || 'admin';
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -65,20 +66,23 @@ function DashboardSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={{ children: item.label }}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navItems.map((item) => {
+            const itemPath = `/${role}${item.href}`;
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === itemPath}
+                  tooltip={{ children: item.label }}
+                >
+                  <Link href={itemPath}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
@@ -86,10 +90,10 @@ function DashboardSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={pathname === '/dashboard/settings'}
+              isActive={pathname === `/${role}/settings`}
               tooltip={{ children: 'Settings' }}
             >
-              <Link href="/dashboard/settings">
+              <Link href={`/${role}/settings`}>
                 <Settings />
                 <span>Settings</span>
               </Link>
@@ -115,6 +119,8 @@ function DashboardSidebar() {
 function DashboardHeader() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const role = params.role || 'admin';
 
   const handleLogout = () => {
     logout();
@@ -152,11 +158,11 @@ function DashboardHeader() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{user ? user.email : 'Admin Account'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+          <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
             <CircleUser className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+          <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>

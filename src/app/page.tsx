@@ -48,7 +48,7 @@ export default function LoginPage() {
     e.preventDefault();
     if(emailRef.current?.value) {
       login({email: emailRef.current.value});
-      router.push('/dashboard');
+      router.push('/admin/dashboard');
     }
   };
 
