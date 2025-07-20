@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { scoreAndParseResume, ScoreAndParseResumeOutput } from '@/ai/flows/score-and-parse-resume';
-import { Bot, Upload, Camera, Loader2, Save, Trash2, PlusCircle } from 'lucide-react';
+import { Bot, Upload, Camera, Loader2, Save, Trash2, PlusCircle, FileText, Smartphone } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
@@ -40,7 +40,6 @@ export default function ParseResumePage() {
   useEffect(() => {
     const getCameraPermission = async () => {
       if (!isCameraOpen) {
-        // Stop camera stream when not in use
         if (videoRef.current?.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
@@ -69,7 +68,6 @@ export default function ParseResumePage() {
     getCameraPermission();
     
     return () => {
-        // Cleanup on unmount
         if (videoRef.current?.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
@@ -82,6 +80,7 @@ export default function ParseResumePage() {
     const file = event.target.files?.[0];
     if (file) {
       setFileName(file.name);
+      setResumeDataUri(null); // Reset before reading new file
       const reader = new FileReader();
       reader.onload = (e) => {
         setResumeDataUri(e.target?.result as string);
@@ -127,32 +126,35 @@ export default function ParseResumePage() {
     }
   };
 
-  const handleFieldChange = (section: keyof ParsedData, index: number, field: string, value: string) => {
+  const handleFieldChange = (section: 'workExperience' | 'education', index: number, field: string, value: string) => {
     if (!editData) return;
     const newData = { ...editData };
     (newData[section] as any[])[index][field] = value;
     setEditData(newData);
   };
   
-  const handleSimpleFieldChange = (field: keyof ParsedData, value: string) => {
+  const handleSimpleFieldChange = (field: keyof ParsedData, value: string | string[]) => {
     if (!editData) return;
     setEditData({ ...editData, [field]: value });
   };
+  
+  const handleArrayChange = (field: 'skills' | 'links' | 'certifications' | 'languages', value: string) => {
+     if (!editData) return;
+     setEditData({ ...editData, [field]: value.split(',').map(s => s.trim()).filter(Boolean) });
+  };
 
-  const handleAddItem = (section: keyof ParsedData) => {
+  const handleAddItem = (section: 'workExperience' | 'education') => {
     if (!editData) return;
     const newData = { ...editData };
     if (section === 'workExperience') {
-      (newData.workExperience as any[]).push({ company: '', title: '', dates: '' });
+      (newData.workExperience as any[]).unshift({ company: '', title: '', dates: '' });
     } else if (section === 'education') {
-      (newData.education as any[]).push({ institution: '', degree: '', year: '' });
-    } else if (section === 'skills' || section === 'links') {
-      (newData[section] as any[]).push('');
+      (newData.education as any[]).unshift({ institution: '', degree: '', year: '' });
     }
     setEditData(newData);
   };
   
-  const handleRemoveItem = (section: keyof ParsedData, index: number) => {
+  const handleRemoveItem = (section: 'workExperience' | 'education', index: number) => {
     if (!editData) return;
     const newData = { ...editData };
     (newData[section] as any[]).splice(index, 1);
@@ -162,7 +164,7 @@ export default function ParseResumePage() {
   const handleSave = () => {
     // In a real application, you would save `editData` to your database.
     console.log("Saving data:", editData);
-    toast({ title: "Profile Saved", description: "The candidate's profile has been saved." });
+    toast({ title: "Profile Saved", description: "The candidate's profile has been saved to the console." });
     resetAll();
   };
   
@@ -189,13 +191,13 @@ export default function ParseResumePage() {
           <Card>
             <CardHeader>
               <CardTitle>1. Job Description</CardTitle>
-              <CardDescription>Enter the job description to score the resume against.</CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
                 rows={8}
+                placeholder="Paste the job description here..."
               />
             </CardContent>
           </Card>
@@ -203,17 +205,18 @@ export default function ParseResumePage() {
           <Card>
             <CardHeader>
               <CardTitle>2. Upload Resume</CardTitle>
-              <CardDescription>Upload a file (.pdf, .docx, .jpg, .png) or use your camera.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,image/*" />
-              <Button onClick={() => fileInputRef.current?.click()} className="w-full mb-2">
-                <Upload className="mr-2 h-4 w-4" /> Upload File
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => setIsCameraOpen(prev => !prev)}>
-                <Camera className="mr-2 h-4 w-4" /> {isCameraOpen ? 'Close Camera' : 'Use Camera'}
-              </Button>
-              {fileName && <p className="text-sm text-muted-foreground mt-2">File: {fileName}</p>}
+              <div className="space-y-2">
+                <Button onClick={() => fileInputRef.current?.click()} className="w-full">
+                  <Upload className="mr-2" /> Upload File
+                </Button>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+                <Button variant="outline" className="w-full" onClick={() => setIsCameraOpen(prev => !prev)}>
+                  <Camera className="mr-2" /> {isCameraOpen ? 'Close Camera' : 'Use Camera'}
+                </Button>
+              </div>
+              {fileName && <p className="text-sm text-muted-foreground mt-4">File selected: {fileName}</p>}
               
               {isCameraOpen && (
                 <div className="mt-4 space-y-2">
@@ -241,21 +244,29 @@ export default function ParseResumePage() {
         <div className="lg:col-span-2">
           <Card className="min-h-full">
             <CardHeader>
-              <CardTitle>3. Review & Edit</CardTitle>
-              <CardDescription>Review the parsed data and make any necessary edits before saving.</CardDescription>
+              <CardTitle>3. Review & Edit Parsed Data</CardTitle>
+              <CardDescription>Review the AI-extracted data. You can edit any field before saving the candidate profile.</CardDescription>
             </CardHeader>
             <CardContent>
               {loading && (
-                <div className="flex flex-col items-center justify-center h-64">
+                <div className="flex flex-col items-center justify-center h-96">
                   <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                   <p className="text-muted-foreground">AI is parsing and scoring the resume...</p>
+                  <p className="text-sm text-muted-foreground mt-2">This may take a moment.</p>
                 </div>
               )}
               
               {!loading && !result && (
-                <div className="flex flex-col items-center justify-center h-64 text-center">
-                  <Bot className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Results will be displayed here after analysis.</p>
+                <div className="flex flex-col items-center justify-center h-96 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="p-4 bg-accent rounded-full">
+                        <FileText className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="p-4 bg-accent rounded-full">
+                        <Smartphone className="h-8 w-8 text-primary" />
+                    </div>
+                  </div>
+                  <p className="mt-6 text-muted-foreground">Results will be displayed here after analysis.</p>
                 </div>
               )}
 
@@ -263,17 +274,18 @@ export default function ParseResumePage() {
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>AI Score</CardTitle>
+                      <CardTitle>AI Match Score</CardTitle>
+                      <CardDescription>Based on the provided job description.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-4">
                         <div className="relative h-24 w-24">
-                          <svg className="h-full w-full" viewBox="0 0 36 36">
-                            <path className="text-muted" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="4"></path>
-                            <path className="text-primary" strokeDasharray={`${result.score}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="4" strokeLinecap="round"></path>
+                          <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                            <circle className="text-muted/20" cx="18" cy="18" r="15.9155" fill="none" strokeWidth="4"></circle>
+                            <circle className="text-primary transition-all duration-500" cx="18" cy="18" r="15.9155" fill="none" strokeWidth="4" strokeDasharray={`${result.score}, 100`} strokeLinecap="round"></circle>
                           </svg>
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-2xl font-bold">{result.score}</span>
+                            <span className="text-3xl font-bold font-headline">{result.score}</span>
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground flex-1">{result.justification}</p>
@@ -288,22 +300,24 @@ export default function ParseResumePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>Name</Label>
-                            <Input value={editData.name} onChange={(e) => handleSimpleFieldChange('name', e.target.value)} />
+                            <Input value={editData.name || ''} onChange={(e) => handleSimpleFieldChange('name', e.target.value)} />
                           </div>
                           <div className="space-y-2">
                             <Label>Email</Label>
-                            <Input value={editData.email} onChange={(e) => handleSimpleFieldChange('email', e.target.value)} />
+                            <Input value={editData.email || ''} onChange={(e) => handleSimpleFieldChange('email', e.target.value)} />
                           </div>
                           <div className="space-y-2">
                             <Label>Phone</Label>
-                            <Input value={editData.phone} onChange={(e) => handleSimpleFieldChange('phone', e.target.value)} />
+                            <Input value={editData.phone || ''} onChange={(e) => handleSimpleFieldChange('phone', e.target.value)} />
                           </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
+
                     <AccordionItem value="item-2">
                       <AccordionTrigger>Work Experience</AccordionTrigger>
                       <AccordionContent className="space-y-4 pt-4">
+                        <Button variant="outline" size="sm" onClick={() => handleAddItem('workExperience')}><PlusCircle className="mr-2 h-4 w-4"/>Add Experience</Button>
                         {editData.workExperience.map((exp, index) => (
                           <div key={index} className="space-y-2 p-3 border rounded-md relative">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -311,15 +325,16 @@ export default function ParseResumePage() {
                               <Input placeholder="Job Title" value={exp.title} onChange={e => handleFieldChange('workExperience', index, 'title', e.target.value)} />
                             </div>
                             <Input placeholder="Dates (e.g., Jan 2020 - Present)" value={exp.dates} onChange={e => handleFieldChange('workExperience', index, 'dates', e.target.value)} />
-                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('workExperience', index)}><Trash2 className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('workExperience', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                           </div>
                         ))}
-                        <Button variant="outline" size="sm" onClick={() => handleAddItem('workExperience')}><PlusCircle className="mr-2 h-4 w-4"/>Add Experience</Button>
                       </AccordionContent>
                     </AccordionItem>
+
                     <AccordionItem value="item-3">
                       <AccordionTrigger>Education</AccordionTrigger>
                       <AccordionContent className="space-y-4 pt-4">
+                         <Button variant="outline" size="sm" onClick={() => handleAddItem('education')}><PlusCircle className="mr-2 h-4 w-4"/>Add Education</Button>
                         {editData.education.map((edu, index) => (
                           <div key={index} className="space-y-2 p-3 border rounded-md relative">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -327,31 +342,39 @@ export default function ParseResumePage() {
                               <Input placeholder="Degree" value={edu.degree} onChange={e => handleFieldChange('education', index, 'degree', e.target.value)} />
                             </div>
                             <Input placeholder="Year" value={edu.year} onChange={e => handleFieldChange('education', index, 'year', e.target.value)} />
-                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('education', index)}><Trash2 className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('education', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                           </div>
                         ))}
-                        <Button variant="outline" size="sm" onClick={() => handleAddItem('education')}><PlusCircle className="mr-2 h-4 w-4"/>Add Education</Button>
                       </AccordionContent>
                     </AccordionItem>
+                    
                     <AccordionItem value="item-4">
-                      <AccordionTrigger>Skills & Links</AccordionTrigger>
+                      <AccordionTrigger>Skills & Qualifications</AccordionTrigger>
                       <AccordionContent className="space-y-4 pt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <Label>Skills (comma separated)</Label>
-                            <Textarea value={editData.skills.join(', ')} onChange={(e) => setEditData({...editData, skills: e.target.value.split(',').map(s=>s.trim())})} />
+                            <Textarea value={(editData.skills || []).join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} />
+                          </div>
+                           <div>
+                            <Label>Languages (comma separated)</Label>
+                            <Textarea value={(editData.languages || []).join(', ')} onChange={(e) => handleArrayChange('languages', e.target.value)} />
+                          </div>
+                           <div>
+                            <Label>Links (comma separated)</Label>
+                            <Textarea value={(editData.links || []).join(', ')} onChange={(e) => handleArrayChange('links', e.target.value)} />
                           </div>
                           <div>
-                            <Label>Links (comma separated)</Label>
-                            <Textarea value={editData.links.join(', ')} onChange={(e) => setEditData({...editData, links: e.target.value.split(',').map(s=>s.trim())})} />
+                            <Label>Certifications (comma separated)</Label>
+                            <Textarea value={(editData.certifications || []).join(', ')} onChange={(e) => handleArrayChange('certifications', e.target.value)} />
                           </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
 
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={resetAll}>Cancel</Button>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={resetAll}>Cancel & Clear</Button>
                     <Button onClick={handleSave}><Save className="mr-2 h-4 w-4" /> Save Candidate Profile</Button>
                   </div>
                 </div>

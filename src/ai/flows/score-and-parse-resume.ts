@@ -24,7 +24,7 @@ export type ScoreAndParseResumeInput = z.infer<typeof ScoreAndParseResumeInputSc
 const WorkExperienceSchema = z.object({
   company: z.string().describe('The name of the company.'),
   title: z.string().describe('The job title or role.'),
-  dates: z.string().describe('The dates of employment.'),
+  dates: z.string().describe('The dates of employment (e.g., "Jan 2020 - Present").'),
 });
 
 const EducationSchema = z.object({
@@ -36,18 +36,22 @@ const EducationSchema = z.object({
 const ScoreAndParseResumeOutputSchema = z.object({
   score: z
     .number()
+    .min(0)
+    .max(100)
     .describe('The score (0-100) of the resume based on the job description.'),
   justification: z
     .string()
-    .describe('The justification for the assigned score.'),
+    .describe('A concise justification for the assigned score, highlighting key strengths and weaknesses.'),
   parsedData: z.object({
     name: z.string().describe("The candidate's full name."),
-    email: z.string().describe("The candidate's email address."),
-    phone: z.string().describe("The candidate's phone number."),
-    links: z.array(z.string()).describe("Array of URLs for social profiles like LinkedIn, GitHub, etc."),
-    skills: z.array(z.string()).describe('An array of skills extracted from the resume.'),
+    email: z.string().describe("The candidate's email address.").optional(),
+    phone: z.string().describe("The candidate's phone number.").optional(),
+    links: z.array(z.string()).describe("Array of URLs for social profiles like LinkedIn, GitHub, personal website, etc."),
+    skills: z.array(z.string()).describe('An array of key skills extracted from the resume.'),
     workExperience: z.array(WorkExperienceSchema).describe('An array of work experience objects.'),
     education: z.array(EducationSchema).describe('An array of education objects.'),
+    certifications: z.array(z.string()).describe('An array of relevant certifications.'),
+    languages: z.array(z.string()).describe('An array of languages spoken by the candidate.'),
   }),
 });
 export type ScoreAndParseResumeOutput = z.infer<typeof ScoreAndParseResumeOutputSchema>;
@@ -63,16 +67,27 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert HR recruiter with experience in parsing resumes and matching candidates to job descriptions.
 
 You will be provided with a job description and a resume (either as text from a document or from an image using OCR). Your tasks are:
-1.  Parse the resume to extract structured information: candidate's name, email, phone, social links (LinkedIn, GitHub, etc.), skills, work experience (company, title, dates), and education (institution, degree, year).
-2.  Score the resume from 0-100 based on how well the candidate's skills and experience match the provided job description.
-3.  Provide a concise justification for the score.
+1.  Parse the resume to extract structured information. Be as accurate as possible. Extract the following fields:
+    - Candidate's full name.
+    - Contact info: email and phone number.
+    - Social and professional links (e.g., LinkedIn, GitHub, portfolio).
+    - A list of key skills (both technical and soft skills).
+    - A list of work experiences, including company, job title, and employment dates.
+    - A list of educational qualifications, including institution, degree, and year.
+    - A list of any certifications mentioned.
+    - A list of languages spoken.
+2.  Score the resume from 0 to 100 based on how well the candidate's skills and experience match the provided job description.
+3.  Provide a concise justification for the score. Explain the reasoning behind your score, noting how the candidate aligns with the requirements.
 
-Job Description: {{{jobDescription}}}
+Job Description:
+\`\`\`
+{{{jobDescription}}}
+\`\`\`
 
 Resume Content:
 {{media url=resumeDataUri}}
 
-Please return the extracted data, score, and justification in the specified JSON format.
+Please return the extracted data, score, and justification in the specified JSON format. If a field is not present in the resume, return an empty string or array for it.
 `,
 });
 
