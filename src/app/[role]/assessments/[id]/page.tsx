@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 export default function TakeAssessmentPage() {
   const params = useParams();
@@ -30,9 +30,9 @@ export default function TakeAssessmentPage() {
 
   useEffect(() => {
     if (!assessment) {
-      router.push('/admin/assessments');
+      router.push(`/${params.role}/assessments`);
     }
-  }, [assessment, router]);
+  }, [assessment, router, params.role]);
   
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -75,21 +75,23 @@ export default function TakeAssessmentPage() {
   if (isFinished) {
     const passed = score >= assessment.passing_score;
     return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-            <Card className="w-full max-w-lg text-center">
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+            <Card className="w-full max-w-lg text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle className="flex justify-center">
-                        {passed ? <CheckCircle className="h-12 w-12 text-green-500"/> : <AlertTriangle className="h-12 w-12 text-destructive"/>}
-                    </CardTitle>
-                    <CardTitle>{passed ? 'Congratulations!' : 'Review Needed'}</CardTitle>
-                    <CardDescription>You have completed the assessment.</CardDescription>
+                    <div className="flex justify-center mb-4">
+                        {passed ? <CheckCircle className="h-16 w-16 text-green-500"/> : <AlertTriangle className="h-16 w-16 text-destructive"/>}
+                    </div>
+                    <CardTitle className="text-3xl font-headline">{passed ? 'Congratulations!' : 'Review Needed'}</CardTitle>
+                    <CardDescription>{passed ? "You have successfully passed the assessment." : "You have completed the assessment."}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-4xl font-bold font-headline">{score}%</p>
-                    <p className="text-muted-foreground">Your score</p>
-                    <p className="mt-4 text-sm">
+                <CardContent className="space-y-4">
+                    <div>
+                        <p className="text-5xl font-bold font-headline text-primary">{score}%</p>
+                        <p className="text-muted-foreground">Your Score</p>
+                    </div>
+                    <p className="text-sm">
                         {passed 
-                            ? "You have successfully passed the assessment." 
+                            ? "Your results have been recorded." 
                             : `The passing score is ${assessment.passing_score}%. A reviewer will check your results.`}
                     </p>
                 </CardContent>
@@ -107,10 +109,10 @@ export default function TakeAssessmentPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-start">
              <div>
                 <CardTitle>{assessment.title}</CardTitle>
-                <CardDescription>Process: {assessment.process_type}</CardDescription>
+                <CardDescription>{assessment.process_type}</CardDescription>
              </div>
              <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4"/>
@@ -118,21 +120,21 @@ export default function TakeAssessmentPage() {
              </div>
           </div>
           <div className="pt-4">
-            <Progress value={(currentQuestionIndex / questions.length) * 100} />
+            <Progress value={((currentQuestionIndex + 1) / questions.length) * 100} className="h-2" />
             <p className="text-sm text-muted-foreground mt-2 text-right">
                 Question {currentQuestionIndex + 1} of {questions.length}
             </p>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="p-4 border rounded-lg min-h-[200px]">
-            <p className="font-semibold mb-4">{currentQuestion?.question_text}</p>
+          <div className="p-4 border rounded-lg min-h-[250px] flex flex-col justify-center">
+            <p className="font-semibold text-lg mb-6 text-center">{currentQuestion?.question_text}</p>
             {currentQuestion?.type === 'mcq' && (
-              <RadioGroup value={answers[currentQuestion.id] || ''} onValueChange={handleAnswerChange}>
+              <RadioGroup value={answers[currentQuestion.id] || ''} onValueChange={handleAnswerChange} className="space-y-3">
                 {currentQuestion.options?.map((option, index) => (
-                  <div key={index} className="flex items-center space-x-2">
+                  <div key={index} className="flex items-center space-x-3 p-3 border rounded-md has-[:checked]:bg-accent has-[:checked]:border-primary">
                     <RadioGroupItem value={option} id={`q${currentQuestion.id}-o${index}`} />
-                    <Label htmlFor={`q${currentQuestion.id}-o${index}`}>{option}</Label>
+                    <Label htmlFor={`q${currentQuestion.id}-o${index}`} className="flex-1 cursor-pointer">{option}</Label>
                   </div>
                 ))}
               </RadioGroup>
@@ -145,7 +147,9 @@ export default function TakeAssessmentPage() {
           </Button>
           {currentQuestionIndex === questions.length - 1 ? (
              <AlertDialog>
-                 <Button>Submit</Button>
+                 <AlertDialogTrigger asChild>
+                    <Button disabled={!answers[currentQuestion.id]}>Submit</Button>
+                 </AlertDialogTrigger>
                  <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
@@ -154,9 +158,7 @@ export default function TakeAssessmentPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogAction asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </AlertDialogAction>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleSubmit}>
                             Submit Assessment
                         </AlertDialogAction>
@@ -164,7 +166,7 @@ export default function TakeAssessmentPage() {
                  </AlertDialogContent>
              </AlertDialog>
           ) : (
-            <Button onClick={handleNext}>
+            <Button onClick={handleNext} disabled={!answers[currentQuestion.id]}>
                 Next
             </Button>
           )}
