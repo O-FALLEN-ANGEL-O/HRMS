@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { assessments } from '@/lib/mock-data/assessments';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -8,10 +9,15 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Video, Mic, ScreenShare, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TypingTest } from '@/components/typing-test';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription as AlertDesc, AlertTitle as AlertT } from '@/components/ui/alert';
+
+
+type AssessmentState = 'consent' | 'inProgress' | 'finished';
 
 export default function TakeAssessmentPage() {
   const params = useParams();
@@ -21,20 +27,67 @@ export default function TakeAssessmentPage() {
 
   const assessment = useMemo(() => assessments.find(a => a.id === assessmentId), [assessmentId]);
 
+  const [assessmentState, setAssessmentState] = useState<AssessmentState>('consent');
+  const [hasConsent, setHasConsent] = useState(false);
+  const [permissions, setPermissions] = useState({ mic: false, webcam: false });
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [typingResult, setTypingResult] = useState<{wpm: number, accuracy: number} | null>(null);
   
   const questions = useMemo(() => assessment?.sections.flatMap(s => s.questions) || [], [assessment]);
   const currentQuestion = questions[currentQuestionIndex];
 
+  // Anti-cheating listeners
+  const handleVisibilityChange = useCallback(() => {
+    if (document.hidden) {
+      toast({
+        variant: 'destructive',
+        title: 'Tab Switch Detected!',
+        description: 'You have been flagged for switching tabs. Continuing this behavior may lead to disqualification.',
+      });
+    }
+  }, [toast]);
+  
+  useEffect(() => {
+    if (assessmentState === 'inProgress') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    }
+  }, [assessmentState, handleVisibilityChange]);
+
+
   useEffect(() => {
     if (!assessment) {
       router.push(`/${params.role}/assessments`);
     }
   }, [assessment, router, params.role]);
+
+  const requestPermissions = async () => {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setPermissions({ mic: true, webcam: true });
+        toast({ title: "Permissions Granted", description: "Camera and microphone access enabled." });
+        stream.getTracks().forEach(track => track.stop()); // Stop tracks immediately after getting permission
+    } catch (err) {
+        setPermissions({ mic: false, webcam: false });
+        toast({ variant: 'destructive', title: "Permissions Denied", description: "You must allow camera and microphone access to proceed." });
+    }
+  };
+
+  const startTest = () => {
+    if (hasConsent && permissions.mic && permissions.webcam) {
+        setAssessmentState('inProgress');
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Cannot Start Test',
+            description: 'Please provide consent and grant all required permissions.',
+        });
+    }
+  };
   
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -55,7 +108,7 @@ export default function TakeAssessmentPage() {
   const handleSubmit = () => {
     if(currentQuestion.type === 'typing' && typingResult) {
        setScore(typingResult.wpm); // For typing, score is WPM
-       setIsFinished(true);
+       setAssessmentState('finished');
        toast({
          title: "Assessment Submitted!",
          description: `Your typing speed is ${typingResult.wpm} WPM with ${typingResult.accuracy}% accuracy.`,
@@ -72,7 +125,7 @@ export default function TakeAssessmentPage() {
     });
     const finalScore = Math.round((correctAnswers / questions.length) * 100);
     setScore(finalScore);
-    setIsFinished(true);
+    setAssessmentState('finished');
 
     toast({
         title: "Assessment Submitted!",
@@ -84,7 +137,53 @@ export default function TakeAssessmentPage() {
     return <div>Loading assessment...</div>;
   }
   
-  if (isFinished) {
+  if (assessmentState === 'consent') {
+    return (
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+            <Card className="w-full max-w-2xl shadow-lg">
+                <CardHeader>
+                    <CardTitle className="text-3xl font-headline text-center">Assessment Rules & Consent</CardTitle>
+                    <CardDescription className="text-center">Please read the following rules and grant permissions before starting.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <Alert variant="default" className="border-yellow-500/50 text-yellow-900 dark:text-yellow-200 [&>svg]:text-yellow-500">
+                        <ShieldAlert className="h-4 w-4" />
+                        <AlertT>Proctoring Enabled</AlertT>
+                        <AlertDesc>
+                            This aptitude test will record your screen, microphone, and webcam during the session to ensure fairness. Please do not switch tabs or exit fullscreen mode. Any violation may lead to automatic disqualification.
+                        </AlertDesc>
+                    </Alert>
+                    <div className="space-y-4">
+                        <Button className="w-full" onClick={requestPermissions} disabled={permissions.mic && permissions.webcam}>
+                            <Video className="mr-2 h-4 w-4" />
+                            {permissions.mic && permissions.webcam ? 'Permissions Granted' : 'Grant Camera & Mic Access'}
+                        </Button>
+                        <div className="flex items-center space-x-2 p-4 border rounded-md">
+                            <Checkbox id="terms" checked={hasConsent} onCheckedChange={(checked) => setHasConsent(checked as boolean)} />
+                            <label
+                                htmlFor="terms"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                I consent to screen, mic, and webcam recording.
+                            </label>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button 
+                        className="w-full" 
+                        onClick={startTest}
+                        disabled={!hasConsent || !permissions.mic || !permissions.webcam}
+                    >
+                        Start Test
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+    );
+  }
+  
+  if (assessmentState === 'finished') {
     const passed = score >= assessment.passing_score;
     const isTypingTest = currentQuestion.type === 'typing';
 
