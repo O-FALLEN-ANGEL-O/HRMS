@@ -3,7 +3,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 20% 98%; /* Very light gray */
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -12,7 +12,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 258 68% 56%; /* Stronger Purple */
+    --primary: 262 84% 56%; /* Indigo-600 like */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -21,30 +21,17 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     
-    --accent: 258 90% 96%; /* Lavender */
-    --accent-foreground: 258 50% 30%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 258 68% 56%;
+    --ring: 262 84% 56%;
 
     --radius: 0.5rem;
-
-    --chart-1: 258 68% 56%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    
-    --sidebar-background: hsl(240 10% 3.9%);
-    --sidebar-foreground: hsl(210 40% 98%);
-    --sidebar-accent: hsl(240 3.7% 15.9%);
-    --sidebar-accent-foreground: hsl(210 40% 98%);
-    --sidebar-border: hsl(240 3.7% 15.9%);
-    --sidebar-ring: hsl(240 4.9% 83.9%);
   }
 
   .dark {
@@ -57,7 +44,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 258 68% 65%;
+    --primary: 262 84% 66%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -74,20 +61,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 258 68% 65%;
-    
-    --chart-1: 258 68% 65%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-
-    --sidebar-background: hsl(240 10% 3.9%);
-    --sidebar-foreground: hsl(210 40% 98%);
-    --sidebar-accent: hsl(240 3.7% 15.9%);
-    --sidebar-accent-foreground: hsl(210 40% 98%);
-    --sidebar-border: hsl(240 3.7% 15.9%);
-    --sidebar-ring: hsl(240 4.9% 83.9%);
+    --ring: 262 84% 66%;
   }
 }
 
@@ -97,6 +71,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
 }
 
