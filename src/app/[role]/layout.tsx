@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
   Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings
+  PackagePlus, Settings, Bell
 } from 'lucide-react';
 
 import { Logo } from '@/components/logo';
@@ -22,7 +23,7 @@ import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
 } from '@/components/ui/tooltip';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Bell } from 'lucide-react';
+
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr'] },
@@ -32,7 +33,7 @@ const allNavItems = [
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['admin', 'employee', 'manager'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'employee'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
   { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr'] },
 ];

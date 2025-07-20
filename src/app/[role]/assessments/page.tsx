@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AssessmentCard } from "@/components/assessment-card";
@@ -10,7 +11,7 @@ import { AlertTriangle } from "lucide-react";
 export default function AssessmentsPage() {
   const { user } = useAuth();
   
-  if (user?.role === 'admin') {
+  if (user?.role === 'admin' || user?.role === 'hr') {
     return (
        <div className="space-y-6">
           <div>
