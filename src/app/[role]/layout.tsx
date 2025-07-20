@@ -33,6 +33,10 @@ import {
   GraduationCap,
   Newspaper,
   CalendarDays,
+  LayoutGrid,
+  Bot,
+  TrendingUp,
+  FileCheck,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -104,6 +108,32 @@ function DashboardSidebar() {
               </SidebarMenuItem>
             )
           })}
+           {role === 'admin' && (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton tooltip={{children: 'AI Tools'}}>
+                        <LayoutGrid />
+                        <span>AI Tools</span>
+                    </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="ml-2">
+                    <DropdownMenuLabel>All Tools</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                        <FileCheck className="mr-2 h-4 w-4" />
+                        <span>Review Analyzer</span>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem>
+                        <Bot className="mr-2 h-4 w-4" />
+                        <span>HR Chatbot</span>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem>
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        <span>Leave Spike Predictor</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
