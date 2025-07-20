@@ -14,7 +14,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
   GraduationCap, Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings, Bell, Fingerprint
+  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon
 } from 'lucide-react';
 
 import { Logo } from '@/components/logo';
@@ -33,6 +33,7 @@ import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescri
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
+  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr'] },
   { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
   { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr'] },
