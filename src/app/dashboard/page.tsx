@@ -12,7 +12,7 @@ import {
   Flame,
 } from "lucide-react"
 import Link from "next/link"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
 
 import {
   Avatar,
@@ -37,24 +37,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
 import { predictBurnout } from "@/ai/flows/predict-burnout";
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
-const recruitmentData = [
-  { name: 'Applied', value: 120 },
-  { name: 'Screening', value: 80 },
-  { name: 'Interview', value: 45 },
-  { name: 'Offer', value: 15 },
-  { name: 'Hired', value: 10 },
+const hiringData = [
+  { month: "Jan", hired: 5, applied: 60 },
+  { month: "Feb", hired: 7, applied: 75 },
+  { month: "Mar", hired: 6, applied: 80 },
+  { month: "Apr", hired: 10, applied: 110 },
+  { month: "May", hired: 8, applied: 95 },
+  { month: "Jun", hired: 12, applied: 130 },
 ];
+
+const recentActivities = [
+    { name: "John Doe", activity: "Completed Onboarding", time: "2 min ago", avatar: "https://placehold.co/100x100?text=JD" },
+    { name: "Jane Smith", activity: "Applied for Software Engineer", time: "10 min ago", avatar: "https://placehold.co/100x100?text=JS" },
+    { name: "HR Bot", activity: "Generated 3 new candidate reports", time: "1 hour ago", avatar: "" },
+    { name: "Alex Ray", activity: "Submitted performance review", time: "3 hours ago", avatar: "https://placehold.co/100x100?text=AR" },
+];
+
 
 function PredictBurnoutCard() {
   const [result, setResult] = React.useState<any>(null);
@@ -119,18 +122,18 @@ function PredictBurnoutCard() {
           </Button>
         </form>
         {result && (
-          <div className="mt-4 space-y-4 rounded-lg border bg-accent/50 p-4">
+          <div className="mt-4 space-y-4 rounded-lg border bg-accent p-4">
             <h4 className="font-bold">Prediction Result:</h4>
             <p><strong>Risk Level:</strong> <Badge variant={result.burnoutRiskLevel === 'High' || result.burnoutRiskLevel === 'Critical' ? 'destructive' : 'default'}>{result.burnoutRiskLevel}</Badge></p>
             <div>
               <p><strong>Risk Factors:</strong></p>
-              <ul className="list-disc pl-5">
+              <ul className="list-disc pl-5 text-sm">
                 {result.riskFactors.map((factor: string, i: number) => <li key={i}>{factor}</li>)}
               </ul>
             </div>
             <div>
               <p><strong>Recommendations:</strong></p>
-              <ul className="list-disc pl-5">
+              <ul className="list-disc pl-5 text-sm">
                 {result.recommendations.map((rec: string, i: number) => <li key={i}>{rec}</li>)}
               </ul>
             </div>
@@ -151,7 +154,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,204</div>
+            <div className="text-2xl font-bold font-headline">1,204</div>
             <p className="text-xs text-muted-foreground">+5.2% from last month</p>
           </CardContent>
         </Card>
@@ -161,7 +164,7 @@ export default function DashboardPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+235</div>
+            <div className="text-2xl font-bold font-headline">+235</div>
             <p className="text-xs text-muted-foreground">+12.1% from last month</p>
           </CardContent>
         </Card>
@@ -171,7 +174,7 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold font-headline">12</div>
             <p className="text-xs text-muted-foreground">+2 since last week</p>
           </CardContent>
         </Card>
@@ -181,7 +184,7 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold font-headline">$45,231.89</div>
             <p className="text-xs text-muted-foreground">Next cycle: July 30</p>
           </CardContent>
         </Card>
@@ -190,23 +193,27 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle className="font-headline">Recruitment Funnel</CardTitle>
-            <CardDescription>Overview of the current hiring pipeline.</CardDescription>
+            <CardTitle className="font-headline">Hiring Overview</CardTitle>
+            <CardDescription>Comparison of applications vs. successful hires this year.</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={recruitmentData}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+              <BarChart data={hiringData}>
+                <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
+                    backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "var(--radius)",
                   }}
-                  labelStyle={{ color: "hsl(var(--foreground))" }}
+                  labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 'bold' }}
+                  itemStyle={{textTransform: 'capitalize'}}
+                  cursor={{fill: "hsl(var(--accent))"}}
                 />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Legend iconType="circle" iconSize={10} />
+                <Bar dataKey="applied" fill="hsl(var(--primary) / 0.3)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="hired" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -214,30 +221,25 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Quick Actions</CardTitle>
-            <CardDescription>Your most common tasks, just a click away.</CardDescription>
+            <CardTitle className="font-headline">Recent Activity</CardTitle>
+            <CardDescription>Latest updates across the platform.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <Link href="/dashboard/employees" className="w-full">
-              <Button className="w-full justify-start" variant="outline">
-                <Users className="mr-2 h-4 w-4" /> Add New Employee
-              </Button>
-            </Link>
-            <Link href="/dashboard/recruitment" className="w-full">
-              <Button className="w-full justify-start" variant="outline">
-                <PlusCircle className="mr-2 h-4 w-4" /> Post New Job
-              </Button>
-            </Link>
-             <Link href="/dashboard/payroll" className="w-full">
-              <Button className="w-full justify-start" variant="outline">
-                <FileText className="mr-2 h-4 w-4" /> Generate Payslips
-              </Button>
-            </Link>
-             <Link href="/dashboard/performance" className="w-full">
-              <Button className="w-full justify-start" variant="outline">
-                <Activity className="mr-2 h-4 w-4" /> Start Performance Review
-              </Button>
-            </Link>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivities.map((item, index) => (
+                <div key={index} className="flex items-center gap-4">
+                    <Avatar className="h-9 w-9">
+                        {item.avatar ? <AvatarImage src={item.avatar} data-ai-hint="person avatar" /> : null}
+                        <AvatarFallback>{item.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                        <p className="text-sm font-medium leading-none">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.activity}</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">{item.time}</div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>

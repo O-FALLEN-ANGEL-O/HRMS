@@ -187,7 +187,7 @@ export default function DashboardLayout({
   
   if (loading || !user) {
     return (
-        <div className="flex h-screen items-center justify-center">
+        <div className="flex h-screen items-center justify-center bg-background">
             <p>Loading...</p>
         </div>
     )
