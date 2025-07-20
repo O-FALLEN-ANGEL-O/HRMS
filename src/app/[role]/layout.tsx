@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,7 +21,7 @@ import { useAuth } from '@/hooks/use-auth';
 import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
 } from '@/components/ui/tooltip';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Bell } from 'lucide-react';
 
 const allNavItems = [
