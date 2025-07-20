@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Edit, AtSign, Phone, Briefcase } from "lucide-react";
+import { Edit, AtSign, Phone, Briefcase, User } from "lucide-react";
 
 function ProfileInfo() {
   const { user } = useAuth();
@@ -44,6 +44,10 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
+       <div className="pb-4">
+          <h1 className="text-3xl font-bold font-headline">Profile</h1>
+          <p className="text-muted-foreground">View and manage your personal details.</p>
+        </div>
        <Card>
         <CardHeader className="relative">
             <div className="absolute top-4 right-4">

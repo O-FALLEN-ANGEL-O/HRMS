@@ -37,6 +37,8 @@ import {
   Bot,
   TrendingUp,
   FileCheck,
+  ChevronDown,
+  User,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -52,6 +54,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/hooks/use-auth';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 const adminNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -68,36 +72,48 @@ const adminNavItems = [
 
 const employeeNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/profile", icon: User, label: "Profile" },
+  { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
   { href: "/leaves", icon: CalendarDays, label: "My Leaves" },
   { href: "/helpdesk", icon: FileQuestion, label: "My Tickets" },
   { href: "/assessments", icon: GraduationCap, label: "Assessments" },
-  { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
 ]
 
 function DashboardSidebar() {
   const pathname = usePathname();
   const params = useParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const role = user?.role || params.role as string;
+  const [isAiToolsOpen, setIsAiToolsOpen] = React.useState(false);
+  
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   const navItems = role === 'admin' ? adminNavItems : employeeNavItems;
-
+  
+  const getBasePath = (path: string) => {
+    return `/${path.split('/')[1]}/${path.split('/')[2]}`;
+  }
+  const currentBasePath = getBasePath(pathname);
+  
   return (
     <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader>
-        <Logo />
+      <SidebarHeader className="p-4 justify-between">
+        <Logo className="text-sidebar-foreground" />
+        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
           {navItems.map((item) => {
             const itemPath = `/${role}${item.href}`;
-            const currentBasePath = `/${pathname.split('/')[2]}`;
-            
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={item.href === currentBasePath}
+                  isActive={currentBasePath === itemPath}
                   tooltip={{ children: item.label }}
                 >
                   <Link href={itemPath}>
@@ -109,58 +125,62 @@ function DashboardSidebar() {
             )
           })}
            {role === 'admin' && (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton tooltip={{children: 'AI Tools'}}>
-                        <LayoutGrid />
-                        <span>AI Tools</span>
+             <Collapsible open={isAiToolsOpen} onOpenChange={setIsAiToolsOpen}>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                        className="justify-between group/button"
+                        >
+                        <div className="flex items-center gap-2">
+                            <Bot />
+                            <span>AI Tools</span>
+                        </div>
+                        <ChevronDown className={cn("transition-transform duration-200 group-data-[collapsible=icon]/sidebar-wrapper:hidden", isAiToolsOpen && "rotate-180")} />
                     </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start" className="ml-2">
-                    <DropdownMenuLabel>All Tools</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                        <FileCheck className="mr-2 h-4 w-4" />
-                        <span>Review Analyzer</span>
-                    </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <Bot className="mr-2 h-4 w-4" />
-                        <span>HR Chatbot</span>
-                    </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <TrendingUp className="mr-2 h-4 w-4" />
-                        <span>Leave Spike Predictor</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+                    <div className="pl-8 flex flex-col gap-1 py-1">
+                        <Link href="#" className="text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground">Review Analyzer</Link>
+                        <Link href="#" className="text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground">HR Chatbot</Link>
+                        <Link href="#" className="text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground">Leave Spike Predictor</Link>
+                    </div>
+                </CollapsibleContent>
+             </Collapsible>
           )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname.endsWith('/settings')}
-              tooltip={{ children: 'Settings' }}
-            >
-              <Link href={`/${role}/settings`}>
-                <Settings />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip={{ children: 'Support' }}
-            >
-              <Link href="#">
-                <LifeBuoy />
-                <span>Support</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 p-2 rounded-md w-full hover:bg-sidebar-accent/10">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="person avatar" />
+                        <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                    </Avatar>
+                     <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+                        {user?.profile?.name || user?.email}
+                     </span>
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start" className="mb-2">
+                <DropdownMenuLabel>{user ? user.email : 'My Account'}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push(`/${role}/profile`)}>
+                    <CircleUser className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
@@ -168,62 +188,22 @@ function DashboardSidebar() {
 }
 
 function DashboardHeader() {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-  const params = useParams();
-  const role = user?.role || params.role as string;
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-  
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
-      <SidebarTrigger className="h-8 w-8" />
+      <div className="md:hidden">
+        <SidebarTrigger className="h-8 w-8" />
+      </div>
       <div className="w-full flex-1">
-        <form>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search features, employees..."
-              className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
-            />
-          </div>
-        </form>
+        {/* Header content can go here if needed, like breadcrumbs */}
       </div>
       <Button variant="ghost" size="icon" className="rounded-full">
         <Bell className="h-5 w-5" />
         <span className="sr-only">Toggle notifications</span>
       </Button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="person avatar" />
-              <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{user ? user.email : 'My Account'}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push(`/${role}/profile`)}>
-            <CircleUser className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+       <Button variant="ghost" size="icon" className="rounded-full">
+        <Settings className="h-5 w-5" />
+        <span className="sr-only">Settings</span>
+      </Button>
     </header>
   );
 }
@@ -257,9 +237,6 @@ export default function DashboardLayout({
         </div>
     )
   }
-  
-  // This layout is now a wrapper. The actual content is in role-specific sub-layouts or pages.
-  // We need to ensure that the router has the correct `role` param to construct URLs.
   
   return (
     <SidebarProvider>
