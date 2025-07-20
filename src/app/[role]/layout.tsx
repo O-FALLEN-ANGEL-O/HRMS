@@ -41,7 +41,7 @@ const allNavItems = [
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'admin'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
   { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
 ];
