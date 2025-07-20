@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react";
-import { PlusCircle, MoreVertical, GripVertical, FileText, Bot } from "lucide-react";
+import Link from 'next/link';
+import { PlusCircle, MoreVertical, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,7 +30,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { scoreResume } from "@/ai/flows/score-resume";
 import { suggestInterviewQuestions } from "@/ai/flows/suggest-interview-questions";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 
@@ -227,9 +227,16 @@ export default function RecruitmentPage() {
           <h1 className="text-3xl font-bold font-headline">Recruitment</h1>
           <p className="text-muted-foreground">Manage your hiring pipeline efficiently.</p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Post New Job
-        </Button>
+        <div className="flex gap-2">
+            <Link href="/dashboard/recruitment/parse">
+                <Button variant="outline">
+                    <Bot className="mr-2 h-4 w-4" /> Parse Resume
+                </Button>
+            </Link>
+            <Button>
+            <PlusCircle className="mr-2 h-4 w-4" /> Post New Job
+            </Button>
+        </div>
       </div>
 
       <div className="flex-grow flex flex-col">
