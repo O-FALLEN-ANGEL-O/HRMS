@@ -74,37 +74,35 @@ function AppSidebar() {
   const navItems = allNavItems.filter((item) => item.roles.includes(role));
 
   const SidebarNav = ({ mobile = false }: { mobile?: boolean }) => (
-    <TooltipProvider delayDuration={0}>
-        <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
-            {navItems.map((item) => {
-            const isActive = item.href === '/dashboard'
-                ? currentBasePath === '/dashboard' || currentBasePath === ''
-                : currentBasePath.startsWith(item.href) && item.href !== '/dashboard';
+    <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
+        {navItems.map((item) => {
+        const isActive = item.href === '/dashboard'
+            ? currentBasePath === '/dashboard' || currentBasePath === ''
+            : currentBasePath.startsWith(item.href) && item.href !== '/dashboard';
 
-            const linkContent = (
-              <div className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors ${isActive ? 'bg-primary/80' : ''}`}>
-                  <item.icon className="h-5 w-5" />
-                  {(isExpanded || mobile) && <span className="text-sm">{item.label}</span>}
-              </div>
-            );
+        const linkContent = (
+          <div className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors ${isActive ? 'bg-primary/80' : ''}`}>
+              <item.icon className="h-5 w-5" />
+              {(isExpanded || mobile) && <span className="text-sm">{item.label}</span>}
+          </div>
+        );
 
-            return (
-              <Tooltip key={item.href}>
-                <TooltipTrigger asChild>
-                  <Link href={`/${role}${item.href}`}>
-                    {linkContent}
-                  </Link>
-                </TooltipTrigger>
-                {!isExpanded && !mobile && (
-                  <TooltipContent side="right">
-                    <p>{item.label}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            );
-            })}
-        </nav>
-    </TooltipProvider>
+        return (
+          <Tooltip key={item.href}>
+            <TooltipTrigger asChild>
+              <Link href={`/${role}${item.href}`}>
+                {linkContent}
+              </Link>
+            </TooltipTrigger>
+            {!isExpanded && !mobile && (
+              <TooltipContent side="right">
+                <p>{item.label}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        );
+        })}
+    </nav>
   )
   
   return (
@@ -119,19 +117,21 @@ function AppSidebar() {
           ${isExpanded ? 'w-64' : 'w-20'}
         `}
       >
-        <div className={`flex items-center h-16 w-full px-4 shrink-0 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
-            <Logo className="text-white" />
-        </div>
-        <SidebarNav/>
-         <div className="mt-auto p-4 space-y-4">
-            <Separator className="bg-slate-700" />
-            <h3 className={`text-sm font-semibold px-2 ${!isExpanded && 'sr-only'}`}>Weekly Winners</h3>
-            <div className="space-y-3">
-                {leaderboardWinners.map(winner => (
-                    <LeaderboardCard key={winner.empId} {...winner} isExpanded={isExpanded} />
-                ))}
+        <TooltipProvider delayDuration={0}>
+            <div className={`flex items-center h-16 w-full px-4 shrink-0 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
+                <Logo className="text-white" />
             </div>
-        </div>
+            <SidebarNav/>
+            <div className="mt-auto p-4 space-y-4">
+                <Separator className="bg-slate-700" />
+                <h3 className={`text-sm font-semibold px-2 ${!isExpanded && 'sr-only'}`}>Weekly Winners</h3>
+                <div className="space-y-3">
+                    {leaderboardWinners.map(winner => (
+                        <LeaderboardCard key={winner.empId} {...winner} isExpanded={isExpanded} />
+                    ))}
+                </div>
+            </div>
+        </TooltipProvider>
       </aside>
     </>
   );
