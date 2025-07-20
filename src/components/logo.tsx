@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from "framer-motion";
+import { cn } from '@/lib/utils';
 
 export function Logo({ className }: { className?: string }) {
   const iconVariants = {
@@ -11,11 +12,11 @@ export function Logo({ className }: { className?: string }) {
     }
   }
   return (
-    <div className={`inline-flex items-center gap-2 font-headline text-xl font-bold ${className}`}>
+    <div className={cn("inline-flex items-center gap-2 font-headline text-xl font-bold", className)}>
         <motion.svg 
             xmlns="http://www.w3.org/2000/svg" 
-            width="24" 
-            height="24" 
+            width="28" 
+            height="28" 
             viewBox="0 0 24 24" 
             fill="none"
             stroke="currentColor" 
@@ -52,7 +53,7 @@ export function Logo({ className }: { className?: string }) {
                 }}
             />
         </motion.svg>
-        <span>OptiTalent</span>
+        <span className="group-data-[collapsible=icon]:hidden">OptiTalent</span>
     </div>
   );
 }
