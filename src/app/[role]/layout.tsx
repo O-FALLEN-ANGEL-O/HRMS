@@ -1,4 +1,5 @@
 
+
 // Updated Responsive Sidebar with:
 // - Animated toggle on hover/click
 // - Adaptive mobile drawer
@@ -13,7 +14,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
   GraduationCap, Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings, Bell
+  PackagePlus, Settings, Bell, Fingerprint
 } from 'lucide-react';
 
 import { Logo } from '@/components/logo';
@@ -35,10 +36,11 @@ const allNavItems = [
   { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
   { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr'] },
+  { href: '/attendance', icon: Fingerprint, label: 'Attendance', roles: ['admin', 'employee', 'manager', 'hr'] },
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
   { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
 ];
