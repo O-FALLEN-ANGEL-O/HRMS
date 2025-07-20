@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
-  GraduationCap, Newspaper, CalendarDays, Menu, FileText, CreditCard,
+  Newspaper, CalendarDays, Menu, FileText, CreditCard,
   PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon
 } from 'lucide-react';
 
@@ -41,8 +41,8 @@ const allNavItems = [
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter'] },
-  { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee'] },
+  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
+  { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee', 'manager', 'hr'] },
   { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
 ];
 
@@ -105,14 +105,14 @@ function AppSidebar() {
       <aside
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
+        data-collapsible={isExpanded ? '' : 'icon'}
         className={`
-          hidden md:flex flex-col fixed top-0 left-0 z-50 h-full bg-slate-900 text-slate-200 transition-all duration-300
+          group hidden md:flex flex-col fixed top-0 left-0 z-50 h-full bg-slate-900 text-slate-200 transition-all duration-300
           ${isExpanded ? 'w-56' : 'w-20'}
         `}
       >
         <div className={`flex items-center h-16 w-full px-4 shrink-0 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
-          <Logo className="text-white" />
-          {isExpanded && <span className="ml-2 font-bold text-white text-lg">OptiTalent</span>}
+            <Logo className="text-white" showText={isExpanded} />
         </div>
         <SidebarNav/>
       </aside>

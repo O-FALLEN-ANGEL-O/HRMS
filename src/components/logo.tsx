@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, showText = true }: { className?: string, showText?: boolean }) {
   const iconVariants = {
     hidden: {
       pathLength: 0,
@@ -53,7 +53,7 @@ export function Logo({ className }: { className?: string }) {
                 }}
             />
         </motion.svg>
-        <span className="group-data-[collapsible=icon]:hidden">OptiTalent</span>
+        {showText && <span className="group-data-[collapsible=icon]:hidden">OptiTalent</span>}
     </div>
   );
 }
