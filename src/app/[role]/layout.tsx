@@ -1,6 +1,5 @@
 
 
-
 // Updated Responsive Sidebar with:
 // - Animated toggle on hover/click
 // - Adaptive mobile drawer
