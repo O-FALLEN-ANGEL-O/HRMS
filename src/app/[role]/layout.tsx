@@ -33,10 +33,21 @@ import {
   CalendarDays,
   User,
   Menu,
+  FileText,
+  DollarSign,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,8 +58,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/hooks/use-auth';
+import { Separator } from '@/components/ui/separator';
 
-const navItems = [
+const adminNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/recruitment", icon: Briefcase, label: "Recruitment" },
   { href: "/onboarding", icon: PackagePlus, label: "Onboarding" },
@@ -59,21 +71,30 @@ const navItems = [
   { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
   { href: "/assessments", icon: GraduationCap, label: "Assessments" },
   { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
-  { href: "/profile", icon: User, label: "Profile" },
   { href: "/settings", icon: Settings, label: "Settings" },
+];
+
+const employeeNavItems = [
+    { href: "/dashboard", icon: Home, label: "Dashboard" },
+    { href: "/profile", icon: User, label: "My Profile" },
+    { href: "/leaves", icon: CalendarDays, label: "My Leaves" },
+    { href: "/assessments", icon: GraduationCap, label: "My Assessments" },
+    { href: "/company-feed", icon: Newspaper, label: "Company Feed" },
+    { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
+    { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
 
 function DashboardSidebar() {
   const pathname = usePathname();
   const params = useParams();
-  const role = params.role as string;
+  const { user } = useAuth();
+  const role = user?.role || params.role as string;
+
+  const navItems = role === 'admin' ? adminNavItems : employeeNavItems;
   
   const getBasePath = (path: string) => {
     const segments = path.split('/');
-    // Assumes URL structure is /[role]/[page] or /[role]/[page]/[subpage]
-    // e.g., /admin/dashboard -> /dashboard
-    // e.g., /employee/recruitment -> /recruitment
     return '/' + segments.slice(2).join('/');
   }
   const currentBasePath = getBasePath(pathname);
@@ -88,7 +109,6 @@ function DashboardSidebar() {
         <SidebarMenu>
           {navItems.map((item) => {
             const itemPath = item.href.startsWith('/') ? item.href : `/${item.href}`;
-             // Special case for dashboard vs other pages
             const isActive = item.href === '/dashboard' 
                 ? currentBasePath === '/dashboard'
                 : currentBasePath.startsWith(itemPath) && item.href !== '/dashboard';
@@ -111,29 +131,89 @@ function DashboardSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                    <Avatar className="h-9 w-9">
-                        <AvatarImage src={`https://placehold.co/100x100?text=A`} alt="User avatar" data-ai-hint="person avatar" />
-                        <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                    <span className="truncate">Admin User</span>
-                </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" className="w-56 mb-2 ml-2">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Log out</DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+         {/* Footer content can be added here later */}
       </SidebarFooter>
     </Sidebar>
   );
 }
+
+const notifications = [
+    {
+        icon: FileText,
+        title: "New applicant assigned",
+        description: "John Doe has been assigned to you for the Software Engineer role.",
+        time: "5m ago",
+        read: false
+    },
+    {
+        icon: CalendarDays,
+        title: "Leave request approved",
+        description: "Your leave request for Dec 25th has been approved.",
+        time: "1h ago",
+        read: false
+    },
+    {
+        icon: DollarSign,
+        title: "Payroll processed",
+        description: "July's payroll has been successfully processed and disbursed.",
+        time: "1d ago",
+        read: true
+    },
+    {
+        icon: AlertCircle,
+        title: "Urgent: IT Ticket #4452",
+        description: "Server room temperature is critical. Immediate action required.",
+        time: "2d ago",
+        read: true
+    }
+];
+
+function NotificationPanel() {
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="sr-only">Toggle notifications</span>
+                    <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary/80"></span>
+                    </span>
+                </Button>
+            </SheetTrigger>
+            <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
+                <SheetHeader>
+                    <SheetTitle>Notifications</SheetTitle>
+                </SheetHeader>
+                <div className="flex-grow overflow-y-auto -mx-6 px-6">
+                    <div className="space-y-4">
+                        {notifications.map((item, index) => {
+                           const Icon = item.icon
+                           return (
+                               <div key={index} className="flex items-start gap-4">
+                                   <div className={`mt-1 p-2 rounded-full ${!item.read ? 'bg-primary/10' : 'bg-muted'}`}>
+                                       <Icon className={`h-5 w-5 ${!item.read ? 'text-primary' : 'text-muted-foreground'}`} />
+                                   </div>
+                                   <div className="flex-1">
+                                       <p className={`font-medium ${!item.read ? 'font-semibold' : ''}`}>{item.title}</p>
+                                       <p className="text-sm text-muted-foreground">{item.description}</p>
+                                       <p className="text-xs text-muted-foreground mt-1">{item.time}</p>
+                                   </div>
+                                    {!item.read && <div className="mt-1 h-2 w-2 rounded-full bg-primary"/>}
+                               </div>
+                           )
+                        })}
+                    </div>
+                </div>
+                <Separator/>
+                <div className="text-center">
+                    <Button variant="ghost" size="sm">Mark all as read</Button>
+                </div>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
 
 function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -156,10 +236,7 @@ function DashboardHeader() {
       <div className="w-full flex-1">
          {/* Can add breadcrumbs or page title here */}
       </div>
-       <Button variant="ghost" size="icon" className="rounded-full">
-        <Bell className="h-5 w-5" />
-        <span className="sr-only">Toggle notifications</span>
-      </Button>
+       <NotificationPanel />
        <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="rounded-full p-0 h-9 w-9">
