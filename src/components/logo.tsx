@@ -34,7 +34,7 @@ export function Logo({ className }: { className?: string }) {
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 0.3, ease: "easeInOut" },
+                    default: { duration: 1, ease: "easeInOut", repeat: Infinity, repeatType: "loop", repeatDelay: 1 },
                 }}
             />
             <motion.path
@@ -43,7 +43,7 @@ export function Logo({ className }: { className?: string }) {
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 0.3, ease: "easeInOut", delay: 0.1 },
+                    default: { duration: 1, ease: "easeInOut", delay: 0.2, repeat: Infinity, repeatType: "loop", repeatDelay: 1 },
                 }}
             />
             <motion.path
@@ -52,7 +52,7 @@ export function Logo({ className }: { className?: string }) {
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 0.3, ease: "easeInOut", delay: 0.2 },
+                    default: { duration: 1, ease: "easeInOut", delay: 0.4, repeat: Infinity, repeatType: "loop", repeatDelay: 1 },
                 }}
             />
         </motion.svg>
