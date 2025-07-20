@@ -22,8 +22,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
-const initialLeaveRequests = [
+type LeaveRequest = {
+    id: string;
+    employee: string;
+    leaveType: 'Sick Leave' | 'Casual Leave' | 'Paid Time Off' | 'Work From Home';
+    dates: string;
+    days: number;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    reason: string;
+};
+
+const initialLeaveRequests: LeaveRequest[] = [
   {
     id: 'LR-001',
     employee: 'Ravi Kumar',
@@ -62,8 +73,96 @@ const initialLeaveRequests = [
   },
 ];
 
-export default function LeaveManagementPage() {
+
+function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) {
     const [open, setOpen] = useState(false);
+    const { toast } = useToast();
+    const { user } = useAuth();
+  
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const formData = new FormData(e.currentTarget);
+      const leaveType = formData.get('leave-type') as LeaveRequest['leaveType'];
+      const fromDate = formData.get('from-date') as string;
+      const toDate = formData.get('to-date') as string;
+      const reason = formData.get('reason') as string;
+  
+      if (!leaveType || !fromDate || !toDate || !reason) {
+        toast({ title: 'Missing fields', description: 'Please fill out all fields.', variant: 'destructive' });
+        return;
+      }
+  
+      const days = (new Date(toDate).getTime() - new Date(fromDate).getTime()) / (1000 * 3600 * 24) + 1;
+  
+      const newRequest: LeaveRequest = {
+        id: `LR-${String(Math.floor(Math.random() * 900) + 100)}`,
+        employee: user?.profile?.name || 'Current User',
+        leaveType,
+        dates: `${fromDate} to ${toDate}`,
+        days: days,
+        status: 'Pending',
+        reason,
+      };
+  
+      onApply(newRequest);
+      toast({ title: 'Request Submitted', description: 'Your leave request has been submitted for approval.' });
+      setOpen(false);
+    };
+
+    return (
+         <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Apply for Leave
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Apply for Leave</DialogTitle>
+                    <DialogDescription>Fill out the form to request time off.</DialogDescription>
+                </DialogHeader>
+                 <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="leave-type">Leave Type</Label>
+                            <Select name="leave-type" required>
+                                <SelectTrigger id="leave-type">
+                                    <SelectValue placeholder="Select a leave type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Sick Leave">Sick Leave</SelectItem>
+                                    <SelectItem value="Casual Leave">Casual Leave</SelectItem>
+                                    <SelectItem value="Paid Time Off">Paid Time Off (PTO)</SelectItem>
+                                    <SelectItem value="Work From Home">Work From Home</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="from-date">From</Label>
+                                <Input id="from-date" name="from-date" type="date" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="to-date">To</Label>
+                                <Input id="to-date" name="to-date" type="date" required />
+                            </div>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="reason">Reason</Label>
+                            <Textarea id="reason" name="reason" placeholder="Please provide a reason for your leave." required />
+                        </div>
+                     </div>
+                    <DialogFooter>
+                        <Button type="submit">Submit Request</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+export default function LeaveManagementPage() {
     const [leaveRequests, setLeaveRequests] = useState(initialLeaveRequests);
     const { toast } = useToast();
     const params = useParams();
@@ -97,6 +196,10 @@ export default function LeaveManagementPage() {
             description: `Leave request ${id} has been successfully ${newStatus.toLowerCase()}.`
         });
     };
+    
+    const handleApplyLeave = (newRequest: LeaveRequest) => {
+        setLeaveRequests(prev => [newRequest, ...prev]);
+    }
 
   return (
     <div className="space-y-6">
@@ -112,53 +215,7 @@ export default function LeaveManagementPage() {
                     Team Calendar
                 </Button>
             )}
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                    <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Apply for Leave
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Apply for Leave</DialogTitle>
-                        <DialogDescription>Fill out the form to request time off.</DialogDescription>
-                    </DialogHeader>
-                     <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="leave-type">Leave Type</Label>
-                            <Select>
-                                <SelectTrigger id="leave-type">
-                                    <SelectValue placeholder="Select a leave type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="sick">Sick Leave</SelectItem>
-                                    <SelectItem value="casual">Casual Leave</SelectItem>
-                                    <SelectItem value="pto">Paid Time Off (PTO)</SelectItem>
-                                    <SelectItem value="wfh">Work From Home</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="from-date">From</Label>
-                                <Input id="from-date" type="date" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="to-date">To</Label>
-                                <Input id="to-date" type="date" />
-                            </div>
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="reason">Reason</Label>
-                            <Textarea id="reason" placeholder="Please provide a reason for your leave." />
-                        </div>
-                     </div>
-                    <DialogFooter>
-                        <Button onClick={() => setOpen(false)}>Submit Request</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ApplyLeaveDialog onApply={handleApplyLeave} />
         </div>
       </div>
       

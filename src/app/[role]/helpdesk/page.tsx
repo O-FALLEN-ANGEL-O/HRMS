@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 type Message = {
     from: 'user' | 'support';
@@ -33,7 +34,7 @@ type Message = {
 type Ticket = {
     id: string;
     subject: string;
-    department: string;
+    department: 'IT' | 'HR' | 'Finance';
     status: 'Open' | 'In Progress' | 'Closed';
     priority: 'High' | 'Medium' | 'Low';
     lastUpdate: string;
@@ -82,10 +83,95 @@ const initialTickets: Ticket[] = [
   },
 ];
 
+
+function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => void}) {
+    const [open, setOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const subject = formData.get('subject') as string;
+        const department = formData.get('department') as 'IT' | 'HR' | 'Finance';
+        const description = formData.get('description') as string;
+
+        if (!subject || !department || !description) {
+            toast({
+                title: "Missing Information",
+                description: "Please fill out all fields to create a ticket.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        const newTicket: Ticket = {
+            id: `HD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
+            subject,
+            department,
+            description,
+            status: 'Open',
+            priority: 'Medium',
+            lastUpdate: 'Just now',
+            messages: [
+                { from: 'user', text: description, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+            ]
+        };
+
+        onNewTicket(newTicket);
+        toast({
+            title: "Ticket Created!",
+            description: `Your ticket ${newTicket.id} has been submitted.`
+        });
+        setOpen(false);
+    };
+
+    return (
+         <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button><PlusCircle className="mr-2 h-4 w-4" /> New Ticket</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Create a New Ticket</DialogTitle>
+                    <DialogDescription>Describe your issue, and we'll route it to the right department.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="department">Department</Label>
+                            <Select name="department" required>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a department" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="IT">IT Support</SelectItem>
+                                    <SelectItem value="HR">HR</SelectItem>
+                                    <SelectItem value="Finance">Finance</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="subject">Subject</Label>
+                            <Input id="subject" name="subject" placeholder="e.g., Password Reset" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea id="description" name="description" placeholder="Please describe your issue in detail." required />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Submit Ticket</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
 export default function HelpdeskPage() {
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
   const [selectedTicket, setSelectedTicket] = useState<Ticket>(tickets[0]);
-  const [openNewTicketDialog, setOpenNewTicketDialog] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
@@ -149,6 +235,11 @@ export default function HelpdeskPage() {
         setIsReplying(false);
     }, 1500);
   }
+  
+  const handleNewTicket = (ticket: Ticket) => {
+    setTickets(prev => [ticket, ...prev]);
+    setSelectedTicket(ticket);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -174,43 +265,7 @@ export default function HelpdeskPage() {
                 <h1 className="text-3xl font-headline tracking-tight">Helpdesk</h1>
                 <p className="text-muted-foreground">Get support for IT, HR, or Finance issues.</p>
             </div>
-            <Dialog open={openNewTicketDialog} onOpenChange={setOpenNewTicketDialog}>
-                <DialogTrigger asChild>
-                    <Button><PlusCircle className="mr-2 h-4 w-4" /> New Ticket</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                    <DialogTitle>Create a New Ticket</DialogTitle>
-                    <DialogDescription>Describe your issue, and we'll route it to the right department.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="department">Department</Label>
-                        <Select>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="it">IT Support</SelectItem>
-                            <SelectItem value="hr">HR</SelectItem>
-                            <SelectItem value="finance">Finance</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="subject">Subject</Label>
-                        <Input id="subject" placeholder="e.g., Password Reset" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea id="description" placeholder="Please describe your issue in detail." />
-                    </div>
-                    </div>
-                    <DialogFooter>
-                    <Button onClick={() => setOpenNewTicketDialog(false)}>Submit Ticket</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <NewTicketDialog onNewTicket={handleNewTicket} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-1 min-h-0">
         <Card className="md:col-span-1 lg:col-span-1 flex flex-col">
@@ -321,5 +376,3 @@ export default function HelpdeskPage() {
     </div>
   );
 }
-
-    

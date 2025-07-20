@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardCard } from '@/components/ui/dashboard-card';
+import { useRouter } from 'next/navigation';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -29,7 +30,12 @@ const teamLeaves = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
   const name = user?.profile?.name || user?.email?.split('@')[0] || 'User';
+  const role = user?.role || 'employee';
+
+  const isManager = role === 'manager' || role === 'hr' || role === 'admin';
 
   return (
     <div className="space-y-6">
@@ -41,7 +47,10 @@ export default function DashboardPage() {
                     <p className="text-indigo-200">Hope you are having a great day</p>
                 </div>
                 <div className="flex-shrink-0">
-                    <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30 border">
+                    <Button 
+                        className="bg-white/20 hover:bg-white/30 text-white border-white/30 border"
+                        onClick={() => router.push(`/${role}/attendance`)}
+                    >
                         Mark Attendance
                     </Button>
                     <p className="text-xs text-indigo-200 mt-1 text-right">Last punch: 18:00, Yesterday</p>
@@ -96,18 +105,20 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6">
-            <Card className="bg-yellow-100 border-yellow-300">
-                <CardContent className="p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <Gift className="h-6 w-6 text-yellow-700"/>
-                        <div>
-                            <p className="font-bold text-yellow-800">Happy Birthday!</p>
-                            <p className="text-sm text-yellow-700">15 people wished you</p>
+            {showBirthdayCard && (
+                <Card className="bg-yellow-100 border-yellow-300">
+                    <CardContent className="p-4 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <Gift className="h-6 w-6 text-yellow-700"/>
+                            <div>
+                                <p className="font-bold text-yellow-800">Happy Birthday!</p>
+                                <p className="text-sm text-yellow-700">15 people wished you</p>
+                            </div>
                         </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-yellow-700 hover:bg-yellow-200">X</Button>
-                </CardContent>
-            </Card>
+                        <Button variant="ghost" size="icon" className="text-yellow-700 hover:bg-yellow-200" onClick={() => setShowBirthdayCard(false)}>X</Button>
+                    </CardContent>
+                </Card>
+            )}
             <Card>
                 <CardHeader>
                     <CardTitle>Calendar</CardTitle>
@@ -118,13 +129,15 @@ export default function DashboardPage() {
                         selected={new Date()}
                         className="p-0"
                     />
-                    <Button variant="link" className="w-full justify-end">Go to Calendar</Button>
+                    <Button variant="link" className="w-full justify-end" onClick={() => router.push(isManager ? `/${role}/leaves/calendar` : `/${role}/leaves`)}>
+                        Go to Calendar
+                    </Button>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-base">Leave Balance</CardTitle>
-                    <Button variant="link" size="sm">See all</Button>
+                    <Button variant="link" size="sm" onClick={() => router.push(`/${role}/leaves`)}>See all</Button>
                 </CardHeader>
                 <CardContent className="flex justify-around items-center">
                     <div className="text-center">

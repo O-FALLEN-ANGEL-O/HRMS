@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -16,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -24,6 +26,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +36,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { autoAssignRoles } from '@/ai/flows/auto-assign-roles';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const initialEmployees = [
   {
@@ -84,8 +88,7 @@ const initialEmployees = [
 
 type Employee = typeof initialEmployees[0];
 
-
-function AddEmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: Employee) => void }) {
+function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employee: Employee) => void; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
   const [loading, setLoading] = useState(false);
@@ -126,7 +129,7 @@ function AddEmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: Employ
     }
     
     const newEmployee: Employee = {
-        id: (initialEmployees.length + 1).toString(),
+        id: (Math.random() * 1000).toString(),
         name,
         email,
         department,
@@ -147,10 +150,7 @@ function AddEmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: Employ
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button onClick={() => setIsOpen(true)}>
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Employee
-      </Button>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Employee</DialogTitle>
@@ -195,10 +195,15 @@ function AddEmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: Employ
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const router = useRouter();
 
   const handleAddEmployee = (newEmployee: Employee) => {
     setEmployees(prev => [...prev, newEmployee]);
   }
+
+  const handleDeactivate = (employeeId: string) => {
+    setEmployees(prev => prev.map(emp => emp.id === employeeId ? {...emp, status: 'Inactive'} : emp));
+  };
 
   return (
     <div>
@@ -207,7 +212,12 @@ export default function EmployeesPage() {
           <h1 className="text-3xl font-bold font-headline">Employees</h1>
           <p className="text-muted-foreground">Manage your organization's members.</p>
         </div>
-        <AddEmployeeDialog onAddEmployee={handleAddEmployee} />
+        <AddEmployeeDialog onAddEmployee={handleAddEmployee}>
+            <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Employee
+            </Button>
+        </AddEmployeeDialog>
       </div>
       <Card>
         <CardContent>
@@ -241,7 +251,7 @@ export default function EmployeesPage() {
                   <TableCell className="hidden md:table-cell">{employee.department}</TableCell>
                   <TableCell>{employee.role}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : ''}>
+                    <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
                       {employee.status}
                     </Badge>
                   </TableCell>
@@ -255,9 +265,10 @@ export default function EmployeesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => router.push('/admin/profile')}>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Deactivate</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(employee.id)}>Deactivate</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

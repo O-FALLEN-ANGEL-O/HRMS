@@ -8,6 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Edit, Mail, Phone, Plus, History, Gift, Award } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const MOCK_USERS = {
   Admin: { full_name: 'Admin User', email: 'admin@hrplus.com', avatar_url: '', id: 'PEP01', department: 'Administration', title: 'System Administrator' },
@@ -19,6 +25,101 @@ const MOCK_USERS = {
   'qa-analyst': { full_name: 'QA Analyst', email: 'qa@hrplus.com', avatar_url: '', id: 'PEP07', department: 'Quality', title: 'QA Analyst' },
   'process-manager': { full_name: 'Process Manager', email: 'pm@hrplus.com', avatar_url: '', id: 'PEP08', department: 'Operations', title: 'Process Manager' },
 };
+
+type UserData = typeof MOCK_USERS[keyof typeof MOCK_USERS];
+
+
+function AwardPointsDialog({ employee, children }: { employee: UserData, children: React.ReactNode}) {
+    const { toast } = useToast();
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        toast({ title: 'Points Awarded!', description: `You have awarded points to ${employee.full_name}` });
+    };
+    return (
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Award Bonus Points</DialogTitle>
+                    <DialogDescription>Recognize a colleague by awarding them bonus points.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <Input defaultValue={employee.id} disabled />
+                        <Input type="number" placeholder="Points" required />
+                        <Textarea placeholder="Reason for award (e.g., great teamwork!)" required />
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Award Points</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+function RedeemPointsDialog({ children }: { children: React.ReactNode}) {
+    const { toast } = useToast();
+     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        toast({ title: 'Redemption Submitted!', description: 'Your request to redeem points has been sent for approval.' });
+    };
+    return (
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Redeem Bonus Points</DialogTitle>
+                    <DialogDescription>Convert your points into rewards. Submit your request for approval.</DialogDescription>
+                </DialogHeader>
+                 <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <Input type="number" placeholder="Points to redeem" required />
+                        <Textarea placeholder="Notes for approver (optional)" />
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Submit for Approval</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+function EditProfileDialog({ employee, children }: { employee: UserData, children: React.ReactNode}) {
+    const { toast } = useToast();
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        toast({ title: 'Profile Updated!', description: 'Your profile information has been saved.' });
+    };
+    return (
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                    <DialogDescription>Update your personal and contact information.</DialogDescription>
+                </DialogHeader>
+                 <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="fullName">Full Name</Label>
+                            <Input id="fullName" defaultValue={employee.full_name} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input id="phone" defaultValue="(123) 456-7890" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Save Changes</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 
 export default function ProfilePage() {
     const params = useParams();
@@ -56,7 +157,9 @@ export default function ProfilePage() {
                                     <h1 className="text-3xl font-bold font-headline">{userData.full_name} ({userData.id})</h1>
                                     <p className="text-muted-foreground">{userData.department} / {userData.title}</p>
                                 </div>
-                                <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
+                                 <EditProfileDialog employee={userData}>
+                                    <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
+                                </EditProfileDialog>
                             </div>
                             <Separator className="my-4" />
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -106,7 +209,9 @@ export default function ProfilePage() {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>My Points</CardTitle>
-                                <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Award Points</Button>
+                                <AwardPointsDialog employee={userData}>
+                                    <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Award Points</Button>
+                                </AwardPointsDialog>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                <div className="flex items-center gap-4">
@@ -124,9 +229,11 @@ export default function ProfilePage() {
                                    <p className="text-sm text-muted-foreground">Balance points to redeem</p>
                                    <p className="text-5xl font-bold tracking-tighter">25,003</p>
                                </div>
-                               <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                                    <Gift className="mr-2 h-5 w-5"/> Redeem Now
-                                </Button>
+                               <RedeemPointsDialog>
+                                   <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                                        <Gift className="mr-2 h-5 w-5"/> Redeem Now
+                                    </Button>
+                               </RedeemPointsDialog>
                             </CardContent>
                         </Card>
                          <Card>
@@ -168,5 +275,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
