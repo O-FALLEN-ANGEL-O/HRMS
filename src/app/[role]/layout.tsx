@@ -14,7 +14,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
   Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon
+  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon, Star,
 } from 'lucide-react';
 
 import { Logo } from '@/components/logo';
@@ -32,18 +32,19 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetH
 
 
 const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
+  { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
   { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr'] },
   { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
   { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr'] },
   { href: '/attendance', icon: Fingerprint, label: 'Attendance', roles: ['admin', 'employee', 'manager', 'hr'] },
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
+  { href: '/quality', icon: Star, label: 'Quality', roles: ['qa-analyst'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
   { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee', 'manager', 'hr'] },
-  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter'] },
+  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
 ];
 
 const notifications = [

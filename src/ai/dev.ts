@@ -13,3 +13,4 @@ import '@/ai/flows/score-and-parse-resume.ts';
 import '@/ai/flows/categorize-ticket.ts';
 import '@/ai/flows/verify-face.ts';
 import '@/ai/flows/get-dashboard-data.ts';
+import '@/ai/flows/get-ticket-summary-flow.ts';

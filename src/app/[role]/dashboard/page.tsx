@@ -2,12 +2,13 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 
 import ManagerDashboard from '@/components/dashboards/manager-dashboard';
 import RecruiterDashboard from '@/components/dashboards/recruiter-dashboard';
 import EmployeeDashboard from '@/components/dashboards/employee-dashboard';
+import QaAnalystDashboard from '@/components/dashboards/qa-analyst-dashboard';
+import ProcessManagerDashboard from '@/components/dashboards/process-manager-dashboard';
 import { Logo } from '@/components/logo';
 
 export default function DashboardPage() {
@@ -35,6 +36,10 @@ export default function DashboardPage() {
         return <ManagerDashboard />;
       case 'recruiter':
         return <RecruiterDashboard />;
+      case 'qa-analyst':
+        return <QaAnalystDashboard />;
+      case 'process-manager':
+        return <ProcessManagerDashboard />;
       case 'employee':
       default:
         return <EmployeeDashboard />;

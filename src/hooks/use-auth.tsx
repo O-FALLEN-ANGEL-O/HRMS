@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface User {
   email: string;
-  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter';
+  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager';
   employeeId?: string;
   isNew?: boolean;
   // This would be expanded in a real app
