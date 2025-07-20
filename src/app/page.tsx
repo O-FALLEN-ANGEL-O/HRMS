@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/logo";
 import { useAuth } from '@/hooks/use-auth';
 import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -43,12 +44,13 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const emailRef = React.useRef<HTMLInputElement>(null);
+  const [role, setRole] = React.useState('admin');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if(emailRef.current?.value) {
-      login({email: emailRef.current.value});
-      router.push('/admin/dashboard');
+      login({email: emailRef.current.value, role });
+      router.push(`/${role}/dashboard`);
     }
   };
 
@@ -91,8 +93,20 @@ export default function LoginPage() {
                 <Label htmlFor="email">Email Address</Label>
                 <Input ref={emailRef} id="email" type="email" placeholder="name@company.com" required defaultValue="admin@optitalent.com"/>
               </div>
+               <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger id="role">
+                        <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="admin">Admin / HR</SelectItem>
+                        <SelectItem value="employee">Employee</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Send Magic Link
+                Sign In
               </Button>
             </form>
           </div>

@@ -46,7 +46,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/hooks/use-auth';
 
-const navItems = [
+const adminNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/recruitment", icon: Briefcase, label: "Recruitment" },
   { href: "/onboarding", icon: PackagePlus, label: "Onboarding" },
@@ -56,10 +56,18 @@ const navItems = [
   { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
 ];
 
+const employeeNavItems = [
+  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/helpdesk", icon: FileQuestion, label: "My Tickets" },
+]
+
 function DashboardSidebar() {
   const pathname = usePathname();
   const params = useParams();
-  const role = params.role || 'admin';
+  const { user } = useAuth();
+  const role = user?.role || 'employee';
+
+  const navItems = role === 'admin' ? adminNavItems : employeeNavItems;
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -121,8 +129,7 @@ function DashboardSidebar() {
 function DashboardHeader() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const params = useParams();
-  const role = params.role || 'admin';
+  const role = user?.role || 'employee';
 
   const handleLogout = () => {
     logout();
@@ -153,12 +160,12 @@ function DashboardHeader() {
           <Button variant="ghost" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
               <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="person avatar" />
-              <AvatarFallback>AD</AvatarFallback>
+              <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{user ? user.email : 'Admin Account'}</DropdownMenuLabel>
+          <DropdownMenuLabel>{user ? user.email : 'My Account'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
             <CircleUser className="mr-2 h-4 w-4" />
@@ -186,12 +193,17 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const params = useParams();
 
   React.useEffect(() => {
     if (!loading && !user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+    // Redirect if role in URL doesn't match user's role
+    if (!loading && user && params.role !== user.role) {
+      router.push(`/${user.role}/dashboard`);
+    }
+  }, [user, loading, router, params.role]);
   
   if (loading || !user) {
     return (

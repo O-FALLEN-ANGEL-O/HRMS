@@ -10,6 +10,9 @@ import {
   FileText,
   DollarSign,
   Flame,
+  CheckCircle2,
+  XCircle,
+  Clock
 } from "lucide-react"
 import Link from "next/link"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
@@ -41,6 +44,8 @@ import { predictBurnout } from "@/ai/flows/predict-burnout";
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { Progress } from '@/components/ui/progress';
 
 const hiringData = [
   { month: "Jan", hired: 5, applied: 60 },
@@ -144,7 +149,7 @@ function PredictBurnoutCard() {
   )
 }
 
-export default function DashboardPage() {
+function AdminDashboard() {
   return (
     <div className="flex flex-1 flex-col gap-4 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -247,4 +252,108 @@ export default function DashboardPage() {
       <PredictBurnoutCard />
     </div>
   )
+}
+
+function EmployeeDashboard() {
+  const { user } = useAuth();
+  
+  const onboardingTasks = [
+    { text: "Complete Your Profile", status: "completed" },
+    { text: "Upload Identity Documents", status: "completed" },
+    { text: "Sign Offer Letter", status: "pending" },
+    { text: "Watch Orientation Video", status: "incomplete" },
+  ];
+  
+  const completedTasks = onboardingTasks.filter(t => t.status === 'completed').length;
+  const progress = (completedTasks / onboardingTasks.length) * 100;
+  
+  const getIconForStatus = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      case 'pending':
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'incomplete':
+        return <XCircle className="h-5 w-5 text-red-500" />;
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Welcome, {user?.email.split('@')[0] || 'Employee'}!</CardTitle>
+          <CardDescription>Here's a quick overview of your dashboard.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>You are viewing the dashboard as an **Employee**.</p>
+        </CardContent>
+      </Card>
+      
+      <div className="grid md:grid-cols-2 gap-6">
+          <Card>
+              <CardHeader>
+                  <CardTitle>Onboarding Progress</CardTitle>
+                  <CardDescription>Complete these steps to finish your onboarding.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div className="flex items-center gap-4 mb-4">
+                      <Progress value={progress} className="w-full"/>
+                      <span className="text-sm font-semibold">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="space-y-3">
+                      {onboardingTasks.map((task, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-md bg-muted/50">
+                           <div className="flex items-center gap-3">
+                             {getIconForStatus(task.status)}
+                             <p className="text-sm font-medium">{task.text}</p>
+                           </div>
+                           <Button size="sm" variant={task.status === 'completed' ? 'ghost' : 'outline'} disabled={task.status === 'completed'}>
+                             {task.status === 'completed' ? 'Done' : 'Go'}
+                           </Button>
+                        </div>
+                      ))}
+                  </div>
+              </CardContent>
+          </Card>
+           <Card>
+              <CardHeader>
+                  <CardTitle>My Profile</CardTitle>
+                  <CardDescription>Your personal and employment details.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4">
+                      <Avatar className="h-20 w-20">
+                          <AvatarImage src="https://placehold.co/200x200?text=AD" data-ai-hint="person avatar"/>
+                          <AvatarFallback>AD</AvatarFallback>
+                      </Avatar>
+                      <div>
+                          <p className="text-lg font-bold">Alex Doe</p>
+                          <p className="text-muted-foreground">Software Engineer</p>
+                          <p className="text-sm text-muted-foreground">alex.doe@optitalent.com</p>
+                      </div>
+                  </div>
+                   <div className="text-sm space-y-1">
+                      <p><strong>Manager:</strong> Isabella Nguyen</p>
+                      <p><strong>Department:</strong> Engineering</p>
+                      <p><strong>Team:</strong> Frontend</p>
+                   </div>
+                   <Button className="w-full" variant="secondary">Edit Profile</Button>
+              </CardContent>
+          </Card>
+      </div>
+
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  const { user } = useAuth();
+  
+  if (user?.role === 'employee') {
+    return <EmployeeDashboard />;
+  }
+  
+  // Default to Admin Dashboard
+  return <AdminDashboard />;
 }
