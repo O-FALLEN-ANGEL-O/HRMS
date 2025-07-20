@@ -11,6 +11,7 @@ import { Logo } from "@/components/logo";
 import { useAuth } from '@/hooks/use-auth';
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from '@/hooks/use-toast';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -31,30 +32,144 @@ function MicrosoftIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function LoginPage() {
+function EmployeeLoginFlow() {
+  const router = useRouter();
+  const { login } = useAuth();
+  const { toast } = useToast();
+  const [step, setStep] = useState(1);
+  const [employeeId, setEmployeeId] = useState("EMP-007");
+  const [password, setPassword] = useState("password");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  const handleIdSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Mocking employee ID check. In a real app, this would be an API call.
+    if (employeeId === "EMP-007") {
+      setIsNewUser(false);
+    } else {
+      setIsNewUser(true);
+      setPassword('');
+    }
+    setStep(2);
+  };
+  
+  const handleFinalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(isNewUser && password !== confirmPassword) {
+      toast({
+        title: "Passwords do not match",
+        description: "Please re-enter your passwords.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    login({ email: `${employeeId}@optitalent.com`, role: 'employee', employeeId, isNew: isNewUser });
+    router.push('/employee/dashboard');
+  };
+  
+  const handleBack = () => {
+    setStep(1);
+    setPassword("password");
+    setConfirmPassword("");
+  }
+  
+  return (
+     <form onSubmit={step === 1 ? handleIdSubmit : handleFinalSubmit} className="space-y-4 pt-4">
+        {step === 2 && (
+             <Button variant="link" onClick={handleBack} className="p-0 h-auto">← Back to Employee ID</Button>
+        )}
+        <div className="space-y-2">
+            <Label htmlFor="employeeId">Employee ID</Label>
+            <Input 
+                id="employeeId" 
+                placeholder="e.g., OPT-12345" 
+                required 
+                value={employeeId} 
+                onChange={(e) => setEmployeeId(e.target.value)}
+                disabled={step === 2}
+            />
+        </div>
+
+        {step === 2 && (
+            isNewUser ? (
+                <>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Create Password</Label>
+                      <Input id="newPassword" type="password" required value={password} onChange={(e) => setPassword(e.target.value)}/>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Input id="confirmPassword" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}/>
+                    </div>
+                </>
+            ) : (
+                 <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+            )
+        )}
+        
+        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+            Continue
+        </Button>
+      </form>
+  )
+}
+
+function AdminLoginFlow() {
   const router = useRouter();
   const { login } = useAuth();
   const adminEmailRef = React.useRef<HTMLInputElement>(null);
-  const employeeIdRef = React.useRef<HTMLInputElement>(null);
-
+  
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if(adminEmailRef.current?.value) {
-      login({email: adminEmailRef.current.value, role: 'admin' });
+    if (adminEmailRef.current?.value) {
+      login({ email: adminEmailRef.current.value, role: 'admin' });
       router.push(`/admin/dashboard`);
     }
   };
 
-  const handleEmployeeLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if(employeeIdRef.current?.value) {
-      // In a real app, you'd check if the employee ID is new or existing.
-      // Here, we'll simulate it for demo purposes.
-      login({email: `${employeeIdRef.current.value}@optitalent.com`, role: 'employee', employeeId: employeeIdRef.current.value });
-      router.push(`/employee/dashboard`);
-    }
-  };
+  return (
+    <div className="space-y-4">
+        <div className="relative mt-4">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with SSO</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
+              <Button variant="outline" className="w-full">
+                  <GoogleIcon className="mr-2 h-5 w-5" />
+                  Google
+              </Button>
+              <Button variant="outline" className="w-full">
+                  <MicrosoftIcon className="mr-2 h-5 w-5" />
+                  Microsoft
+              </Button>
+          </div>
+        <form onSubmit={handleAdminLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="adminEmail">Email Address</Label>
+            <Input ref={adminEmailRef} id="adminEmail" type="email" placeholder="name@company.com" required defaultValue="admin@optitalent.com"/>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="adminPassword">Password</Label>
+            <Input id="adminPassword" type="password" required defaultValue="password" />
+          </div>
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+            Sign In
+          </Button>
+        </form>
+    </div>
+  )
+}
 
+export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">
@@ -71,7 +186,7 @@ export default function LoginPage() {
               <TabsTrigger value="employee">Employee</TabsTrigger>
               <TabsTrigger value="admin">Admin / Manager</TabsTrigger>
             </TabsList>
-            <TabsContent value="employee" className="space-y-4">
+            <TabsContent value="employee">
                <div className="relative mt-4">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
@@ -80,49 +195,10 @@ export default function LoginPage() {
                   <span className="bg-card px-2 text-muted-foreground">Sign in with your Employee ID</span>
                 </div>
               </div>
-              <form onSubmit={handleEmployeeLogin} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employeeId">Employee ID</Label>
-                  <Input ref={employeeIdRef} id="employeeId" placeholder="e.g., OPT-12345" required defaultValue="EMP-007" />
-                </div>
-                {/* Logic for password can be added here based on whether user is new or existing */}
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Continue
-                </Button>
-              </form>
+              <EmployeeLoginFlow />
             </TabsContent>
-            <TabsContent value="admin" className="space-y-4">
-              <div className="relative mt-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or continue with SSO</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
-                    <Button variant="outline" className="w-full">
-                        <GoogleIcon className="mr-2 h-5 w-5" />
-                        Google
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                        <MicrosoftIcon className="mr-2 h-5 w-5" />
-                        Microsoft
-                    </Button>
-                </div>
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="adminEmail">Email Address</Label>
-                  <Input ref={adminEmailRef} id="adminEmail" type="email" placeholder="name@company.com" required defaultValue="admin@optitalent.com"/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="adminPassword">Password</Label>
-                  <Input id="adminPassword" type="password" required defaultValue="password" />
-                </div>
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Sign In
-                </Button>
-              </form>
+            <TabsContent value="admin">
+              <AdminLoginFlow />
             </TabsContent>
           </Tabs>
         </CardContent>

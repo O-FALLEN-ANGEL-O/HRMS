@@ -7,6 +7,7 @@ interface User {
   email: string;
   role: 'admin' | 'employee';
   employeeId?: string;
+  isNew?: boolean;
   // This would be expanded in a real app
   profile?: {
     name?: string;
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // For now, we'll mock some partial data for employees.
     if (userData.role === 'employee' && !userData.profile) {
       userData.profile = {
-          name: 'Alex Doe',
+          name: userData.isNew ? 'New Employee' : 'Alex Doe',
           department: 'Technology',
           status: 'Active'
       };
