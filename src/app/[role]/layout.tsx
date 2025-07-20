@@ -95,6 +95,7 @@ function DashboardSidebar() {
   
   const getBasePath = (path: string) => {
     const segments = path.split('/');
+    // For a path like /admin/dashboard, this returns /dashboard
     return '/' + segments.slice(2).join('/');
   }
   const currentBasePath = getBasePath(pathname);
@@ -110,7 +111,9 @@ function DashboardSidebar() {
           {navItems.map((item) => {
             const itemPath = item.href.startsWith('/') ? item.href : `/${item.href}`;
             const isActive = item.href === '/dashboard' 
+                // Special case for dashboard to only match exactly
                 ? currentBasePath === '/dashboard'
+                // For other routes, check if the path starts with the item's href
                 : currentBasePath.startsWith(itemPath) && item.href !== '/dashboard';
 
             return (
@@ -317,7 +320,7 @@ export default function DashboardLayout({
       <DashboardSidebar />
       <SidebarInset>
         <DashboardHeader />
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-[#F5F5F5] dark:bg-muted/40">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/20 dark:bg-muted/40">
           {children}
         </main>
       </SidebarInset>
