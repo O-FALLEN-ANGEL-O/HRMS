@@ -1,3 +1,4 @@
+
 // Updated Responsive Sidebar with:
 // - Animated toggle on hover/click
 // - Adaptive mobile drawer
@@ -26,7 +27,7 @@ import { useAuth } from '@/hooks/use-auth';
 import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
 } from '@/components/ui/tooltip';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 
 const allNavItems = [
