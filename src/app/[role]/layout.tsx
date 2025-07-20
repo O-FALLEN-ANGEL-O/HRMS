@@ -14,7 +14,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Bell,
@@ -30,6 +29,7 @@ import {
   Users,
   BarChart,
   FileQuestion,
+  GraduationCap,
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
@@ -54,11 +54,13 @@ const adminNavItems = [
   { href: "/payroll", icon: CreditCard, label: "Payroll" },
   { href: "/performance", icon: BarChart, label: "Performance" },
   { href: "/helpdesk", icon: FileQuestion, label: "Helpdesk" },
+  { href: "/assessments", icon: GraduationCap, label: "Assessments" },
 ];
 
 const employeeNavItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/helpdesk", icon: FileQuestion, label: "My Tickets" },
+  { href: "/assessments", icon: GraduationCap, label: "Assessments" },
 ]
 
 function DashboardSidebar() {
@@ -78,11 +80,14 @@ function DashboardSidebar() {
         <SidebarMenu>
           {navItems.map((item) => {
             const itemPath = `/${role}${item.href}`;
+            const baseItemPath = itemPath.split('/')[2];
+            const currentBasePath = pathname.split('/')[2];
+
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === itemPath}
+                  isActive={baseItemPath === currentBasePath}
                   tooltip={{ children: item.label }}
                 >
                   <Link href={itemPath}>
