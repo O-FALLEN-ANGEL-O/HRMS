@@ -141,7 +141,7 @@ export default function CompanyFeedPage() {
             Stay up-to-date with the latest news and announcements.
           </p>
         </div>
-        {user?.role === 'admin' && <NewPostDialog onAddPost={handleAddPost} />}
+        {(user?.role === 'admin' || user?.role === 'hr') && <NewPostDialog onAddPost={handleAddPost} />}
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">
@@ -151,7 +151,7 @@ export default function CompanyFeedPage() {
               <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src={post.avatar} data-ai-hint="person avatar"/>
-                  <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{post.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
                   <CardTitle className="text-lg">{post.author}</CardTitle>
