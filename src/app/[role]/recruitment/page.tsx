@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import Link from 'next/link';
-import { PlusCircle, MoreVertical, Bot, Search, Filter, Link2 } from "lucide-react";
+import { Bot, Search, Filter, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,12 +13,6 @@ import {
   CardDescription
 } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {
   Table,
   TableBody,
   TableCell,
@@ -26,23 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { scoreResume } from "@/ai/flows/score-resume";
-import { suggestInterviewQuestions } from "@/ai/flows/suggest-interview-questions";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 type Applicant = {
   id: string;
@@ -60,6 +41,23 @@ const initialApplicants: Applicant[] = [
   { id: '4', name: 'Sneha Verma', avatar: 'https://placehold.co/100x100?text=SV', role: 'Senior Frontend Developer', appliedDate: '2023-10-22', status: 'Offer' },
   { id: '5', name: 'Vikram Singh', avatar: 'https://placehold.co/100x100?text=VS', role: 'DevOps Engineer', appliedDate: '2023-10-21', status: 'Hired' },
 ];
+
+
+const getStatusBadge = (status: Applicant['status']) => {
+    switch (status) {
+        case 'Interview':
+            return <Badge variant="default">Interview</Badge>;
+        case 'Offer':
+            return <Badge className="bg-blue-500 text-white">Offer</Badge>;
+        case 'Hired':
+            return <Badge className="bg-green-500 text-white">Hired</Badge>;
+        case 'Screening':
+            return <Badge variant="secondary">Screening</Badge>;
+        default:
+            return <Badge variant="outline">{status}</Badge>;
+    }
+}
+
 
 export default function RecruitmentPage() {
   const [applicants] = useState<Applicant[]>(initialApplicants);
@@ -89,7 +87,7 @@ export default function RecruitmentPage() {
                 <CardDescription>Track and manage all candidates in your hiring pipeline.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4">
                     <div className="relative flex-1 md:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input className="w-full pl-10" placeholder="Search by name..." type="text" />
@@ -113,20 +111,26 @@ export default function RecruitmentPage() {
                 <div className="mt-4 flow-root">
                     <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                            <Table className="min-w-full divide-y divide-gray-200">
+                            <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</TableHead>
-                                        <TableHead className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Applied For</TableHead>
-                                        <TableHead className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Applied Date</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Applied For</TableHead>
+                                        <TableHead>Applied Date</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody className="divide-y divide-gray-200 bg-white">
+                                <TableBody>
                                     {applicants.map((applicant) => (
                                         <TableRow key={applicant.id}>
-                                            <TableCell className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{applicant.name}</TableCell>
-                                            <TableCell className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{applicant.role}</TableCell>
-                                            <TableCell className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{applicant.appliedDate}</TableCell>
+                                            <TableCell className="font-medium">{applicant.name}</TableCell>
+                                            <TableCell>{applicant.role}</TableCell>
+                                            <TableCell>{applicant.appliedDate}</TableCell>
+                                            <TableCell>{getStatusBadge(applicant.status)}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm">View Profile</Button>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
