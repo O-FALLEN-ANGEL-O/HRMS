@@ -40,15 +40,15 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert payroll auditor. Your job is to review payroll data and identify any potential errors or discrepancies before the payroll is processed.
 
   Here's the payroll data you need to review (in JSON format):
-  ```json
+  \`\`\`json
   {{{payrollData}}}
-  ```
+  \`\`\`
 
   {{#if historicalData}}
   Here's some historical payroll data for comparison (in JSON format). Use it to help detect anomalies:
-  ```json
+  \`\`\`json
   {{{historicalData}}}
-  ```
+  \`\`\`
   {{/if}}
 
   Identify any potential errors, and explain why you believe each one is an error. Be specific and provide context. Classify the severity of each error as high, medium, or low.
