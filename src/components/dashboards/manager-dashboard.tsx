@@ -4,9 +4,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, CheckCircle, Clock, TrendingUp } from "lucide-react";
+import { Users, CheckCircle, Clock, TrendingUp, Award } from "lucide-react";
 import { TeamCard } from '@/components/team-card';
 import { DashboardCard } from '@/components/ui/dashboard-card';
+import { Input } from '../ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '../ui/textarea';
 
 // Mock Data
 const teamMembers = [
@@ -55,6 +58,21 @@ const pendingApprovals = [
 ];
 
 export default function ManagerDashboard() {
+  const { toast } = useToast();
+
+  const handleGiveAward = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const empId = formData.get('empId');
+    if (empId) {
+        toast({
+            title: 'Award Sent! 🎉',
+            description: `You've successfully given an award to ${empId}.`,
+        });
+        e.currentTarget.reset();
+    }
+  }
+
   return (
     <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -101,6 +119,22 @@ export default function ManagerDashboard() {
                 </Card>
             </div>
             <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Recognize a Peer</CardTitle>
+                        <CardDescription>Give an award to a deserving colleague.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form className="space-y-4" onSubmit={handleGiveAward}>
+                            <Input name="empId" placeholder="Enter Employee ID (e.g., EMP001)" required />
+                            <Textarea name="message" placeholder="Reason for award (optional)" />
+                            <Button type="submit" className="w-full">
+                                <Award className="mr-2 h-4 w-4" />
+                                Give Award
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle>Pending Approvals</CardTitle>
