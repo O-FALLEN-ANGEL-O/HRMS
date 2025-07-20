@@ -31,7 +31,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 1.2, ease: "easeInOut" },
+                    default: { duration: 0.6, ease: "easeInOut" },
                 }}
             />
             <motion.path
@@ -40,7 +40,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 1.2, ease: "easeInOut", delay: 0.3 },
+                    default: { duration: 0.6, ease: "easeInOut", delay: 0.15 },
                 }}
             />
             <motion.path
@@ -49,7 +49,7 @@ export function Logo({ className, showText = true }: { className?: string, showT
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 1.2, ease: "easeInOut", delay: 0.6 },
+                    default: { duration: 0.6, ease: "easeInOut", delay: 0.3 },
                 }}
             />
         </motion.svg>
