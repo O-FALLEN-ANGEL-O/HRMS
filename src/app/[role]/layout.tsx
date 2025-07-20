@@ -22,10 +22,8 @@ import {
   CircleUser,
   CreditCard,
   Home,
-  LifeBuoy,
   LogOut,
   PackagePlus,
-  Search,
   Settings,
   Users,
   BarChart,
@@ -33,10 +31,7 @@ import {
   GraduationCap,
   Newspaper,
   CalendarDays,
-  LayoutGrid,
   Bot,
-  TrendingUp,
-  FileCheck,
   ChevronDown,
   User,
 } from "lucide-react";
@@ -51,7 +46,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/hooks/use-auth';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -95,7 +89,11 @@ function DashboardSidebar() {
   const navItems = role === 'admin' ? adminNavItems : employeeNavItems;
   
   const getBasePath = (path: string) => {
-    return `/${path.split('/')[1]}/${path.split('/')[2]}`;
+    const segments = path.split('/');
+    if (segments.length > 2) {
+      return `/${segments[1]}/${segments[2]}`;
+    }
+    return `/${segments[1]}`;
   }
   const currentBasePath = getBasePath(pathname);
   
@@ -113,7 +111,7 @@ function DashboardSidebar() {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={currentBasePath === itemPath}
+                  isActive={currentBasePath === itemPath || (currentBasePath === `/${role}` && item.href === '/dashboard')}
                   tooltip={{ children: item.label }}
                 >
                   <Link href={itemPath}>

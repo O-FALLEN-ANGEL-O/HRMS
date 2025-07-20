@@ -1,5 +1,4 @@
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
 
 @layer base {
@@ -13,7 +12,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 258 68% 73%; /* light purple #A893E0 */
+    --primary: 258 68% 56%; /* A stronger purple */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -22,19 +21,19 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 258 68% 73%; /* light purple for active items */
-    --accent-foreground: 210 40% 98%; /* white for active item text */
+    --accent: 258 68% 96%; /* Lighter purple for accents */
+    --accent-foreground: 258 68% 30%; /* Darker purple for text on accent */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 258 68% 73%;
+    --ring: 258 68% 56%;
 
     --radius: 0.5rem;
 
-    --chart-1: 258 68% 73%;
+    --chart-1: 258 68% 56%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
@@ -42,12 +41,10 @@
     
     --sidebar-background: 248 35% 12%; /* dark purple */
     --sidebar-foreground: 240 5% 83%; /* light gray for text */
-    --sidebar-primary: 258 68% 73%; /* same as primary */
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 258 68% 73%; /* same as primary for hover/active */
+    --sidebar-accent: 258 68% 56%; /* same as primary for hover/active */
     --sidebar-accent-foreground: 210 40% 98%; /* white text on hover/active */
     --sidebar-border: 248 35% 20%;
-    --sidebar-ring: 258 68% 73%;
+    --sidebar-ring: 258 68% 56%;
   }
 
   .dark {
@@ -60,7 +57,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 258 68% 73%;
+    --primary: 258 68% 65%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -69,7 +66,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 258 68% 73%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -77,9 +74,9 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 258 68% 73%;
+    --ring: 258 68% 65%;
     
-    --chart-1: 258 68% 73%;
+    --chart-1: 258 68% 65%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
@@ -87,12 +84,10 @@
 
     --sidebar-background: 248 35% 12%;
     --sidebar-foreground: 240 5% 83%;
-    --sidebar-primary: 258 68% 73%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 258 68% 73%;
+    --sidebar-accent: 258 68% 65%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 248 35% 20%;
-    --sidebar-ring: 258 68% 73%;
+    --sidebar-ring: 258 68% 65%;
   }
 }
 
@@ -103,4 +98,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer components {
+    @tailwind components;
 }
