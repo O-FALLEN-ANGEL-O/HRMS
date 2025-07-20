@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/logo";
+import { useAuth } from '@/hooks/use-auth';
+import React from 'react';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -39,10 +41,15 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
+  const emailRef = React.useRef<HTMLInputElement>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/dashboard');
+    if(emailRef.current?.value) {
+      login({email: emailRef.current.value});
+      router.push('/dashboard');
+    }
   };
 
   return (
@@ -82,7 +89,7 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="name@company.com" required />
+                <Input ref={emailRef} id="email" type="email" placeholder="name@company.com" required defaultValue="admin@optitalent.com"/>
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                 Send Magic Link

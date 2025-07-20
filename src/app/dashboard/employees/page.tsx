@@ -34,7 +34,7 @@ import { Input } from '@/components/ui/input';
 import { autoAssignRoles } from '@/ai/flows/auto-assign-roles';
 import { useToast } from '@/hooks/use-toast';
 
-const employees = [
+const initialEmployees = [
   {
     id: "1",
     name: "Olivia Martin",
@@ -80,13 +80,19 @@ const employees = [
     status: "Active",
     avatar: "https://placehold.co/100x100?text=SD",
   },
-]
+];
 
-function AddEmployeeDialog() {
+type Employee = typeof initialEmployees[0];
+
+
+function AddEmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: Employee) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  
+  const nameRef = React.useRef<HTMLInputElement>(null);
+  const emailRef = React.useRef<HTMLInputElement>(null);
   const departmentRef = React.useRef<HTMLInputElement>(null);
   const jobTitleRef = React.useRef<HTMLInputElement>(null);
 
@@ -109,6 +115,36 @@ function AddEmployeeDialog() {
     setLoading(false);
   }
 
+  const handleSave = () => {
+    const name = nameRef.current?.value;
+    const email = emailRef.current?.value;
+    const department = departmentRef.current?.value;
+    
+    if (!name || !email || !department || !suggestedRole) {
+      toast({ title: "Missing Information", description: "Please fill all fields and suggest a role.", variant: "destructive" });
+      return;
+    }
+    
+    const newEmployee: Employee = {
+        id: (initialEmployees.length + 1).toString(),
+        name,
+        email,
+        department,
+        role: suggestedRole,
+        status: "Active",
+        avatar: `https://placehold.co/100x100?text=${name.split(' ').map(n => n[0]).join('')}`
+    };
+    onAddEmployee(newEmployee);
+    setIsOpen(false);
+    // Reset fields
+    setSuggestedRole('');
+    if(nameRef.current) nameRef.current.value = '';
+    if(emailRef.current) emailRef.current.value = '';
+    if(departmentRef.current) departmentRef.current.value = '';
+    if(jobTitleRef.current) jobTitleRef.current.value = '';
+    toast({ title: "Employee Added", description: `${name} has been added to the system.` });
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button onClick={() => setIsOpen(true)}>
@@ -125,11 +161,11 @@ function AddEmployeeDialog() {
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">Name</Label>
-            <Input id="name" className="col-span-3" />
+            <Input id="name" ref={nameRef} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="email" className="text-right">Email</Label>
-            <Input id="email" type="email" className="col-span-3" />
+            <Input id="email" type="email" ref={emailRef} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="department" className="text-right">Department</Label>
@@ -150,7 +186,7 @@ function AddEmployeeDialog() {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit">Save Employee</Button>
+          <Button onClick={handleSave}>Save Employee</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -158,6 +194,12 @@ function AddEmployeeDialog() {
 }
 
 export default function EmployeesPage() {
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+
+  const handleAddEmployee = (newEmployee: Employee) => {
+    setEmployees(prev => [...prev, newEmployee]);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between pb-4">
@@ -165,7 +207,7 @@ export default function EmployeesPage() {
           <h1 className="text-3xl font-bold font-headline">Employees</h1>
           <p className="text-muted-foreground">Manage your organization's members.</p>
         </div>
-        <AddEmployeeDialog />
+        <AddEmployeeDialog onAddEmployee={handleAddEmployee} />
       </div>
       <Card>
         <CardContent>
