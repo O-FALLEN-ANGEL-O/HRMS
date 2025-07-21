@@ -6,12 +6,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy, MoreHorizontal } from 'lucide-react';
+import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy, MoreHorizontal, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useRouter } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { initialEmployees } from '../employees/page';
+import { EmployeeDetailsCard } from '@/components/employee-details-card';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -58,6 +61,9 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
   const [posts, setPosts] = React.useState(initialPosts);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchedEmployee, setSearchedEmployee] = React.useState<typeof initialEmployees[0] | null>(null);
+
 
   const name = user?.profile?.name || user?.email?.split('@')[0] || 'User';
   const role = user?.role || 'employee';
@@ -89,6 +95,26 @@ export default function DashboardPage() {
       description: `This would typically expand or navigate to a new page for ${title}.`,
     });
   };
+  
+  const handleSearch = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!searchTerm) {
+          setSearchedEmployee(null);
+          return;
+      }
+      const foundEmployee = initialEmployees.find(emp => 
+        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        emp.id.toLowerCase() === searchTerm.toLowerCase()
+      );
+      setSearchedEmployee(foundEmployee || null);
+      if(!foundEmployee) {
+        toast({
+            title: "Employee Not Found",
+            description: `No employee found with the name or ID "${searchTerm}".`,
+            variant: "destructive"
+        })
+      }
+  }
 
   return (
     <div className="space-y-6">
@@ -157,6 +183,29 @@ export default function DashboardPage() {
 
             {/* Middle Column */}
             <div className="lg:col-span-2 space-y-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Employee Search</CardTitle>
+                        <CardDescription>Find an employee by their name or ID.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSearch} className="flex gap-2">
+                            <Input 
+                                placeholder="Search by name or employee ID..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <Button type="submit" variant="outline" size="icon">
+                                <Search className="h-4 w-4" />
+                            </Button>
+                        </form>
+                        {searchedEmployee && (
+                           <div className="mt-4">
+                             <EmployeeDetailsCard employee={searchedEmployee} />
+                           </div>
+                        )}
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle>Feed</CardTitle>
@@ -291,3 +340,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

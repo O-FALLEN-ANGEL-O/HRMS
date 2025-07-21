@@ -14,7 +14,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
   Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon, Star, Trophy,
+  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon, Star,
 } from 'lucide-react';
 
 import { Logo } from '@/components/logo';
@@ -31,8 +31,6 @@ import {
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
-import { LeaderboardCard } from '@/components/leaderboard-card';
-import { Separator } from '@/components/ui/separator';
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
@@ -54,12 +52,6 @@ const notifications = [
     { id: 1, icon: Users, text: "New applicant for 'Software Engineer'", time: '2m ago' },
     { id: 2, icon: CalendarDays, text: "Your leave request has been approved", time: '1h ago' },
     { id: 3, icon: CreditCard, text: "Payroll for July has been processed", time: '5h ago' },
-];
-
-const weeklyWinners = [
-    { rank: 1, name: 'Anika Sharma', empId: 'EMP006', image: 'https://placehold.co/100x100?text=AS', awards: 15, crown: 'gold' as const },
-    { rank: 2, name: 'Rohan Verma', empId: 'EMP007', image: 'https://placehold.co/100x100?text=RV', awards: 12, crown: 'silver' as const },
-    { rank: 3, name: 'Priya Mehta', empId: 'EMP008', image: 'https://placehold.co/100x100?text=PM', awards: 9, crown: 'bronze' as const },
 ];
 
 function AppSidebar() {
@@ -124,17 +116,8 @@ function AppSidebar() {
                 <Logo className="text-white" />
             </div>
             <SidebarNav/>
-            <div className="mt-auto p-4 space-y-4">
-                <Separator className="bg-slate-700"/>
-                <div className={`flex items-center gap-2 text-slate-400 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
-                    <Trophy className="h-5 w-5"/>
-                    {isExpanded && <h3 className="font-semibold text-sm">Weekly Winners</h3>}
-                </div>
-                 <div className="space-y-2">
-                    {weeklyWinners.map(winner => (
-                        <LeaderboardCard key={winner.empId} {...winner} isExpanded={isExpanded} />
-                    ))}
-                </div>
+            <div className="mt-auto p-4">
+              {/* Weekly winners removed from here */}
             </div>
         </TooltipProvider>
       </aside>
@@ -314,3 +297,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+
+    
