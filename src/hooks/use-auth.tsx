@@ -31,7 +31,6 @@ interface AuthContextType {
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  revalidateUser: () => Promise<void>;
   logout: () => Promise<any>;
   signUp: (data: any) => Promise<any>;
 }
@@ -87,13 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false);
   };
-  
-  const revalidateUser = async () => {
-    setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    await fetchUser(session?.user ?? null);
-    setLoading(false);
-  }
 
   useEffect(() => {
     // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
@@ -103,6 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
     }
     
+    const revalidateUser = async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetchUser(session?.user ?? null);
+      setLoading(false);
+    }
     // Fetch user on initial load
     revalidateUser();
 
@@ -190,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
-  const value = { user, loading, searchTerm, setSearchTerm, revalidateUser, logout, signUp };
+  const value = { user, loading, searchTerm, setSearchTerm, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

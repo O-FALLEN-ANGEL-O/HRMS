@@ -99,7 +99,7 @@ const demoAccounts = [
 
 export default function LoginPage() {
     const router = useRouter();
-    const { user, loading: authLoading, revalidateUser } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     
@@ -131,8 +131,9 @@ export default function LoginPage() {
             setLoading(false);
         } else {
             toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard.' });
-            await revalidateUser();
             // The onAuthStateChange listener in useAuth will handle the redirect.
+            // We just need to force a page reload to trigger it.
+            window.location.reload();
         }
     }
 

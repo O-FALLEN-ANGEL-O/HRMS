@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { createClient } from "@supabase/supabase-js";
@@ -79,32 +80,4 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
     };
     
     return { error: null, user };
-}
-
-export async function verifyOtp({ email, otp }: { email: string, otp: string }): Promise<{ success: boolean; error?: string }> {
-    const cookieStore = cookies();
-    const supabase = createClient(
-        SUPABASE_URL,
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ",
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll() },
-                set(name, value, options) { cookieStore.set({ name, value, ...options }) },
-                remove(name, options) { cookieStore.set({ name, value: '', ...options }) },
-            },
-        }
-    );
-
-    const { error } = await supabase.auth.verifyOtp({
-        email: email,
-        token: otp,
-        type: 'email',
-    });
-
-    if (error) {
-        console.error("OTP verification error:", error);
-        return { success: false, error: "Invalid OTP. Please check your email and try again." };
-    }
-
-    return { success: true };
 }
