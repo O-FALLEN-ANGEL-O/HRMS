@@ -10,6 +10,15 @@
 -- ----------------------------------------------------------------
 -- 1. Helper Functions & Types
 -- ----------------------------------------------------------------
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS leave_status CASCADE;
+DROP TYPE IF EXISTS ticket_status CASCADE;
+DROP TYPE IF EXISTS ticket_priority CASCADE;
+DROP TYPE IF EXISTS ticket_category CASCADE;
+DROP TYPE IF EXISTS asset_status CASCADE;
+DROP TYPE IF EXISTS assessment_type CASCADE;
+DROP TYPE IF EXISTS employee_status CASCADE;
+DROP TYPE IF EXISTS production_line_status CASCADE;
 
 -- Custom Types for Roles and Statuses
 CREATE TYPE user_role AS ENUM ('admin', 'hr', 'manager', 'employee', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager', 'guest');
@@ -53,21 +62,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ----------------------------------------------------------------
 -- 2. Core Tables
 -- ----------------------------------------------------------------
--- Departments Table
 CREATE TABLE IF NOT EXISTS departments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT UNIQUE NOT NULL,
-  head_id uuid, -- To be populated later, references employees.id
-  created_at TIMESTAMPTZ DEFAULT now()
+  name TEXT UNIQUE NOT NULL
 );
 
--- Employees Table
+-- Employees Table (replaces public.users, links to auth.users)
+-- Stores detailed employee information.
 CREATE TABLE IF NOT EXISTS employees (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_id TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
-  role user_role,
   job_title TEXT,
   department_id uuid REFERENCES departments(id),
   manager_id uuid REFERENCES employees(id),
@@ -75,28 +81,27 @@ CREATE TABLE IF NOT EXISTS employees (
   status employee_status DEFAULT 'Active',
   profile_picture_url TEXT,
   phone_number TEXT,
+  emergency_contact JSONB,
   bio TEXT,
   skills JSONB,
   linkedin_profile TEXT,
-  emergency_contact JSONB,
+  role user_role,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-ALTER TABLE departments
-ADD CONSTRAINT fk_department_head
-FOREIGN KEY (head_id) REFERENCES employees(id) ON DELETE SET NULL;
-
 -- Teams Table
+-- Defines teams within the organization.
 CREATE TABLE IF NOT EXISTS teams (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  department_id uuid NOT NULL REFERENCES departments(id),
+  department_id uuid REFERENCES departments(id),
   team_lead_id uuid REFERENCES employees(id),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Team Members Junction Table
+-- Links employees to teams.
 CREATE TABLE IF NOT EXISTS team_members (
   team_id uuid REFERENCES teams(id) ON DELETE CASCADE,
   employee_id uuid REFERENCES employees(id) ON DELETE CASCADE,
@@ -149,14 +154,6 @@ CREATE TABLE IF NOT EXISTS helpdesk_tickets (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS helpdesk_messages (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  ticket_id uuid NOT NULL REFERENCES helpdesk_tickets(id),
-  sender_id uuid NOT NULL REFERENCES employees(id),
-  message TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
 -- Assessment Module Tables
 CREATE TABLE IF NOT EXISTS assessments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -183,23 +180,6 @@ CREATE TABLE IF NOT EXISTS assessment_questions (
   options JSONB, -- For MCQ options
   correct_answer TEXT,
   typing_prompt TEXT -- For typing tests
-);
-
-CREATE TABLE IF NOT EXISTS assessment_attempts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  assessment_id uuid NOT NULL REFERENCES assessments(id),
-  employee_id uuid NOT NULL REFERENCES employees(id),
-  status TEXT DEFAULT 'in_progress', -- e.g., in_progress, completed
-  score NUMERIC(5, 2),
-  started_at TIMESTAMPTZ DEFAULT now(),
-  completed_at TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS assessment_answers (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  attempt_id uuid NOT NULL REFERENCES assessment_attempts(id) ON DELETE CASCADE,
-  question_id uuid NOT NULL REFERENCES assessment_questions(id),
-  answer TEXT
 );
 
 
@@ -231,56 +211,30 @@ CREATE TABLE IF NOT EXISTS applicants (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS interview_schedules (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  applicant_id uuid NOT NULL REFERENCES applicants(id),
+  interviewer_id uuid NOT NULL REFERENCES employees(id),
+  mode TEXT, -- Online, Offline
+  datetime TIMESTAMPTZ,
+  location TEXT,
+  meeting_link TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+
 -- Finance & Payroll Tables
-CREATE TABLE IF NOT EXISTS payslips (
+CREATE TABLE IF NOT EXISTS payroll_records (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id uuid NOT NULL REFERENCES employees(id),
-    period_start_date DATE NOT NULL,
-    period_end_date DATE NOT NULL,
-    gross_salary NUMERIC(10, 2),
+    month INT,
+    year INT,
+    amount NUMERIC(10, 2),
+    bonuses NUMERIC(10, 2),
     deductions NUMERIC(10, 2),
-    net_salary NUMERIC(10, 2),
-    payslip_data JSONB, -- Store detailed breakdown
     generated_on DATE DEFAULT CURRENT_DATE
 );
 
-CREATE TABLE IF NOT EXISTS expense_claims (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id uuid NOT NULL REFERENCES employees(id),
-    amount NUMERIC(10, 2) NOT NULL,
-    description TEXT,
-    status leave_status DEFAULT 'Pending',
-    approved_by_id uuid REFERENCES employees(id),
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS purchase_orders (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    requester_id uuid NOT NULL REFERENCES employees(id),
-    vendor TEXT,
-    description TEXT,
-    amount NUMERIC(10, 2) NOT NULL,
-    status leave_status DEFAULT 'Pending',
-    approved_by_id uuid REFERENCES employees(id),
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS timesheets (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id uuid NOT NULL REFERENCES employees(id),
-    week_ending_date DATE NOT NULL,
-    hours_worked NUMERIC(5, 2),
-    status leave_status DEFAULT 'Pending',
-    approved_by_id uuid REFERENCES employees(id)
-);
-
-CREATE TABLE IF NOT EXISTS budgets (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    department_id uuid NOT NULL REFERENCES departments(id),
-    year INT NOT NULL,
-    allocated_amount NUMERIC(15, 2),
-    UNIQUE(department_id, year)
-);
 
 -- IT & Operations Tables
 CREATE TABLE IF NOT EXISTS it_assets (
@@ -310,20 +264,28 @@ CREATE TABLE IF NOT EXISTS performance_reviews (
     employee_id uuid NOT NULL REFERENCES employees(id),
     reviewer_id uuid NOT NULL REFERENCES employees(id),
     review_period TEXT,
-    goals TEXT,
-    achievements TEXT,
-    areas_for_improvement TEXT,
-    rating TEXT,
+    rating NUMERIC(3, 1),
+    comments TEXT,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS employee_awards (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    giver_id uuid NOT NULL REFERENCES employees(id),
-    receiver_id uuid NOT NULL REFERENCES employees(id),
-    reason TEXT,
-    created_at TIMESTAMPTZ DEFAULT now()
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  giver_id uuid NOT NULL REFERENCES employees(id),
+  receiver_id uuid NOT NULL REFERENCES employees(id),
+  reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- This is a simplified version. A real system might use a cron job to populate this.
+CREATE TABLE IF NOT EXISTS weekly_award_stats (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id uuid NOT NULL REFERENCES employees(id),
+  total_awards INT,
+  week_number INT,
+  year INT
+);
+
 
 -- ----------------------------------------------------------------
 -- 4. Enable Real-time & Row-Level Security (RLS)
@@ -331,32 +293,28 @@ CREATE TABLE IF NOT EXISTS employee_awards (
 
 -- Enable RLS on all tables
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leave_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE helpdesk_tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE helpdesk_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessment_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessment_questions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessment_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessment_answers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_openings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE applicants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payslips ENABLE ROW LEVEL SECURITY;
-ALTER TABLE expense_claims ENABLE ROW LEVEL SECURITY;
-ALTER TABLE purchase_orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE timesheets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payroll_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE it_assets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE asset_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE performance_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE employee_awards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_award_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE interview_schedules ENABLE ROW LEVEL SECURITY;
+
 
 -- Enable real-time on key tables
-ALTER PUBLICATION supabase_realtime ADD TABLE company_posts, helpdesk_tickets, helpdesk_messages;
+-- This publishes changes to subscribed clients.
+ALTER PUBLICATION supabase_realtime ADD TABLE company_posts, helpdesk_tickets;
 
 
 -- ----------------------------------------------------------------
@@ -388,6 +346,9 @@ CREATE POLICY "Support staff can update tickets" ON helpdesk_tickets FOR UPDATE 
 CREATE POLICY "Authenticated users can see company posts" ON company_posts FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can see teams" ON teams FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can see team members" ON team_members FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated can see awards" ON employee_awards FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated can give awards" ON employee_awards FOR INSERT WITH CHECK (giver_id = auth.uid());
+
 
 -- Policies for Assessment Tables
 CREATE POLICY "HR/Recruiters can manage assessments" ON assessments FOR ALL USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
@@ -396,15 +357,20 @@ CREATE POLICY "HR/Recruiters can manage assessment sections" ON assessment_secti
 CREATE POLICY "Employees can view assessment sections" ON assessment_sections FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "HR/Recruiters can manage assessment questions" ON assessment_questions FOR ALL USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
 CREATE POLICY "Employees can view assessment questions" ON assessment_questions FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Employees can manage own attempts" ON assessment_attempts FOR ALL USING (employee_id = auth.uid()) WITH CHECK (employee_id = auth.uid());
-CREATE POLICY "HR/Recruiters can view all attempts" ON assessment_attempts FOR SELECT USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
-CREATE POLICY "Employees can submit their own answers" ON assessment_answers FOR INSERT WITH CHECK ((SELECT employee_id FROM assessment_attempts WHERE id = attempt_id) = auth.uid());
-CREATE POLICY "HR/Recruiters can view all answers" ON assessment_answers FOR SELECT USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
 
--- Default restrictive policies
-CREATE POLICY "Employees can view their own payslips" ON payslips FOR SELECT USING (employee_id = auth.uid());
-CREATE POLICY "Finance/HR/Admins can manage payslips" ON payslips FOR ALL USING (get_my_role() IN ('admin', 'hr', 'finance'));
-CREATE POLICY "Finance/Admin can manage budgets" ON budgets FOR ALL USING (get_my_role() IN ('finance', 'admin'));
+-- Default restrictive policies (example for one table, apply to all sensitive tables)
+CREATE POLICY "Employees can view their own payslips" ON payroll_records FOR SELECT USING (employee_id = auth.uid());
+CREATE POLICY "Finance/HR/Admins can manage payslips" ON payroll_records FOR ALL USING (get_my_role() IN ('admin', 'hr', 'finance'));
+
+-- Example for an IT table:
 CREATE POLICY "IT/Admin can manage assets" ON it_assets FOR ALL USING (get_my_role() IN ('it-manager', 'admin'));
-CREATE POLICY "Recruiters/HR/Admins can manage openings" ON job_openings FOR ALL USING (get_my_role() IN ('recruiter', 'hr', 'admin'));
+
+-- Example for a Recruitment table:
+CREATE POLICY "Recruiters/HR/Admins can manage openings and applicants" ON job_openings FOR ALL USING (get_my_role() IN ('recruiter', 'hr', 'admin'));
 CREATE POLICY "Recruiters/HR/Admins can view applicants" ON applicants FOR SELECT USING (get_my_role() IN ('recruiter', 'hr', 'admin'));
+CREATE POLICY "Recruiters/HR/Admins can manage interviews" ON interview_schedules FOR ALL USING (get_my_role() IN ('recruiter', 'hr', 'admin'));
+
+-- Example for a performance table:
+CREATE POLICY "Users can see own reviews" ON performance_reviews FOR SELECT USING (employee_id = auth.uid());
+CREATE POLICY "Managers/HR can see team reviews" ON performance_reviews FOR SELECT USING (get_my_role() IN ('admin', 'hr') OR is_manager_of(auth.uid(), employee_id));
+CREATE POLICY "Managers/HR can create reviews" ON performance_reviews FOR INSERT WITH CHECK (get_my_role() IN ('admin', 'hr') OR is_manager_of(auth.uid(), employee_id));
