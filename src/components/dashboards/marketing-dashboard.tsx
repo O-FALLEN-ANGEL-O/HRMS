@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Target, TrendingUp, UserCheck, Check, X, MoveRight } from "lucide-react";
+import { Target, TrendingUp, UserCheck, Check, X, MoveRight, FileText, Banknote, MoreHorizontal } from "lucide-react";
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { Button } from '../ui/button';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/chart';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu';
 
 const chartConfig = {
   leads: {
@@ -38,9 +39,14 @@ const salesLeaderboard = [
     { rank: 3, name: 'Aarav Sharma', leads: 35, revenue: 9800 },
 ];
 
-const contentApprovalQueue = [
+const initialContentApprovalQueue = [
     { id: 'C-001', title: 'Q3 Social Media Campaign Images', type: 'Social Media', submittedBy: 'Anika Sharma' },
     { id: 'C-002', title: 'New Product Launch Blog Post', type: 'Blog', submittedBy: 'Vikram Singh' },
+];
+
+const initialBudgetRequests = [
+    { id: 'B-001', title: 'Q4 Social Media Push', amount: 5000, department: 'Digital Marketing' },
+    { id: 'B-002', title: 'Summer Sale SEO', amount: 3500, department: 'Content' },
 ];
 
 const salesPipeline = [
@@ -52,14 +58,105 @@ const salesPipeline = [
     { stage: 'Closed-Won', count: 15, color: 'bg-green-500' },
 ];
 
+const initialTasks = {
+    'To Do': [
+        { id: 'task-1', content: 'Draft Q4 newsletter' },
+        { id: 'task-2', content: 'Plan photoshoot for new product line' },
+    ],
+    'In Progress': [
+        { id: 'task-3', content: 'A/B testing for landing page variants' },
+    ],
+    'Done': [
+        { id: 'task-4', content: 'Published "Top 10 Marketing Trends" blog post' },
+        { id: 'task-5', content: 'Finalized ad copy for Google Ads' },
+    ]
+}
+
+type TaskStatus = 'To Do' | 'In Progress' | 'Done';
+
+function TaskBoard() {
+    const [tasks, setTasks] = useState(initialTasks);
+
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string, sourceStatus: TaskStatus) => {
+        e.dataTransfer.setData("taskId", taskId);
+        e.dataTransfer.setData("sourceStatus", sourceStatus);
+    }
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetStatus: TaskStatus) => {
+        const taskId = e.dataTransfer.getData("taskId");
+        const sourceStatus = e.dataTransfer.getData("sourceStatus") as TaskStatus;
+
+        if (sourceStatus === targetStatus) return;
+
+        const taskToMove = tasks[sourceStatus].find(t => t.id === taskId);
+        if (!taskToMove) return;
+        
+        const newTasks = { ...tasks };
+        newTasks[sourceStatus] = newTasks[sourceStatus].filter(t => t.id !== taskId);
+        newTasks[targetStatus] = [taskToMove, ...newTasks[targetStatus]];
+
+        setTasks(newTasks);
+    }
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Team Task Board</CardTitle>
+                <CardDescription>Drag and drop tasks to update their status.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(Object.keys(tasks) as TaskStatus[]).map(status => (
+                    <div key={status} 
+                         className="p-4 bg-muted/50 rounded-lg h-full min-h-[200px]"
+                         onDrop={(e) => handleDrop(e, status)}
+                         onDragOver={handleDragOver}
+                    >
+                        <h3 className="font-semibold mb-3">{status}</h3>
+                        <div className="space-y-3">
+                            {tasks[status].map(task => (
+                                <div key={task.id}
+                                     className="p-3 bg-card rounded-md shadow-sm cursor-grab"
+                                     draggable
+                                     onDragStart={(e) => handleDragStart(e, task.id, status)}
+                                >
+                                    <p className="text-sm">{task.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function MarketingDashboard() {
   const { toast } = useToast();
+  const [contentQueue, setContentQueue] = useState(initialContentApprovalQueue);
+  const [budgetRequests, setBudgetRequests] = useState(initialBudgetRequests);
   
-  const handleApproval = (id: string, approved: boolean) => {
+  const handleApproval = (id: string, type: 'content' | 'budget', approved: boolean) => {
+    if (type === 'content') {
+        setContentQueue(prev => prev.filter(item => item.id !== id));
+    } else {
+        setBudgetRequests(prev => prev.filter(item => item.id !== id));
+    }
+    
     toast({
-        title: `Content ${approved ? 'Approved' : 'Rejected'}`,
-        description: `Content piece ${id} has been processed.`,
+        title: `${type === 'content' ? 'Content' : 'Budget'} Request ${approved ? 'Approved' : 'Rejected'}`,
+        description: `Request ${id} has been processed.`,
     });
+  }
+
+  const handleAssetDownload = (assetName: string) => {
+      toast({
+          title: "Asset Downloading",
+          description: `${assetName} has started downloading.`
+      });
   }
 
   const maxPipelineCount = useMemo(() => Math.max(...salesPipeline.map(p => p.count)), []);
@@ -86,6 +183,8 @@ export default function MarketingDashboard() {
                 icon={Target}
             />
         </div>
+
+        <TaskBoard />
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
             <div className="lg:col-span-3 space-y-6">
@@ -105,40 +204,48 @@ export default function MarketingDashboard() {
                         </ChartContainer>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Content Approval Queue</CardTitle>
-                        <CardDescription>Review and approve marketing content submissions.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Content</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {contentApprovalQueue.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <p className='font-medium'>{item.title}</p>
-                                            <p className='text-xs text-muted-foreground'>by {item.submittedBy}</p>
-                                        </TableCell>
-                                        <TableCell><Badge variant="outline">{item.type}</Badge></TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex gap-2 justify-end">
-                                                <Button size="icon" variant="outline" className="h-8 w-8 border-green-500 text-green-500 hover:bg-green-500/10" onClick={() => handleApproval(item.id, true)}><Check className="h-4 w-4"/></Button>
-                                                <Button size="icon" variant="outline" className="h-8 w-8 border-red-500 text-red-500 hover:bg-red-500/10" onClick={() => handleApproval(item.id, false)}><X className="h-4 w-4"/></Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Content Approval Queue</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3">
+                                {contentQueue.map(item => (
+                                    <div key={item.id} className="p-3 bg-muted rounded-md">
+                                        <p className='font-medium text-sm'>{item.title}</p>
+                                        <p className='text-xs text-muted-foreground'>by {item.submittedBy}</p>
+                                        <div className="flex gap-2 justify-end mt-2">
+                                            <Button size="icon" variant="outline" className="h-7 w-7 border-green-500 text-green-500 hover:bg-green-500/10" onClick={() => handleApproval(item.id, 'content', true)}><Check className="h-4 w-4"/></Button>
+                                            <Button size="icon" variant="outline" className="h-7 w-7 border-red-500 text-red-500 hover:bg-red-500/10" onClick={() => handleApproval(item.id, 'content', false)}><X className="h-4 w-4"/></Button>
+                                        </div>
+                                    </div>
                                 ))}
-                            </TableBody>
-                         </Table>
-                    </CardContent>
-                </Card>
+                                {contentQueue.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Queue is empty.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Campaign Budget Approvals</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="space-y-3">
+                                {budgetRequests.map(item => (
+                                    <div key={item.id} className="p-3 bg-muted rounded-md">
+                                        <p className='font-medium text-sm'>{item.title}</p>
+                                        <p className='text-xs text-muted-foreground'>Request: ${item.amount.toLocaleString()}</p>
+                                        <div className="flex gap-2 justify-end mt-2">
+                                            <Button size="icon" variant="outline" className="h-7 w-7 border-green-500 text-green-500 hover:bg-green-500/10" onClick={() => handleApproval(item.id, 'budget', true)}><Check className="h-4 w-4"/></Button>
+                                            <Button size="icon" variant="outline" className="h-7 w-7 border-red-500 text-red-500 hover:bg-red-500/10" onClick={() => handleApproval(item.id, 'budget', false)}><X className="h-4 w-4"/></Button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {budgetRequests.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No pending requests.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
             <div className="lg:col-span-2 space-y-6">
                 <Card>
@@ -194,8 +301,23 @@ export default function MarketingDashboard() {
                         ))}
                     </CardContent>
                 </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Marketing Assets</CardTitle>
+                        <CardDescription>Quick access to brand materials.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                        <Button variant="outline" onClick={() => handleAssetDownload('Brand Guidelines')}>
+                            <FileText className="mr-2 h-4 w-4" /> Brand Guidelines
+                        </Button>
+                        <Button variant="outline" onClick={() => handleAssetDownload('Logo Pack')}>
+                            <FileText className="mr-2 h-4 w-4" /> Logo Pack
+                        </Button>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </div>
   )
 }
+
