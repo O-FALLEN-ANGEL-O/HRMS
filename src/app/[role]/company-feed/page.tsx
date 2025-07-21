@@ -131,6 +131,15 @@ export default function CompanyFeedPage() {
     const handleAddPost = (post: Post) => {
         setPosts(prev => [post, ...prev]);
     };
+    
+    const handleLike = (postId: string) => {
+        setPosts(posts.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
+    };
+
+    const handleComment = (postId: string) => {
+        setPosts(posts.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p));
+    };
+
 
   return (
     <div className="space-y-6">
@@ -164,10 +173,10 @@ export default function CompanyFeedPage() {
               <p className="text-muted-foreground whitespace-pre-wrap">{post.content}</p>
             </CardContent>
             <CardFooter className="flex gap-4">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)}>
                 Like ({post.likes})
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => handleComment(post.id)}>
                 Comment ({post.comments})
               </Button>
             </CardFooter>

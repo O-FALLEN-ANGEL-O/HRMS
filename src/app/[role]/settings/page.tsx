@@ -50,12 +50,12 @@ export default function SettingsPage() {
     { device: "Safari on iPhone", location: "Bangalore, IN", time: "1 day ago", current: false },
   ]
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = (type: 'Profile' | 'Notifications' | 'Password') => {
     // In a real app, you'd send this data to your API
-    console.log("Saving changes:", { profile, notifications });
+    console.log(`Saving ${type} changes...`);
     toast({
-      title: "Settings Saved",
-      description: "Your changes have been saved successfully.",
+      title: `${type} Settings Saved`,
+      description: `Your ${type.toLowerCase()} changes have been saved successfully.`,
     });
   };
 
@@ -97,7 +97,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
              <CardFooter className="border-t px-6 py-4">
-                <Button onClick={handleSaveChanges}>Save Profile</Button>
+                <Button onClick={() => handleSaveChanges('Profile')}>Save Profile</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-                <Button>Update Password</Button>
+                <Button onClick={() => handleSaveChanges('Password')}>Update Password</Button>
             </CardFooter>
           </Card>
            <Card className="mt-6">
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                 </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-                <Button onClick={handleSaveChanges}>Save Notifications</Button>
+                <Button onClick={() => handleSaveChanges('Notifications')}>Save Notifications</Button>
             </CardFooter>
           </Card>
         </TabsContent>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -108,9 +108,8 @@ function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => voi
             id: `HD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
             subject,
             department,
-            description,
             status: 'Open',
-            priority: 'Medium',
+            priority: 'Medium', // Default priority
             lastUpdate: 'Just now',
             messages: [
                 { from: 'user', text: description, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
@@ -171,9 +170,10 @@ function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => voi
 
 export default function HelpdeskPage() {
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket>(tickets[0]);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(tickets[0]);
   const [newMessage, setNewMessage] = useState('');
   const [isReplying, setIsReplying] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -188,7 +188,7 @@ export default function HelpdeskPage() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || isReplying || selectedTicket.status === 'Closed') return;
+    if (!newMessage.trim() || isReplying || !selectedTicket || selectedTicket.status === 'Closed') return;
 
     const userMessage: Message = {
         from: 'user',
@@ -196,7 +196,6 @@ export default function HelpdeskPage() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     
-    // Immediately update the UI with the user's message
     const updatedTicketsWithUserMessage = tickets.map(ticket => {
         if (ticket.id === selectedTicket.id) {
             const updatedTicket = { ...ticket, messages: [...ticket.messages, userMessage] };
@@ -209,7 +208,6 @@ export default function HelpdeskPage() {
     setNewMessage('');
     setIsReplying(true);
 
-    // Simulate bot reply
     setTimeout(() => {
         const botMessage: Message = {
             from: 'support',
@@ -217,12 +215,10 @@ export default function HelpdeskPage() {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         
-        // Update state with the bot's reply based on the *current* state
         setTickets(currentTickets => {
             return currentTickets.map(ticket => {
                 if (ticket.id === selectedTicket.id) {
                     const updatedTicket = { ...ticket, messages: [...ticket.messages, botMessage] };
-                     // Also update the selected ticket state if it's the current one
                     if(selectedTicket && ticket.id === selectedTicket.id) {
                         setSelectedTicket(updatedTicket);
                     }
@@ -240,6 +236,13 @@ export default function HelpdeskPage() {
     setTickets(prev => [ticket, ...prev]);
     setSelectedTicket(ticket);
   };
+  
+  const filteredTickets = useMemo(() => {
+    return tickets.filter(ticket => 
+      ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [tickets, searchTerm]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -273,13 +276,13 @@ export default function HelpdeskPage() {
             <CardTitle>My Tickets</CardTitle>
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search tickets..." className="pl-8" />
+                <Input placeholder="Search tickets..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ScrollArea className="h-full">
                 <div className="p-6 pt-0">
-                {tickets.map((ticket) => (
+                {filteredTickets.map((ticket) => (
                     <button
                     key={ticket.id}
                     onClick={() => setSelectedTicket(ticket)}

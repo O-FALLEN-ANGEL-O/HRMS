@@ -169,7 +169,7 @@ export default function DashboardPage() {
                                     Comment ({post.comments})
                                   </Button>
                                </div>
-                                <Button variant="link">See more</Button>
+                                <Button variant="link" onClick={() => router.push(`/${role}/company-feed`)}>See more</Button>
                             </CardFooter>
                           </Card>
                         ))}
