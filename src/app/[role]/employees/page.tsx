@@ -34,7 +34,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { autoAssignRoles } from '@/ai/flows/auto-assign-roles';
+import { suggestRoleAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -196,7 +196,7 @@ function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employ
     }
     setLoading(true);
     try {
-      const result = await autoAssignRoles({
+      const result = await suggestRoleAction({
         department: departmentRef.current.value,
         jobTitle: jobTitleRef.current.value
       });
