@@ -5,16 +5,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ShieldQuestion } from 'lucide-react';
+import { Loader2, ShieldQuestion, UserCheck } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getEmailForEmployeeId } from './actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function AnimatedLogo() {
@@ -101,11 +98,7 @@ export default function LoginPage() {
     const router = useRouter();
     const { login, user, loading: authLoading } = useAuth();
     const { toast } = useToast();
-    const [loading, setLoading] = useState(false);
-    
-    // State for Employee login
-    const [employeeId, setEmployeeId] = useState('PEP0001');
-    const [employeePassword, setEmployeePassword] = useState('password');
+    const [loading, setLoading] = useState<string | null>(null);
 
     useEffect(() => {
         // The onAuthStateChange listener in useAuth will handle redirects
@@ -114,11 +107,10 @@ export default function LoginPage() {
         }
     }, [user, authLoading, router]);
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+    const handleLogin = async (employeeId: string, password: string) => {
+        setLoading(employeeId);
 
-        const { error } = await login(employeeId, employeePassword);
+        const { error } = await login(employeeId, password);
         
         if (error) {
              toast({
@@ -126,11 +118,11 @@ export default function LoginPage() {
                 title: 'Login Failed',
                 description: error.message || "An unknown error occurred."
             });
+            setLoading(null);
         } else {
             toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard...' });
             // Redirect is now handled by onAuthStateChange in the useAuth hook
         }
-        setLoading(false);
     }
 
   // Show a loading state if auth is still resolving and there's no user yet
@@ -156,70 +148,41 @@ export default function LoginPage() {
          </div>
       </div>
       <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-background min-h-screen">
-        <div className="w-full max-w-sm space-y-6">
-          <Card className="w-full max-w-sm shadow-2xl border-none">
+        <div className="w-full max-w-2xl space-y-6">
+           <Card className="w-full shadow-2xl border-none">
             <CardHeader>
-              <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-              <CardDescription>Enter your employee credentials to sign in.</CardDescription>
+                <CardTitle className="flex items-center gap-2 font-headline text-3xl"><ShieldQuestion className="text-primary"/> Quick Login</CardTitle>
+                <CardDescription>Click any user to instantly log in and explore their role-based dashboard.</CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                    <Label htmlFor="employeeId">Employee ID</Label>
-                    <Input
-                        id="employeeId"
-                        placeholder="e.g., PEP0001"
-                        required
-                        value={employeeId}
-                        onChange={(e) => setEmployeeId(e.target.value)}
-                    />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="employeePassword">Password</Label>
-                        <Input
-                            id="employeePassword"
-                            type="password"
-                            required
-                            value={employeePassword}
-                            onChange={e => setEmployeePassword(e.target.value)}
-                        />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
-                    </Button>
-                </form>
-            </CardContent>
-             <CardFooter className="flex flex-col items-center gap-4">
-                <div className="text-center text-sm">
-                    Don&apos;t have an account?{" "}
-                    <Link href="/signup" className="underline">
-                        Sign up
-                    </Link>
-                </div>
-            </CardFooter>
-          </Card>
-
-           <Card className="w-full max-w-sm shadow-lg border-none">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><ShieldQuestion className="text-primary"/> Demo Accounts</CardTitle>
-                <CardDescription>Use these credentials to explore different roles.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <ScrollArea className="h-64">
+                 <ScrollArea className="h-96">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Employee ID</TableHead>
-                                <TableHead>Password</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {demoAccounts.map(account => (
-                                <TableRow key={account.role}>
+                                <TableRow key={account.user}>
                                     <TableCell className="font-medium">{account.role}</TableCell>
                                     <TableCell>{account.user}</TableCell>
-                                    <TableCell>{account.pass}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button 
+                                            size="sm"
+                                            onClick={() => handleLogin(account.user, account.pass)}
+                                            disabled={loading !== null}
+                                        >
+                                            {loading === account.user ? (
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <UserCheck className="mr-2 h-4 w-4" />
+                                            )}
+                                            Login
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -227,6 +190,12 @@ export default function LoginPage() {
                 </ScrollArea>
             </CardContent>
            </Card>
+            <div className="text-center text-sm">
+                Need to create a new account?{" "}
+                <Link href="/signup" className="underline">
+                    Sign up
+                </Link>
+            </div>
         </div>
       </div>
     </div>
