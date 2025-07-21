@@ -47,5 +47,3 @@ export function useTeam() {
 
   return teamMembers;
 }
-
-    

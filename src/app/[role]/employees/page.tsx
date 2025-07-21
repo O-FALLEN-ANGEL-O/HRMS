@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
+import { useTeam } from '@/hooks/use-team';
+import { TeamCard } from '@/components/team-card';
 
 type Employee = {
     id: string;
@@ -49,6 +51,11 @@ type Employee = {
     department: { name: string };
     status: string;
     profile_picture_url: string;
+    // from useTeam mock
+    performance?: number;
+    tasksCompleted?: number;
+    tasksPending?: number;
+    avatar?: string;
 };
 
 function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employee: Employee) => void; children: React.ReactNode }) {
@@ -139,9 +146,13 @@ export default function EmployeesPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
+  const teamMembers = useTeam();
+  const isManagerView = user?.role === 'manager' || user?.role === 'team-leader';
 
   useEffect(() => {
     const fetchEmployees = async () => {
+        if(isManagerView) return; // Manager view uses the useTeam hook instead
+
         setLoading(true);
         const { data, error } = await supabase
             .from('employees')
@@ -165,7 +176,14 @@ export default function EmployeesPage() {
         setLoading(false);
     }
     fetchEmployees();
-  }, [toast]);
+  }, [toast, isManagerView]);
+
+  useEffect(() => {
+      if (isManagerView) {
+          setEmployees(teamMembers);
+          setLoading(false);
+      }
+  }, [teamMembers, isManagerView]);
 
 
   const handleAddEmployee = (newEmployee: Employee) => {
@@ -186,83 +204,99 @@ export default function EmployeesPage() {
     }
   };
 
+  const AdminView = () => (
+    <Card>
+      <CardContent>
+        {loading ? (
+            <div className='text-center p-10'>Loading employees...</div>
+        ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead className="hidden md:table-cell">Department</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead className="hidden md:table-cell">Status</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {employees.map((employee) => (
+              <TableRow key={employee.id}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src={employee.profile_picture_url} alt="Avatar" data-ai-hint="person avatar" />
+                      <AvatarFallback>{employee.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-0.5">
+                      <p className="font-medium">{employee.full_name}</p>
+                      <p className="text-sm text-muted-foreground hidden md:inline">{employee.email}</p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{employee.department?.name || 'N/A'}</TableCell>
+                <TableCell>{employee.role}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
+                    {employee.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => router.push(`/${user?.role}/profile`)}>View Profile</DropdownMenuItem>
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(employee.id)}>Deactivate</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const ManagerView = () => (
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {loading ? (
+            <p>Loading team...</p>
+        ) : employees.map((member) => (
+            <TeamCard key={member.id} member={member} />
+        ))}
+    </div>
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between pb-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">Employees</h1>
-          <p className="text-muted-foreground">Manage your organization's members.</p>
+          <h1 className="text-3xl font-bold font-headline">{isManagerView ? "My Team" : "Employees"}</h1>
+          <p className="text-muted-foreground">{isManagerView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
         </div>
-        <AddEmployeeDialog onAddEmployee={handleAddEmployee}>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Employee
-            </Button>
-        </AddEmployeeDialog>
+        {!isManagerView && (
+            <AddEmployeeDialog onAddEmployee={handleAddEmployee}>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Employee
+                </Button>
+            </AddEmployeeDialog>
+        )}
       </div>
-      <Card>
-        <CardContent>
-          {loading ? (
-             <div className='text-center p-10'>Loading employees...</div>
-          ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">Department</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="hidden md:table-cell">Status</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {employees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src={employee.profile_picture_url} alt="Avatar" data-ai-hint="person avatar" />
-                        <AvatarFallback>{employee.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="grid gap-0.5">
-                        <p className="font-medium">{employee.full_name}</p>
-                        <p className="text-sm text-muted-foreground hidden md:inline">{employee.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{employee.department?.name || 'N/A'}</TableCell>
-                  <TableCell>{employee.role}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
-                      {employee.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => router.push(`/${user?.role}/profile`)}>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(employee.id)}>Deactivate</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          )}
-        </CardContent>
-      </Card>
+      {isManagerView ? <ManagerView /> : <AdminView />}
     </div>
   )
 }

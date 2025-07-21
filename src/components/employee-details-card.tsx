@@ -75,5 +75,3 @@ export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
     </Card>
   );
 }
-
-    
