@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -30,7 +31,7 @@ interface AuthContextType {
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (identifier: string, password: string, isEmployeeId?: boolean) => Promise<any>;
+  login: (email: string, password: string) => Promise<any>;
   logout: () => Promise<any>;
   signUp: (data: any) => Promise<any>;
 }
@@ -103,7 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
         const sessionUser = session?.user ?? null;
+        setLoading(true);
         await fetchUser(sessionUser);
+        setLoading(false);
         
         if (event === 'SIGNED_IN' && sessionUser) {
             const { data: profile } = await supabase.from('employees').select('role').eq('id', sessionUser.id).single();
@@ -121,24 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [router]);
 
-  const login = async (identifier: string, password: string, isEmployeeId: boolean = false) => {
+  const login = async (email: string, password: string) => {
     if (!supabase) return { error: { message: "Supabase not configured." }};
-    let email = identifier;
-    if (isEmployeeId) {
-      if (!identifier) {
-        return { data: null, error: { message: "Employee ID is required." } };
-      }
-      const { data: employee, error } = await supabase
-        .from('employees')
-        .select('email')
-        .eq('employee_id', identifier.toUpperCase())
-        .single();
-      
-      if (error || !employee) {
-        return { data: null, error: { message: "Employee ID not found." } };
-      }
-      email = employee.email;
-    }
     return supabase.auth.signInWithPassword({ email, password });
   };
   

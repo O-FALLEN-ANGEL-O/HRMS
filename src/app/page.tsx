@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldQuestion } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { loginWithEmployeeId } from './actions';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -134,36 +135,31 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
         
-        const { data, error } = await login(employeeId, employeePassword, true);
+        const result = await loginWithEmployeeId({
+          employeeId: employeeId,
+          password: employeePassword
+        });
         
-        if (error) {
+        if (result.error) {
              toast({
                 variant: 'destructive',
                 title: 'Login Failed',
-                description: error.message
+                description: result.error
             });
             setLoading(false);
         } else {
             toast({ title: 'Login Successful', description: `Redirecting...` });
+            // onAuthStateChange will handle the redirect
         }
     }
 
   // Show a loading state if auth is still resolving and there's no user yet
-  if (authLoading) {
+  if (authLoading || user) {
       return (
         <div className="flex h-screen items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       );
-  }
-
-  // If user is already logged in, this page will redirect, so we can return null or a loading spinner.
-  if (user) {
-    return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-    );
   }
 
   return (
