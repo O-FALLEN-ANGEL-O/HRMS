@@ -1,11 +1,18 @@
-
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL and Anon Key are required.')
+let supabase: ReturnType<typeof createClient>;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  console.warn('Supabase URL or Anon Key is not set. Supabase client not initialized.');
+  // In a non-browser environment (like during build), we can assign a null-like object
+  // to prevent crashes on import, but auth/db calls will fail.
+  // The useAuth hook will handle this case for build purposes.
+  supabase = {} as any;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export { supabase };

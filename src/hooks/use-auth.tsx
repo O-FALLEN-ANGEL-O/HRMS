@@ -36,6 +36,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// A mock user for deployment build purposes
+const MOCK_USER: User = {
+    id: 'mock-user-id',
+    email: 'admin@optitalent.com',
+    role: 'admin',
+    profile: {
+        id: 'mock-user-id',
+        full_name: 'Admin User',
+        department: { name: 'Administration' },
+        department_id: 'mock-dept-id',
+        job_title: 'Administrator',
+        role: 'admin',
+        employee_id: 'PEP0001',
+    }
+};
+
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
+    if (!supabase || !supabase.auth) {
+        setUser(MOCK_USER);
+        setLoading(false);
+        return;
+    }
+
     const fetchUser = async (sessionUser: SupabaseUser | null) => {
         if (sessionUser) {
             const { data: profile, error } = await supabase
@@ -97,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const login = async (identifier: string, password: string, isEmployeeId: boolean = false) => {
+    if (!supabase) return { error: { message: "Supabase not configured." }};
     let email = identifier;
     if (isEmployeeId) {
       if (!identifier) {
@@ -117,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const signUp = async (data: any) => {
+    if (!supabase) return { error: { message: "Supabase not configured." }};
     const { email, password, firstName, lastName } = data;
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -160,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     setUser(null);
     router.push('/');
