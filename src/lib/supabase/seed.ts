@@ -53,8 +53,8 @@ async function clearData() {
   console.log('🗑️ Clearing existing data...');
   
   for (const table of DELETION_ORDER) {
-    const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Use a dummy neq to delete all
-    if (error && error.code !== '42P01') { // 42P01: undefined_table
+    const { error } = await supabase.from(table).delete().gt('id', 0); // Use a dummy filter to delete all rows
+    if (error && error.code !== '42P01' && error.code !== '42703') { // 42P01: undefined_table, 42703: undefined_column
       console.error(`Error clearing table ${table}:`, error.message);
     }
   }
