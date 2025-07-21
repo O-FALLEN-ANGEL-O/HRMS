@@ -136,7 +136,7 @@ export default function LoginPage() {
             setLoginStep('otp');
             toast({
                 title: 'OTP Required',
-                description: `An OTP has been sent to ${result.user.email}. Please check your inbox.`,
+                description: `An OTP has been sent to the email address of ${result.user.profile?.full_name}. Please check your inbox.`,
                 duration: 10000,
             });
             setLoading(false);

@@ -61,7 +61,7 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
     
     if (signInError) {
         console.error("Sign in error:", signInError);
-        return { error: signInError.message, user: null, otpRequired: false };
+        return { error: "Invalid password.", user: null, otpRequired: false };
     }
 
     // Since password is correct, create a temporary user object for the OTP step
