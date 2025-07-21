@@ -32,19 +32,19 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetH
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
-  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'employee'] },
+  { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
+  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'employee', 'team-leader'] },
   { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
-  { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr'] },
-  { href: '/attendance', icon: Fingerprint, label: 'Attendance', roles: ['admin', 'employee', 'manager', 'hr'] },
+  { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr', 'team-leader'] },
+  { href: '/attendance', icon: Fingerprint, label: 'Attendance', roles: ['admin', 'employee', 'manager', 'hr', 'team-leader'] },
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/quality', icon: Star, label: 'Quality', roles: ['qa-analyst'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
   { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
   { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
   { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee', 'manager', 'hr'] },
-  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager'] },
+  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
 ];
 
 const notifications = [

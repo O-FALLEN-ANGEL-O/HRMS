@@ -9,6 +9,7 @@ import RecruiterDashboard from '@/components/dashboards/recruiter-dashboard';
 import EmployeeDashboard from '@/components/dashboards/employee-dashboard';
 import QaAnalystDashboard from '@/components/dashboards/qa-analyst-dashboard';
 import ProcessManagerDashboard from '@/components/dashboards/process-manager-dashboard';
+import TeamLeaderDashboard from '@/components/dashboards/team-leader-dashboard';
 import { Logo } from '@/components/logo';
 
 export default function AnalyticsPage() {
@@ -33,6 +34,8 @@ export default function AnalyticsPage() {
       case 'hr':
       case 'manager':
         return <ManagerDashboard />;
+      case 'team-leader':
+        return <TeamLeaderDashboard />;
       case 'recruiter':
         return <RecruiterDashboard />;
       case 'qa-analyst':

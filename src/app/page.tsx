@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
-import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart } from 'lucide-react';
+import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart, Users as TeamLeaderIcon } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 function AnimatedLogo() {
@@ -70,9 +70,10 @@ function AnimatedLogo() {
   );
 }
 
-const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager', icon: LucideIcon }[] = [
+const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader', icon: LucideIcon }[] = [
     { name: "Admin", value: "admin", icon: Shield },
     { name: "Manager", value: "manager", icon: UserCog },
+    { name: "Team Leader", value: "team-leader", icon: TeamLeaderIcon },
     { name: "HR", value: "hr", icon: BarChart },
     { name: "Recruiter", value: "recruiter", icon: Briefcase },
     { name: "Employee", value: "employee", icon: User },
@@ -85,7 +86,7 @@ export default function LoginPage() {
     const router = useRouter();
     const { login } = useAuth();
 
-    const handleRoleSelect = (role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager') => {
+    const handleRoleSelect = (role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader') => {
         const userEmail = `${role}@optitalent.com`;
         const profile = { name: role.charAt(0).toUpperCase() + role.slice(1).replace('-', ' ') };
         login({ email: userEmail, role, profile });
