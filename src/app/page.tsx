@@ -131,20 +131,14 @@ export default function LoginPage() {
             });
             setLoading(false);
         } else {
-            if (result.otpRequired) {
-                setTempUser(result.user);
-                setLoginStep('otp');
-                toast({
-                    title: 'OTP Required',
-                    description: `An OTP has been sent to ${result.user.email}. Please check your inbox.`,
-                    duration: 10000,
-                });
-                setLoading(false);
-            } else {
-                // For other roles, complete login immediately
-                await revalidateUser(); // This triggers onAuthStateChange and redirect
-                toast({ title: 'Login Successful', description: `Redirecting...` });
-            }
+            setTempUser(result.user);
+            setLoginStep('otp');
+            toast({
+                title: 'OTP Required',
+                description: `An OTP has been sent to ${result.user.email}. Please check your inbox.`,
+                duration: 10000,
+            });
+            setLoading(false);
         }
     }
 

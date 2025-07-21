@@ -59,34 +59,31 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
         return { error: signInError.message, user: null, otpRequired: false };
     }
 
+    // Since password is correct, create a temporary user object for the OTP step
     const user: User = {
         id: employee.id,
         email: employee.email,
         role: employee.role,
         profile: employee
     };
-
-    const otpRequired = user.role === 'admin' || user.role === 'manager';
-
-    if (otpRequired) {
-        // Step 2: If password is correct and role requires 2FA, sign out to invalidate password session
-        // and send an OTP for a new passwordless session.
-        await supabase.auth.signOut(); 
-        const { error: otpError } = await supabase.auth.signInWithOtp({
-            email: employee.email,
-            options: {
-                shouldCreateUser: false,
-            }
-        });
-
-        if (otpError) {
-            console.error("OTP send error:", otpError);
-            return { error: "Could not send OTP. Please try again.", user: null, otpRequired: false };
+    
+    // Step 2: Password is correct. Now sign out to invalidate the password session
+    // and send an OTP for a new passwordless session. This is the 2FA step.
+    await supabase.auth.signOut(); 
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: employee.email,
+        options: {
+            shouldCreateUser: false,
         }
+    });
+
+    if (otpError) {
+        console.error("OTP send error:", otpError);
+        return { error: "Could not send OTP. Please try again.", user: null, otpRequired: false };
     }
 
-
-    return { error: null, user, otpRequired };
+    // Signal to the client that OTP is now required for all roles
+    return { error: null, user, otpRequired: true };
 }
 
 export async function verifyOtp({ email, otp }: { email: string, otp: string }): Promise<{ success: boolean; error?: string }> {
