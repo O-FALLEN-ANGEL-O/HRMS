@@ -67,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     } else if (userData.role === 'process-manager' && !userData.profile) {
       userData.profile = { name: 'Process Manager', department: 'Operations' }
+    } else if(userData.role === 'qa-analyst' && !userData.profile) {
+       userData.profile = { name: 'QA Analyst', department: 'Quality' }
     }
 
 
