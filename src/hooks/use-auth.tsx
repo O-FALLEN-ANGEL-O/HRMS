@@ -141,9 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    if (!supabase) return;
     document.cookie = 'user-profile=; Max-Age=-99999999; path=/;';
-    await supabase.auth.signOut();
     setUser(null);
     router.push('/');
   };
