@@ -14,7 +14,6 @@
     "db:seed": "tsx src/lib/supabase/seed.ts"
   },
   "dependencies": {
-    "@genkit-ai/core": "^1.14.1",
     "@genkit-ai/firebase": "^1.14.1",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.14.1",
