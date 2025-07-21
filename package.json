@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:seed": "tsx src/lib/supabase/seed.ts"
+    "db:seed": "tsx --require dotenv/config src/lib/supabase/seed.ts"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",

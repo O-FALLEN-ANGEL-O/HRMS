@@ -3,9 +3,6 @@
 // It should contain the following variables:
 // SUPABASE_URL="your-supabase-url"
 // SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
-import { config } from 'dotenv';
-config(); // MUST BE THE FIRST LINE
-
 import { createClient } from '@supabase/supabase-js';
 import { faker } from '@faker-js/faker';
 
