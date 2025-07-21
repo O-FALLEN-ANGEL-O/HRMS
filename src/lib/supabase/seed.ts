@@ -179,20 +179,32 @@ async function seedData() {
    if (!postError) console.log(`  - ✅ Company posts seeded.`);
   
    // 6. IT Assets
-   const { error: assetError } = await supabase.from('it_assets').insert(
-     Array.from({length: 10}, () => ({
+   const { data: assets } = await supabase.from('it_assets').insert(
+     Array.from({length: 20}, () => ({
       asset_tag: `OPT-LT-${faker.string.alphanumeric(6).toUpperCase()}`,
-      asset_type: 'Laptop',
-      model: faker.helpers.arrayElement(['MacBook Pro', 'Dell XPS', 'Lenovo ThinkPad']),
+      asset_type: faker.helpers.arrayElement(['Laptop', 'Monitor', 'Keyboard', 'Mouse']),
+      model: faker.helpers.arrayElement(['MacBook Pro', 'Dell XPS', 'Lenovo ThinkPad', 'Dell UltraSharp', 'Logitech MX Keys']),
       status: 'Available',
       purchase_date: faker.date.past({ years: 3 }),
       warranty_end_date: faker.date.future({ years: 2 }),
       image_url: `https://placehold.co/600x400.png`,
      }))
-   );
-   if (!assetError) console.log(`  - ✅ IT Assets seeded.`);
+   ).select();
+   if (!assets) {
+     console.error('Error seeding IT Assets');
+   } else {
+     console.log(`  - ✅ ${assets.length} IT Assets seeded.`);
+     // 7. Asset Assignments
+     const assetAssignments = seededEmployees.slice(0, 10).map((employee, index) => ({
+       asset_id: assets[index].id,
+       employee_id: employee.id,
+       assignment_date: faker.date.recent(),
+     }));
+     const { error: assignmentError } = await supabase.from('asset_assignments').insert(assetAssignments);
+     if (!assignmentError) console.log(`  - ✅ ${assetAssignments.length} asset assignments seeded.`);
+   }
 
-  // 7. Performance Reviews
+  // 8. Performance Reviews
   const reviewers = seededEmployees.filter(e => ['manager', 'hr', 'admin'].includes(e.role));
   const reviewees = seededEmployees.filter(e => e.role === 'employee');
   const { error: reviewError } = await supabase.from('performance_reviews').insert(
@@ -205,6 +217,46 @@ async function seedData() {
     }))
   );
   if (!reviewError) console.log(`  - ✅ Performance reviews seeded.`);
+
+  // 9. Leave Balances and Requests
+  for(const employee of seededEmployees) {
+    await supabase.from('leave_balances').insert([
+        { employee_id: employee.id, leave_type: 'Sick Leave', balance: 10 },
+        { employee_id: employee.id, leave_type: 'Casual Leave', balance: 5 },
+    ]);
+  }
+  console.log(`  - ✅ Leave balances seeded for all employees.`);
+
+  const { error: leaveError } = await supabase.from('leave_requests').insert(
+    Array.from({length: 10}, () => ({
+        employee_id: faker.helpers.arrayElement(seededEmployees).id,
+        leave_type: faker.helpers.arrayElement(['Sick Leave', 'Casual Leave', 'Paid Time Off']),
+        start_date: faker.date.recent(),
+        end_date: faker.date.future(),
+        reason: faker.lorem.sentence(),
+        status: faker.helpers.arrayElement(['Pending', 'Approved', 'Rejected'])
+    }))
+  );
+  if (!leaveError) console.log(`  - ✅ Leave requests seeded.`);
+
+  // 10. Employee Awards
+  const { error: awardError } = await supabase.from('employee_awards').insert(
+    Array.from({length: 15}, () => {
+        const giver = faker.helpers.arrayElement(seededEmployees);
+        let receiver = faker.helpers.arrayElement(seededEmployees);
+        while (receiver.id === giver.id) {
+            receiver = faker.helpers.arrayElement(seededEmployees);
+        }
+        return {
+            giver_id: giver.id,
+            receiver_id: receiver.id,
+            points: faker.helpers.arrayElement([100, 200, 500]),
+            reason: faker.company.buzzPhrase(),
+        }
+    })
+  );
+  if (!awardError) console.log(`  - ✅ Employee awards seeded.`);
+
 
 }
 
