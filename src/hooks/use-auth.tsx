@@ -145,8 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         employee_id,
         status: 'Active',
         role: 'employee',
-        emergency_contact: {},
-        skills: []
+        emergency_contact: JSON.stringify({}),
+        skills: JSON.stringify([]),
       });
 
     if (profileError) {
