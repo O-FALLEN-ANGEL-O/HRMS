@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Search, Send, User, Bot, Clock, FileText } from 'lucide-react';
+import { PlusCircle, Search, Send, User, Bot, Clock, FileText, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { categorizeTicket } from '@/ai/flows/categorize-ticket';
+import { categorizeTicketAction } from './actions';
 
 type Message = {
     from: 'user' | 'support' | 'system';
@@ -109,7 +108,7 @@ function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => voi
         }
 
         try {
-            const aiResult = await categorizeTicket({ subject, description });
+            const aiResult = await categorizeTicketAction({ subject, description });
 
             const newTicket: Ticket = {
                 id: `HD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
@@ -163,7 +162,10 @@ function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => voi
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit Ticket'}</Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {loading ? 'Submitting...' : 'Submit Ticket'}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -178,7 +180,7 @@ export default function HelpdeskPage() {
   const [newMessage, setNewMessage] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -202,7 +204,7 @@ export default function HelpdeskPage() {
     
     const updatedTicketsWithUserMessage = tickets.map(ticket => {
         if (ticket.id === selectedTicket.id) {
-            const updatedTicket = { ...ticket, messages: [...ticket.messages, userMessage] };
+            const updatedTicket = { ...ticket, messages: [...ticket.messages, userMessage], lastUpdate: 'Just now' };
             setSelectedTicket(updatedTicket);
             return updatedTicket;
         }
@@ -327,7 +329,7 @@ export default function HelpdeskPage() {
                             <div key={index} className={cn("flex items-end gap-3", message.from === 'user' ? 'justify-end' : 'justify-start')}>
                                 {message.from !== 'user' && (
                                     <Avatar className="h-8 w-8">
-                                        <AvatarFallback><Bot/></AvatarFallback>
+                                        <AvatarFallback>{message.from === 'system' ? <Bot/> : 'S'}</AvatarFallback>
                                     </Avatar>
                                 )}
                                 <div className={cn("max-w-xs md:max-w-md rounded-lg p-3", 
