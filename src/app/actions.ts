@@ -9,8 +9,6 @@ import type { User } from '@/hooks/use-auth';
 // Hardcoded Supabase credentials for server-side actions.
 const SUPABASE_URL = "https://qgmknoilorehwimlhngf.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzA5MDcyOSwiZXhwIjoyMDY4NjY2NzI5fQ.ZX7cVFzfOV7PrjSkwxTcrYkk6_3sNqaoVyd2UDfbAf0";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ";
-
 
 const demoAccounts = [
     { role: 'Admin', user: 'PEP0001', pass: 'password' },
@@ -54,27 +52,7 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
       return { error: "Could not find employee profile.", user: null };
     }
     
-    // 3. Programmatically set the session for the user
-    const cookieStore = cookies();
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        cookies: {
-            getAll: () => cookieStore.getAll(),
-            set: (name, value, options) => cookieStore.set({ name, value, ...options }),
-            remove: (name, options) => cookieStore.set({ name, value: '', ...options }),
-        },
-    });
-
-    const { error: sessionError } = await supabase.auth.setSession({
-        access_token: 'dummy_access_token_for_mock_session', // This is a placeholder as we're not using real auth
-        refresh_token: 'dummy_refresh_token_for_mock_session',
-    });
-
-    if (sessionError) {
-        console.error("Error setting session:", sessionError);
-        return { error: "Could not create a session.", user: null };
-    }
-
-    // Construct the user object to return to the client
+    // Construct the user object to store in the cookie
     const user: User = {
         id: employee.id,
         email: employee.email,
@@ -82,14 +60,20 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
         profile: employee
     };
     
-    // As we are mocking the session, we need to manually store user info.
-    // In a real app, setSession would handle this. We'll use a cookie.
-    cookieStore.set({
-      name: 'user-profile',
-      value: JSON.stringify(user),
-      httpOnly: true,
-      path: '/',
-    });
+    // 3. Manually set a user profile cookie.
+    try {
+        const cookieStore = cookies();
+        cookieStore.set({
+          name: 'user-profile',
+          value: JSON.stringify(user),
+          httpOnly: true,
+          path: '/',
+          maxAge: 60 * 60 * 24 // 1 day
+        });
+    } catch (e) {
+        console.error("Error setting cookie:", e);
+        return { error: "Could not create a session.", user: null };
+    }
     
     return { error: null, user };
 }
