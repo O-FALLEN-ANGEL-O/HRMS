@@ -29,8 +29,6 @@ import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
 } from '@/components/ui/tooltip';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
-import { LeaderboardCard } from '@/components/leaderboard-card';
-import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const allNavItems = [
@@ -53,12 +51,6 @@ const notifications = [
     { id: 1, icon: Users, text: "New applicant for 'Software Engineer'", time: '2m ago' },
     { id: 2, icon: CalendarDays, text: "Your leave request has been approved", time: '1h ago' },
     { id: 3, icon: CreditCard, text: "Payroll for July has been processed", time: '5h ago' },
-];
-
-const leaderboardWinners = [
-    { rank: 1, name: 'Priya Mehta', empId: 'EMP003', image: 'https://placehold.co/100x100?text=PM', awards: 21, crown: 'gold' as const },
-    { rank: 2, name: 'Rohan Verma', empId: 'EMP002', image: 'https://placehold.co/100x100?text=RV', awards: 18, crown: 'silver' as const },
-    { rank: 3, name: 'Anika Sharma', empId: 'EMP001', image: 'https://placehold.co/100x100?text=AS', awards: 15, crown: 'bronze' as const },
 ];
 
 function AppSidebar() {
@@ -123,15 +115,6 @@ function AppSidebar() {
                 <Logo className="text-white" />
             </div>
             <SidebarNav/>
-            <div className="mt-auto p-4 space-y-4">
-                <Separator className="bg-slate-700" />
-                <h3 className={`text-sm font-semibold px-2 ${!isExpanded && 'sr-only'}`}>Weekly Winners</h3>
-                <div className="space-y-3">
-                    {leaderboardWinners.map(winner => (
-                        <LeaderboardCard key={winner.empId} {...winner} isExpanded={isExpanded} />
-                    ))}
-                </div>
-            </div>
         </TooltipProvider>
       </aside>
     </>
