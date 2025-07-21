@@ -128,7 +128,7 @@ export default function AttendancePage() {
     } finally {
         setIsProcessing(false);
     }
-  };
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
