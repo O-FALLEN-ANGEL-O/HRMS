@@ -231,6 +231,7 @@ export default function AttendancePage() {
                     <p className="text-sm text-muted-foreground text-center py-4">No activity yet for today.</p>
                 )}
             </CardContent>
+        </Card>
     </div>
     </div>
   );
