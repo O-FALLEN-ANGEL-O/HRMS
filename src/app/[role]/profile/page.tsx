@@ -18,15 +18,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 
 const MOCK_USERS = {
-  Admin: { full_name: 'Admin User', email: 'admin@hrplus.com', avatar_url: '', id: 'PEP01', department: 'Administration', title: 'System Administrator' },
-  HR: { full_name: 'HR User', email: 'hr@hrplus.com', avatar_url: '', id: 'PEP02', department: 'Human Resources', title: 'HR Generalist' },
-  Manager: { full_name: 'Manager User', email: 'manager@hrplus.com', avatar_url: '', id: 'PEP03', department: 'Engineering', title: 'Engineering Manager' },
-  Employee: { full_name: 'Employee User', email: 'employee@hrplus.com', avatar_url: '', id: 'PEP04', department: 'Marketing', title: 'Marketing Specialist' },
-  Recruiter: { full_name: 'Recruiter User', email: 'recruiter@hrplus.com', avatar_url: '', id: 'PEP05', department: 'Human Resources', title: 'Talent Acquisition' },
-  Guest: { full_name: 'Guest User', email: 'guest@hrplus.com', avatar_url: '', id: 'PEP06', department: 'N/A', title: 'Guest' },
+  admin: { full_name: 'Admin User', email: 'admin@hrplus.com', avatar_url: '', id: 'PEP01', department: 'Administration', title: 'System Administrator' },
+  hr: { full_name: 'HR User', email: 'hr@hrplus.com', avatar_url: '', id: 'PEP02', department: 'Human Resources', title: 'HR Generalist' },
+  manager: { full_name: 'Manager User', email: 'manager@hrplus.com', avatar_url: '', id: 'PEP03', department: 'Engineering', title: 'Engineering Manager' },
+  employee: { full_name: 'Employee User', email: 'employee@hrplus.com', avatar_url: '', id: 'PEP04', department: 'Marketing', title: 'Marketing Specialist' },
+  recruiter: { full_name: 'Recruiter User', email: 'recruiter@hrplus.com', avatar_url: '', id: 'PEP05', department: 'Human Resources', title: 'Talent Acquisition' },
+  guest: { full_name: 'Guest User', email: 'guest@hrplus.com', avatar_url: '', id: 'PEP06', department: 'N/A', title: 'Guest' },
   'qa-analyst': { full_name: 'QA Analyst', email: 'qa@hrplus.com', avatar_url: '', id: 'PEP07', department: 'Quality', title: 'QA Analyst' },
   'process-manager': { full_name: 'Process Manager', email: 'pm@hrplus.com', avatar_url: '', id: 'PEP08', department: 'Operations', title: 'Process Manager' },
   'team-leader': { full_name: 'Team Leader', email: 'team-leader@optitalent.com', avatar_url: '', id: 'PEP09', department: 'Support', title: 'Team Leader' },
+  'marketing': { full_name: 'Marketing Head', email: 'marketing.head@optitalent.com', avatar_url: '', id: 'PEP10', department: 'Marketing', title: 'Head of Marketing & Sales'},
+  'finance': { full_name: 'Finance Head', email: 'finance.mgr@optitalent.com', avatar_url: '', id: 'PEP11', department: 'Finance', title: 'Head of Finance'},
+  'it-manager': { full_name: 'IT Manager', email: 'it.mgr@optitalent.com', avatar_url: '', id: 'PEP12', department: 'IT', title: 'IT Manager'},
+  'operations-manager': { full_name: 'Operations Manager', email: 'operations.mgr@optitalent.com', avatar_url: '', id: 'PEP13', department: 'Operations', title: 'Operations Manager'},
 };
 
 type UserData = typeof MOCK_USERS[keyof typeof MOCK_USERS];
@@ -128,7 +132,7 @@ export default function ProfilePage() {
     const params = useParams();
     const { toast } = useToast();
     const role = (params.role as string) as keyof typeof MOCK_USERS;
-    const userData = MOCK_USERS[role] || MOCK_USERS['Guest'];
+    const userData = MOCK_USERS[role] || MOCK_USERS['guest'];
 
     const bonusHistory = [
         { type: "redeem", action: "Redeem request created for 2,500 points", date: "19/07/2025" },
@@ -361,7 +365,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    
-
-    
