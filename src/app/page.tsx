@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -74,19 +75,28 @@ function AnimatedLogo() {
   );
 }
 
+
 export default function LoginPage() {
     const router = useRouter();
-    const { login } = useAuth();
+    const { login, checkEmployeeId } = useAuth();
     const { toast } = useToast();
-    const [email, setEmail] = useState('manager@optitalent.com');
-    const [password, setPassword] = useState('password');
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    // State for Admin/Manager login
+    const [adminEmail, setAdminEmail] = useState('manager@optitalent.com');
+    const [adminPassword, setAdminPassword] = useState('password');
+
+    // State for Employee login
+    const [employeeId, setEmployeeId] = useState('');
+    const [employeePassword, setEmployeePassword] = useState('');
+    const [employeeConfirmPassword, setEmployeeConfirmPassword] = useState('');
+    const [employeeLoginStep, setEmployeeLoginStep] = useState<'enterId' | 'enterPassword' | 'createPassword'>('enterId');
+
+    const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const user = await login(email, password);
+            const user = await login(adminEmail, adminPassword);
             if (user) {
                 toast({ title: 'Login Successful', description: `Welcome back, ${user.profile?.name || user.email}!` });
                 router.push(`/${user.role}/dashboard`);
@@ -97,9 +107,55 @@ export default function LoginPage() {
                 title: 'Login Failed',
                 description: (error as Error).message
             });
+        } finally {
             setLoading(false);
         }
     };
+
+    const handleEmployeeIdSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        const result = await checkEmployeeId(employeeId);
+        if (result.exists) {
+            if (result.isRegistered) {
+                setEmployeeLoginStep('enterPassword');
+                toast({ title: 'Welcome Back!', description: 'Please enter your password.' });
+            } else {
+                setEmployeeLoginStep('createPassword');
+                toast({ title: 'First Time Login', description: 'Please create a password for your account.' });
+            }
+        } else {
+            toast({ variant: 'destructive', title: 'Invalid ID', description: 'Employee ID not found. Please check and try again.' });
+        }
+        setLoading(false);
+    };
+
+    const handleEmployeePasswordLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (employeeLoginStep === 'createPassword' && employeePassword !== employeeConfirmPassword) {
+            toast({ variant: 'destructive', title: 'Passwords Do Not Match', description: 'Please ensure both passwords are the same.' });
+            return;
+        }
+        
+        setLoading(true);
+        try {
+            // Using employeeId as "email" for the login function in this simulated flow
+            const user = await login(employeeId, employeePassword);
+             if (user) {
+                toast({ title: 'Login Successful', description: `Welcome, ${user.profile?.name || user.email}!` });
+                router.push(`/${user.role}/dashboard`);
+            }
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: (error as Error).message
+            });
+        } finally {
+            setLoading(false);
+        }
+    }
+
 
   return (
     <div className="min-h-screen w-full lg:grid lg:grid-cols-2">
@@ -118,39 +174,109 @@ export default function LoginPage() {
           <Card className="w-full max-w-sm shadow-2xl border-none">
             <CardHeader>
               <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-              <CardDescription>Enter your credentials to access your account.</CardDescription>
+              <CardDescription>Select your login method to access your account.</CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input 
-                            id="email" 
-                            type="email" 
-                            placeholder="m@example.com" 
-                            required 
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
+              <Tabs defaultValue="employee" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="employee">Employee</TabsTrigger>
+                    <TabsTrigger value="admin">Admin / Manager</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="employee" className="pt-4">
+                  {employeeLoginStep === 'enterId' && (
+                    <form onSubmit={handleEmployeeIdSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="employeeId">Employee ID</Label>
+                        <Input
+                          id="employeeId"
+                          placeholder="e.g., PEP04"
+                          required
+                          value={employeeId}
+                          onChange={(e) => setEmployeeId(e.target.value)}
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input 
-                            id="password" 
-                            type="password" 
-                            required 
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                        />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Sign In
-                    </Button>
-                    <Button variant="outline" className="w-full" type="button" disabled={loading}>
-                        Sign in with Google
-                    </Button>
-                </form>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Continue'}
+                      </Button>
+                    </form>
+                  )}
+
+                  {(employeeLoginStep === 'enterPassword' || employeeLoginStep === 'createPassword') && (
+                     <form onSubmit={handleEmployeePasswordLogin} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="employeeId-static">Employee ID</Label>
+                            <Input id="employeeId-static" value={employeeId} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="employeePassword">
+                                {employeeLoginStep === 'enterPassword' ? 'Password' : 'Create Password'}
+                            </Label>
+                            <Input 
+                                id="employeePassword" 
+                                type="password" 
+                                required 
+                                value={employeePassword}
+                                onChange={e => setEmployeePassword(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        {employeeLoginStep === 'createPassword' && (
+                           <div className="space-y-2">
+                                <Label htmlFor="employeeConfirmPassword">Confirm Password</Label>
+                                <Input 
+                                    id="employeeConfirmPassword" 
+                                    type="password" 
+                                    required 
+                                    value={employeeConfirmPassword}
+                                    onChange={e => setEmployeeConfirmPassword(e.target.value)}
+                                />
+                            </div>
+                        )}
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {employeeLoginStep === 'enterPassword' ? 'Sign In' : 'Create Password & Sign In'}
+                        </Button>
+                        <Button variant="link" size="sm" onClick={() => setEmployeeLoginStep('enterId')}>
+                            Use a different Employee ID
+                        </Button>
+                     </form>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="admin" className="pt-4">
+                  <form onSubmit={handleAdminLogin} className="space-y-4">
+                      <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input 
+                              id="email" 
+                              type="email" 
+                              placeholder="m@example.com" 
+                              required 
+                              value={adminEmail}
+                              onChange={e => setAdminEmail(e.target.value)}
+                          />
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="password">Password</Label>
+                          <Input 
+                              id="password" 
+                              type="password" 
+                              required 
+                              value={adminPassword}
+                              onChange={e => setAdminPassword(e.target.value)}
+                          />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Sign In
+                      </Button>
+                      <Button variant="outline" className="w-full" type="button" disabled={loading}>
+                          Sign in with Google
+                      </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
             </CardContent>
              <CardFooter className="flex flex-col items-center gap-4">
                 <div className="text-center text-sm">

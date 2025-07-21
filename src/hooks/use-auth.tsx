@@ -23,10 +23,10 @@ interface User {
 
 // Mock database of users. In a real app, this comes from your backend (e.g., Firestore).
 const mockUsersDb: Record<string, User> = {
+    // Admin/Manager users (keyed by email)
     'olivia.martin@email.com': { email: 'olivia.martin@email.com', role: 'admin' },
     'manager@optitalent.com': { email: 'manager@optitalent.com', role: 'manager' },
     'hr@optitalent.com': { email: 'hr@optitalent.com', role: 'hr' },
-    'anika.sharma@email.com': { email: 'anika.sharma@email.com', role: 'employee' },
     'recruiter@optitalent.com': { email: 'recruiter@optitalent.com', role: 'recruiter' },
     'qa@optitalent.com': { email: 'qa@optitalent.com', role: 'qa-analyst' },
     'pm@optitalent.com': { email: 'pm@optitalent.com', role: 'process-manager' },
@@ -35,16 +35,24 @@ const mockUsersDb: Record<string, User> = {
     'finance.mgr@optitalent.com': { email: 'finance.mgr@optitalent.com', role: 'finance' },
     'it.mgr@optitalent.com': { email: 'it.mgr@optitalent.com', role: 'it-manager' },
     'operations.mgr@optitalent.com': { email: 'operations.mgr@optitalent.com', role: 'operations-manager' },
+    
+    // Employee users (keyed by Employee ID)
+    'PEP04': { email: 'employee@hrplus.com', role: 'employee', employeeId: 'PEP04' },
+    'PEP06': { email: 'anika.sharma@email.com', role: 'employee', employeeId: 'PEP06' },
 };
+
+// Simulate which users have "registered" by setting a password.
+const registeredUsers = new Set(['PEP06']);
 
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, newUserProfile?: User) => Promise<User | null>;
+  login: (identifier: string, password: string, newUserProfile?: User) => Promise<User | null>;
   logout: () => void;
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  checkEmployeeId: (employeeId: string) => Promise<{ exists: boolean; isRegistered: boolean }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,8 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // This effect now primarily handles restoring session from localStorage
-    // The Firebase onAuthStateChanged listener will handle the real auth state
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -69,25 +75,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string, newUserProfile?: User): Promise<User | null> => {
-    // This is a simulation. In a real Firebase app, you'd use signInWithEmailAndPassword
-    // For portfolio purposes, we'll check against our mock DB.
+  const login = async (identifier: string, password: string, newUserProfile?: User): Promise<User | null> => {
+    // This is a simulation.
+    // Identifier can be an email or an Employee ID.
     
-    // Simulate sign-up
     if (newUserProfile) {
-        mockUsersDb[email] = newUserProfile;
+        mockUsersDb[identifier] = newUserProfile;
     }
 
-    const foundUser = mockUsersDb[email.toLowerCase()];
+    const foundUser = mockUsersDb[identifier.toLowerCase()];
 
     if (!foundUser) {
-        throw new Error("No user found with this email.");
+        throw new Error("No user found with this identifier.");
     }
     
     // In a real app, password would be checked by Firebase. Here we just accept it.
     
-    // In a real app, you would fetch this from a DB (like Firestore). For now, find the mock user.
-    const fullUserProfile = initialEmployees.find(emp => emp.email === foundUser.email);
+    const fullUserProfile = initialEmployees.find(emp => emp.email === foundUser.email || emp.id === foundUser.employeeId);
 
     if (fullUserProfile) {
       foundUser.profile = {
@@ -106,12 +110,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return foundUser;
   };
 
+  const checkEmployeeId = async (employeeId: string): Promise<{ exists: boolean; isRegistered: boolean }> => {
+    // Simulate API call to check employee ID
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const userExists = !!mockUsersDb[employeeId.toUpperCase()];
+    const isRegistered = registeredUsers.has(employeeId.toUpperCase());
+    return { exists: userExists, isRegistered };
+  }
+
   const logout = () => {
     localStorage.removeItem('user');
     setUser(null);
   };
 
-  const value = { user, login, logout, loading, searchTerm, setSearchTerm };
+  const value = { user, login, logout, loading, searchTerm, setSearchTerm, checkEmployeeId };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
