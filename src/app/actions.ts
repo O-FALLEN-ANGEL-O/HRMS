@@ -3,8 +3,9 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import type { User } from '@/hooks/use-auth';
 
-export async function loginWithEmployeeId({ employeeId, password }: { employeeId: string, password: string }) {
+export async function loginWithEmployeeId({ employeeId, password }: { employeeId: string, password: string }): Promise<{ error: string | null; user: User | null }> {
     
     // We must create a new client here on the server to use the service_role key
     // This allows us to bypass RLS and query the employees table for the email address
@@ -14,18 +15,18 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
     );
     
     if (!employeeId) {
-      return { error: "Employee ID is required." };
+      return { error: "Employee ID is required.", user: null };
     }
     
     const { data: employee, error: queryError } = await supabaseAdmin
       .from('employees')
-      .select('email')
+      .select('*, department:departments(name)')
       .eq('employee_id', employeeId.toUpperCase())
       .single();
 
     if (queryError || !employee) {
       console.error("Employee ID lookup error:", queryError);
-      return { error: "Employee ID not found." };
+      return { error: "Employee ID not found.", user: null };
     }
     
     const cookieStore = cookies();
@@ -54,8 +55,25 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
     
     if (signInError) {
         console.error("Sign in error:", signInError);
-        return { error: signInError.message };
+        return { error: signInError.message, user: null };
     }
 
-    return { error: null };
+    const user: User = {
+        id: employee.id,
+        email: employee.email,
+        role: employee.role,
+        profile: employee
+    };
+
+    return { error: null, user };
+}
+
+export async function verifyOtp(otp: string): Promise<{ success: boolean; error?: string }> {
+  // In a real application, this would involve a call to a service like Twilio
+  // to verify the OTP. For this demo, we'll accept a mock OTP.
+  console.log(`Verifying OTP: ${otp}`);
+  if (otp === "123456") {
+    return { success: true };
+  }
+  return { success: false, error: "Invalid OTP. Please try again." };
 }

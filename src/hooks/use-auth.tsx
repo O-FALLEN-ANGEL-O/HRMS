@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   full_name: string;
   department: { name: string };
@@ -19,11 +19,11 @@ interface UserProfile {
   phone_number?: string;
 }
 
-interface User {
+export interface User {
   id: string;
   email: string;
   role: UserProfile['role'];
-  profile: UserProfile | null;
+  profile: UserProfile;
 }
 
 interface AuthContextType {
@@ -31,7 +31,7 @@ interface AuthContextType {
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (email: string, password: string) => Promise<any>;
+  revalidateUser: () => Promise<void>;
   logout: () => Promise<any>;
   signUp: (data: any) => Promise<any>;
 }
@@ -51,6 +51,7 @@ const MOCK_USER: User = {
         job_title: 'Administrator',
         role: 'admin',
         employee_id: 'PEP0001',
+        phone_number: '1234567890'
     }
 };
 
@@ -61,6 +62,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
+  const fetchUser = async (sessionUser: SupabaseUser | null) => {
+      if (sessionUser) {
+          const { data: profile, error } = await supabase
+              .from('employees')
+              .select(`*, department:departments(name)`)
+              .eq('id', sessionUser.id)
+              .single();
+
+          if (error) {
+              console.error("Error fetching profile:", error);
+              setUser(null);
+          } else {
+               const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
+               setUser({
+                  id: sessionUser.id,
+                  email: sessionUser.email!,
+                  role: userRole,
+                  profile: profile as UserProfile,
+              });
+          }
+      } else {
+          setUser(null);
+      }
+      setLoading(false);
+  };
+  
+  const revalidateUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetchUser(session?.user ?? null);
+  }
+
   useEffect(() => {
     // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
     if (!supabase || !supabase.auth) {
@@ -68,43 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
     }
-
-    const fetchUser = async (sessionUser: SupabaseUser | null) => {
-        if (sessionUser) {
-            const { data: profile, error } = await supabase
-                .from('employees')
-                .select(`*, department:departments(name)`)
-                .eq('id', sessionUser.id)
-                .single();
-
-            if (error) {
-                console.error("Error fetching profile:", error);
-                setUser(null);
-            } else {
-                 const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
-                 setUser({
-                    id: sessionUser.id,
-                    email: sessionUser.email!,
-                    role: userRole,
-                    profile: profile as UserProfile,
-                });
-            }
-        } else {
-            setUser(null);
-        }
-        setLoading(false);
-    };
     
     // Fetch user on initial load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-        fetchUser(session?.user ?? null);
-    });
+    revalidateUser();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
-        const sessionUser = session?.user ?? null;
         setLoading(true);
+        const sessionUser = session?.user ?? null;
         await fetchUser(sessionUser);
         setLoading(false);
         
@@ -114,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             router.push(`/${userRole}/dashboard`);
         }
         if (event === 'SIGNED_OUT') {
+            setUser(null);
             router.push('/');
         }
       }
@@ -123,11 +128,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription?.unsubscribe();
     };
   }, [router]);
-
-  const login = async (email: string, password: string) => {
-    if (!supabase) return { error: { message: "Supabase not configured." }};
-    return supabase.auth.signInWithPassword({ email, password });
-  };
   
   const signUp = async (data: any) => {
     if (!supabase) return { error: { message: "Supabase not configured." }};
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
-  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
+  const value = { user, loading, searchTerm, setSearchTerm, revalidateUser, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

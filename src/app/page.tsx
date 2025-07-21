@@ -13,9 +13,9 @@ import { motion } from "framer-motion";
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldQuestion } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { loginWithEmployeeId } from './actions';
+import { loginWithEmployeeId, verifyOtp } from './actions';
+import type { User } from '@/hooks/use-auth';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -79,59 +79,33 @@ function AnimatedLogo() {
 }
 
 const demoAccounts = [
-    { role: 'Admin', user: 'admin@optitalent.com', pass: 'password' },
-    { role: 'HR', user: 'hr@optitalent.com', pass: 'password' },
-    { role: 'Manager', user: 'manager@optitalent.com', pass: 'password' },
-    { role: 'Recruiter', user: 'recruiter@optitalent.com', pass: 'password' },
-    { role: 'QA Analyst', user: 'qa-analyst@optitalent.com', pass: 'password' },
-    { role: 'Process Manager', user: 'process-manager@optitalent.com', pass: 'password' },
-    { role: 'Team Leader', user: 'team-leader@optitalent.com', pass: 'password' },
-    { role: 'Marketing', user: 'marketing@optitalent.com', pass: 'password' },
-    { role: 'Finance', user: 'finance@optitalent.com', pass: 'password' },
-    { role: 'IT Manager', user: 'it-manager@optitalent.com', pass: 'password' },
-    { role: 'Ops Manager', user: 'operations-manager@optitalent.com', pass: 'password' },
+    { role: 'Admin', user: 'PEP0001', pass: 'password' },
+    { role: 'Manager', user: 'PEP0003', pass: 'password' },
     { role: 'Employee', user: 'PEP0012', pass: 'password123' },
 ];
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login, user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, revalidateUser } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
-
-    // State for Admin/Manager login
-    const [adminEmail, setAdminEmail] = useState('manager@optitalent.com');
-    const [adminPassword, setAdminPassword] = useState('password');
+    
+    // 'password' | 'otp'
+    const [loginStep, setLoginStep] = useState('password'); 
+    const [tempUser, setTempUser] = useState<User | null>(null);
 
     // State for Employee login
-    const [employeeId, setEmployeeId] = useState('PEP0012');
-    const [employeePassword, setEmployeePassword] = useState('password123');
+    const [employeeId, setEmployeeId] = useState('PEP0001');
+    const [employeePassword, setEmployeePassword] = useState('password');
+    const [otp, setOtp] = useState('');
 
     useEffect(() => {
-        // If the auth state is no longer loading and a user object exists, redirect them.
         if (!authLoading && user) {
             router.push(`/${user.role}/dashboard`);
         }
     }, [user, authLoading, router]);
 
-    const handleAdminLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        const { error } = await login(adminEmail, adminPassword);
-        if (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Login Failed',
-                description: error.message
-            });
-            setLoading(false);
-        } else {
-            // The onAuthStateChange listener in useAuth will handle the redirect
-            toast({ title: 'Login Successful', description: `Redirecting...` });
-        }
-    };
-
-    const handleEmployeeLogin = async (e: React.FormEvent) => {
+    const handlePasswordLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         
@@ -140,18 +114,51 @@ export default function LoginPage() {
           password: employeePassword
         });
         
-        if (result.error) {
+        if (result.error || !result.user) {
              toast({
                 variant: 'destructive',
                 title: 'Login Failed',
-                description: result.error
+                description: result.error || "An unknown error occurred."
             });
             setLoading(false);
         } else {
-            toast({ title: 'Login Successful', description: `Redirecting...` });
-            // onAuthStateChange will handle the redirect
+            // Check user role to decide next step
+            if (result.user.role === 'admin' || result.user.role === 'manager') {
+                setTempUser(result.user);
+                setLoginStep('otp');
+                toast({
+                    title: 'OTP Required',
+                    description: `For demonstration, your OTP is 123456. This would be sent to the number ending in ***${result.user.profile.phone_number?.slice(-4)}`,
+                    duration: 10000,
+                });
+                setLoading(false);
+            } else {
+                // For other roles, complete login immediately
+                await revalidateUser(); // This triggers onAuthStateChange and redirect
+                toast({ title: 'Login Successful', description: `Redirecting...` });
+            }
         }
     }
+
+     const handleOtpVerification = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        
+        const result = await verifyOtp(otp);
+
+        if (result.success) {
+            await revalidateUser();
+            toast({ title: 'Verification Successful!', description: 'Redirecting to your dashboard.' });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Verification Failed',
+                description: result.error || 'The OTP you entered is incorrect.',
+            });
+            setLoading(false);
+        }
+    };
+
 
   // Show a loading state if auth is still resolving and there's no user yet
   if (authLoading || user) {
@@ -179,77 +186,61 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-6">
           <Card className="w-full max-w-sm shadow-2xl border-none">
             <CardHeader>
-              <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-              <CardDescription>Select your login method to access your account.</CardDescription>
+              <CardTitle className="font-headline text-3xl">
+                {loginStep === 'password' ? 'Welcome Back' : 'Verify Your Identity'}
+                </CardTitle>
+              <CardDescription>
+                {loginStep === 'password' ? 'Enter your employee credentials to sign in.' : `An OTP has been sent to the mobile number of ${tempUser?.profile?.full_name}.`}
+                </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="employee" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="employee">Employee</TabsTrigger>
-                    <TabsTrigger value="admin">Admin / Manager</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="employee" className="pt-4">
-                  <form onSubmit={handleEmployeeLogin} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="employeeId">Employee ID</Label>
+              {loginStep === 'password' ? (
+                <form onSubmit={handlePasswordLogin} className="space-y-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="employeeId">Employee ID</Label>
+                    <Input
+                        id="employeeId"
+                        placeholder="e.g., PEP0001"
+                        required
+                        value={employeeId}
+                        onChange={(e) => setEmployeeId(e.target.value)}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="employeePassword">Password</Label>
                         <Input
-                          id="employeeId"
-                          placeholder="e.g., PEP0004"
-                          required
-                          value={employeeId}
-                          onChange={(e) => setEmployeeId(e.target.value)}
+                            id="employeePassword"
+                            type="password"
+                            required
+                            value={employeePassword}
+                            onChange={e => setEmployeePassword(e.target.value)}
                         />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="employeePassword">Password</Label>
-                          <Input
-                              id="employeePassword"
-                              type="password"
-                              required
-                              value={employeePassword}
-                              onChange={e => setEmployeePassword(e.target.value)}
-                          />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
-                      </Button>
-                    </form>
-                </TabsContent>
-
-                <TabsContent value="admin" className="pt-4">
-                  <form onSubmit={handleAdminLogin} className="space-y-4">
-                      <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input 
-                              id="email" 
-                              type="email" 
-                              placeholder="m@example.com" 
-                              required 
-                              value={adminEmail}
-                              onChange={e => setAdminEmail(e.target.value)}
-                          />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="password">Password</Label>
-                          <Input 
-                              id="password" 
-                              type="password" 
-                              required 
-                              value={adminPassword}
-                              onChange={e => setAdminPassword(e.target.value)}
-                          />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
-                          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Sign In
-                      </Button>
-                      <Button variant="outline" className="w-full" type="button" disabled={loading}>
-                          Sign in with Google
-                      </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
+                    </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleOtpVerification} className="space-y-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="otp">One-Time Password</Label>
+                    <Input
+                        id="otp"
+                        placeholder="Enter 6-digit code"
+                        required
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        maxLength={6}
+                    />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Verify & Sign In'}
+                    </Button>
+                    <Button variant="link" size="sm" className="w-full" onClick={() => setLoginStep('password')}>
+                        Back to password login
+                    </Button>
+                </form>
+              )}
             </CardContent>
              <CardFooter className="flex flex-col items-center gap-4">
                 <div className="text-center text-sm">
@@ -271,7 +262,7 @@ export default function LoginPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Role</TableHead>
-                            <TableHead>Username</TableHead>
+                            <TableHead>Employee ID</TableHead>
                             <TableHead>Password</TableHead>
                         </TableRow>
                     </TableHeader>
