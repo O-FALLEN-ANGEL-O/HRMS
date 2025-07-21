@@ -34,8 +34,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 
 const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
-  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'employee', 'team-leader'] },
+  { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'] },
+  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'employee', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'] },
   { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
   { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
   { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr', 'team-leader'] },
@@ -43,10 +43,10 @@ const allNavItems = [
   { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
   { href: '/quality', icon: Star, label: 'Quality', roles: ['qa-analyst'] },
   { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
-  { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin'] },
+  { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin', 'employee', 'finance'] },
   { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
-  { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee', 'manager', 'hr'] },
-  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
+  { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee', 'manager', 'hr', 'it-manager'] },
+  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'] },
 ];
 
 const notifications = [

@@ -61,7 +61,7 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
   const [posts, setPosts] = React.useState(initialPosts);
-  const [searchedEmployee, setSearchedEmployee] = React.useState<typeof initialEmployees[0] | null>(null);
+  const [searchedEmployee, setSearchedEmployee] = React.useState<(typeof initialEmployees)[0] | null | undefined>(null);
 
   const name = user?.profile?.name || user?.email?.split('@')[0] || 'User';
   const role = user?.role || 'employee';
@@ -77,7 +77,7 @@ export default function DashboardPage() {
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       emp.id.toLowerCase() === searchTerm.toLowerCase()
     );
-    setSearchedEmployee(foundEmployee || null);
+    setSearchedEmployee(foundEmployee);
     if(!foundEmployee) {
       toast({
           title: "Employee Not Found",
@@ -115,25 +115,27 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg border-none">
-        <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                <div>
-                    <h1 className="text-3xl font-headline tracking-tight">Hello, {name}!</h1>
-                    <p className="text-indigo-200">Hope you are having a great day</p>
+       {searchedEmployee === null && (
+         <Card className="bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg border-none">
+            <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div>
+                        <h1 className="text-3xl font-headline tracking-tight">Hello, {name}!</h1>
+                        <p className="text-indigo-200">Hope you are having a great day</p>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <Button 
+                            className="bg-white/20 hover:bg-white/30 text-white border-white/30 border"
+                            onClick={() => router.push(`/${role}/attendance`)}
+                        >
+                            Mark Attendance
+                        </Button>
+                        <p className="text-xs text-indigo-200 mt-1 text-right">Last punch: 18:00, Yesterday</p>
+                    </div>
                 </div>
-                <div className="flex-shrink-0">
-                    <Button 
-                        className="bg-white/20 hover:bg-white/30 text-white border-white/30 border"
-                        onClick={() => router.push(`/${role}/attendance`)}
-                    >
-                        Mark Attendance
-                    </Button>
-                    <p className="text-xs text-indigo-200 mt-1 text-right">Last punch: 18:00, Yesterday</p>
-                </div>
-            </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+       )}
       
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
             {/* Left Column */}
@@ -180,12 +182,21 @@ export default function DashboardPage() {
 
             {/* Middle Column */}
             <div className="lg:col-span-2 space-y-6">
-                {searchedEmployee && (
+                {searchedEmployee ? (
                    <div className="mt-4">
                      <EmployeeDetailsCard employee={searchedEmployee} />
                    </div>
-                )}
-                {!searchedEmployee && (
+                ) : searchedEmployee === undefined ? (
+                    <Card>
+                        <CardContent className="p-6 text-center">
+                           <Search className="mx-auto h-12 w-12 text-muted-foreground" />
+                           <h3 className="mt-4 text-lg font-semibold">Employee Not Found</h3>
+                           <p className="mt-1 text-sm text-muted-foreground">
+                             The employee ID or name you searched for does not exist.
+                           </p>
+                        </CardContent>
+                    </Card>
+                ) : (
                   <Card>
                       <CardHeader>
                           <CardTitle>Feed</CardTitle>

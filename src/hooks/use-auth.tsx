@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         department: fullUserProfile.department,
         status: fullUserProfile.status,
       }
+      userData.employeeId = fullUserProfile.id;
     } else if (userData.role === 'employee' && !userData.profile) {
        userData.profile = {
           name: userData.isNew ? 'New Employee' : 'Alex Doe',
