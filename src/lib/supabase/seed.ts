@@ -1,4 +1,5 @@
 
+
 // A '.env' file is NOT required for this script to run with hardcoded credentials.
 // For security, you would typically use environment variables, but this approach ensures the script runs in any environment.
 import { createClient } from '@supabase/supabase-js';

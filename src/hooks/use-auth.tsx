@@ -2,10 +2,11 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import { getEmailForEmployeeId } from '@/app/actions';
 
 export interface UserProfile {
   id: string;
@@ -31,8 +32,8 @@ interface AuthContextType {
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  revalidateUser: () => Promise<void>;
-  logout: () => Promise<any>;
+  login: (employeeId: string, password: string) => Promise<{ error: { message: string } | null }>;
+  logout: () => Promise<void>;
   signUp: (data: any) => Promise<any>;
 }
 
@@ -62,22 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
-  const revalidateUser = useCallback(async () => {
-    // Check for our manual user profile cookie
-    const userProfileCookie = document.cookie.split('; ').find(row => row.startsWith('user-profile='));
-    if (userProfileCookie) {
-        try {
-            const userData = JSON.parse(decodeURIComponent(userProfileCookie.split('=')[1]));
-            setUser(userData);
-        } catch (e) {
-            setUser(null);
-        }
-    } else {
-        setUser(null);
-    }
-    setLoading(false);
-  }, []);
-
   useEffect(() => {
     // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
     if (!supabase || !supabase.auth) {
@@ -85,8 +70,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
     }
-    revalidateUser();
-  }, [revalidateUser]);
+
+    const fetchUserAndProfile = async (sessionUser: SupabaseUser | null) => {
+      if (sessionUser) {
+        const { data: profile, error } = await supabase
+            .from('employees')
+            .select(`*, department:departments(name)`)
+            .eq('id', sessionUser.id)
+            .single();
+        
+        if (error) {
+          console.error("Error fetching profile, logging out.", error);
+          await supabase.auth.signOut();
+          setUser(null);
+        } else {
+          setUser({
+            id: sessionUser.id,
+            email: sessionUser.email!,
+            role: profile.role,
+            profile: profile
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    }
+    
+    // Run on initial load
+    supabase.auth.getSession().then(({ data: { session }}) => {
+      fetchUserAndProfile(session?.user ?? null);
+    });
+
+    // Set up the listener for auth changes
+    const { data: { subscription }} = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setLoading(true);
+        await fetchUserAndProfile(session?.user ?? null);
+        if (event === "SIGNED_IN" && session?.user) {
+          // The user object might not be set yet, so we get role from profile
+          const { data: profile } = await supabase.from('employees').select('role').eq('id', session.user.id).single();
+          const role = profile?.role || 'employee';
+          router.push(`/${role}/dashboard`);
+        } else if (event === "SIGNED_OUT") {
+          router.push('/');
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+
+  }, [router]);
+  
+  const login = async (employeeId: string, password: string) => {
+    if (!supabase) return { error: { message: "Supabase not configured." }};
+
+    const { email, error: emailError } = await getEmailForEmployeeId(employeeId);
+
+    if(emailError || !email) {
+      return { error: { message: emailError || "Invalid Employee ID" }};
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
+  };
   
   const signUp = async (data: any) => {
     if (!supabase) return { error: { message: "Supabase not configured." }};
@@ -131,9 +181,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (profileError) {
         console.error("Error creating profile:", profileError);
-        // Attempt to delete the auth user if profile creation fails to prevent orphaned users
-        // This requires service_role key and should be handled with care
-        // await supabase.auth.admin.deleteUser(authData.user.id);
         return { user: null, error: profileError };
     }
 
@@ -141,12 +188,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    document.cookie = 'user-profile=; Max-Age=-99999999; path=/;';
+    if (!supabase) return;
+    await supabase.auth.signOut();
     setUser(null);
     router.push('/');
   };
 
-  const value = { user, loading, searchTerm, setSearchTerm, logout, signUp, revalidateUser };
+  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

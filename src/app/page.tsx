@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldQuestion } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { loginWithEmployeeId } from './actions';
+import { getEmailForEmployeeId } from './actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function AnimatedLogo() {
@@ -99,7 +99,7 @@ const demoAccounts = [
 
 export default function LoginPage() {
     const router = useRouter();
-    const { user, loading: authLoading, revalidateUser } = useAuth();
+    const { login, user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     
@@ -108,6 +108,7 @@ export default function LoginPage() {
     const [employeePassword, setEmployeePassword] = useState('password');
 
     useEffect(() => {
+        // The onAuthStateChange listener in useAuth will handle redirects
         if (!authLoading && user) {
             router.push(`/${user.role}/dashboard`);
         }
@@ -116,26 +117,20 @@ export default function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        const { error } = await login(employeeId, employeePassword);
         
-        const result = await loginWithEmployeeId({
-          employeeId: employeeId,
-          password: employeePassword
-        });
-        
-        if (result.error || !result.role) {
+        if (error) {
              toast({
                 variant: 'destructive',
                 title: 'Login Failed',
-                description: result.error || "An unknown error occurred."
+                description: error.message || "An unknown error occurred."
             });
-            setLoading(false);
         } else {
-            toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard.' });
-            // The revalidateUser call updates the auth context, which can be useful
-            // but the primary redirect is now handled directly.
-            await revalidateUser();
-            router.push(`/${result.role}/dashboard`);
+            toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard...' });
+            // Redirect is now handled by onAuthStateChange in the useAuth hook
         }
+        setLoading(false);
     }
 
   // Show a loading state if auth is still resolving and there's no user yet
