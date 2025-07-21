@@ -26,7 +26,7 @@ export function TypingTest({ prompt, timeLimit, onTestComplete }: TypingTestProp
   const timerRef = useRef<NodeJS.Timeout>();
   const chartTimerRef = useRef<NodeJS.Timeout>();
 
-  const promptChars = useMemo(() => prompt.split(''), [prompt]);
+  const promptChars = React.useMemo(() => prompt.split(''), [prompt]);
 
   const startTest = () => {
     setIsTestRunning(true);
