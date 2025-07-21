@@ -6,9 +6,10 @@ import { cookies } from "next/headers";
 import type { User } from '@/hooks/use-auth';
 
 // Hardcoded Supabase credentials for server-side actions.
-// This is a temporary measure for this specific environment to ensure functionality.
 const SUPABASE_URL = "https://qgmknoilorehwimlhngf.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzA5MDcyOSwiZXhwIjoyMDY4NjY2NzI5fQ.ZX7cVFzfOV7PrjSkwxTcrYkk6_3sNqaoVyd2UDfbAf0";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ";
+
 
 export async function loginWithEmployeeId({ employeeId, password }: { employeeId: string, password: string }): Promise<{ error: string | null; user: User | null }> {
     
@@ -34,10 +35,11 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
       return { error: "Employee ID not found.", user: null };
     }
     
+    // This client handles session management (cookies)
     const cookieStore = cookies();
     const supabase = createClient(
         SUPABASE_URL,
-        supabaseAnonKey,
+        SUPABASE_ANON_KEY,
         {
             cookies: {
                 getAll() {
@@ -52,8 +54,6 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
             },
         }
     );
-    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ";
-
 
     // Directly sign in with password
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
