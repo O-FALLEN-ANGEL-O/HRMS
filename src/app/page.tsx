@@ -14,8 +14,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldQuestion } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { loginWithEmployeeId, verifyOtp } from './actions';
-import type { User } from '@/hooks/use-auth';
+import { loginWithEmployeeId } from './actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function AnimatedLogo() {
@@ -90,8 +89,12 @@ const demoAccounts = [
     { role: 'Marketing', user: 'PEP0008', pass: 'password' },
     { role: 'Finance', user: 'PEP0009', pass: 'password' },
     { role: 'IT Manager', user: 'PEP0010', pass: 'password' },
-    { role: 'Ops Manager', user: 'PEP0011', pass: 'password' },
+    { role: 'Operations Manager', user: 'PEP0011', pass: 'password' },
     { role: 'Employee', user: 'PEP0012', pass: 'password123' },
+    { role: 'Employee 2', user: 'PEP0013', pass: 'password123' },
+    { role: 'Employee 3', user: 'PEP0014', pass: 'password123' },
+    { role: 'Employee 4', user: 'PEP0015', pass: 'password123' },
+    { role: 'Employee 5', user: 'PEP0016', pass: 'password123' },
 ];
 
 export default function LoginPage() {
@@ -100,14 +103,9 @@ export default function LoginPage() {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     
-    // 'password' | 'otp'
-    const [loginStep, setLoginStep] = useState('password'); 
-    const [tempUser, setTempUser] = useState<User | null>(null);
-
     // State for Employee login
     const [employeeId, setEmployeeId] = useState('PEP0001');
     const [employeePassword, setEmployeePassword] = useState('password');
-    const [otp, setOtp] = useState('');
 
     useEffect(() => {
         if (!authLoading && user) {
@@ -115,7 +113,7 @@ export default function LoginPage() {
         }
     }, [user, authLoading, router]);
 
-    const handlePasswordLogin = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         
@@ -132,38 +130,11 @@ export default function LoginPage() {
             });
             setLoading(false);
         } else {
-            setTempUser(result.user);
-            setLoginStep('otp');
-            toast({
-                title: 'OTP Required',
-                description: `An OTP has been sent to the email address of ${result.user.profile?.full_name}. Please check your inbox.`,
-                duration: 10000,
-            });
-            setLoading(false);
+            toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard.' });
+            await revalidateUser();
+            // The onAuthStateChange listener in useAuth will handle the redirect.
         }
     }
-
-     const handleOtpVerification = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!tempUser) return;
-
-        setLoading(true);
-        
-        const result = await verifyOtp({ email: tempUser.email, otp });
-
-        if (result.success) {
-            await revalidateUser();
-            toast({ title: 'Verification Successful!', description: 'Redirecting to your dashboard.' });
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Verification Failed',
-                description: result.error || 'The OTP you entered is incorrect.',
-            });
-            setLoading(false);
-        }
-    };
-
 
   // Show a loading state if auth is still resolving and there's no user yet
   if (authLoading || user) {
@@ -191,16 +162,11 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-6">
           <Card className="w-full max-w-sm shadow-2xl border-none">
             <CardHeader>
-              <CardTitle className="font-headline text-3xl">
-                {loginStep === 'password' ? 'Welcome Back' : 'Verify Your Identity'}
-                </CardTitle>
-              <CardDescription>
-                {loginStep === 'password' ? 'Enter your employee credentials to sign in.' : `An OTP has been sent to the email address of ${tempUser?.profile?.full_name}.`}
-                </CardDescription>
+              <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
+              <CardDescription>Enter your employee credentials to sign in.</CardDescription>
             </CardHeader>
             <CardContent>
-              {loginStep === 'password' ? (
-                <form onSubmit={handlePasswordLogin} className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
                     <Label htmlFor="employeeId">Employee ID</Label>
                     <Input
@@ -225,27 +191,6 @@ export default function LoginPage() {
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
                     </Button>
                 </form>
-              ) : (
-                <form onSubmit={handleOtpVerification} className="space-y-4">
-                    <div className="space-y-2">
-                    <Label htmlFor="otp">One-Time Password</Label>
-                    <Input
-                        id="otp"
-                        placeholder="Enter 6-digit code from email"
-                        required
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        maxLength={6}
-                    />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Verify & Sign In'}
-                    </Button>
-                    <Button variant="link" size="sm" className="w-full" onClick={() => setLoginStep('password')}>
-                        Back to password login
-                    </Button>
-                </form>
-              )}
             </CardContent>
              <CardFooter className="flex flex-col items-center gap-4">
                 <div className="text-center text-sm">

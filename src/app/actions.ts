@@ -10,7 +10,7 @@ import type { User } from '@/hooks/use-auth';
 const SUPABASE_URL = "https://qgmknoilorehwimlhngf.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzA5MDcyOSwiZXhwIjoyMDY4NjY2NzI5fQ.ZX7cVFzfOV7PrjSkwxTcrYkk6_3sNqaoVyd2UDfbAf0";
 
-export async function loginWithEmployeeId({ employeeId, password }: { employeeId: string, password: string }): Promise<{ error: string | null; user: User | null, otpRequired: boolean }> {
+export async function loginWithEmployeeId({ employeeId, password }: { employeeId: string, password: string }): Promise<{ error: string | null; user: User | null }> {
     
     // We must create a new client here on the server to use the service_role key
     // This allows us to bypass RLS and query the employees table for the email address
@@ -20,7 +20,7 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
     );
     
     if (!employeeId) {
-      return { error: "Employee ID is required.", user: null, otpRequired: false };
+      return { error: "Employee ID is required.", user: null };
     }
     
     const { data: employee, error: queryError } = await supabaseAdmin
@@ -31,13 +31,13 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
 
     if (queryError || !employee) {
       console.error("Employee ID lookup error:", queryError);
-      return { error: "Employee ID not found.", user: null, otpRequired: false };
+      return { error: "Employee ID not found.", user: null };
     }
     
     const cookieStore = cookies();
     const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        SUPABASE_URL,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -52,19 +52,25 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
             },
         }
     );
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ";
 
-    // Step 1: Validate password first
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+
+    // Directly sign in with password
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: employee.email,
         password: password,
     });
     
     if (signInError) {
         console.error("Sign in error:", signInError);
-        return { error: "Invalid password.", user: null, otpRequired: false };
+        return { error: "Invalid password.", user: null };
+    }
+    
+    if (!signInData.user) {
+        return { error: "Login failed. Please try again.", user: null };
     }
 
-    // Since password is correct, create a temporary user object for the OTP step
+    // Construct the user object to return to the client
     const user: User = {
         id: employee.id,
         email: employee.email,
@@ -72,30 +78,14 @@ export async function loginWithEmployeeId({ employeeId, password }: { employeeId
         profile: employee
     };
     
-    // Step 2: Password is correct. Now sign out to invalidate the password session
-    // and send an OTP for a new passwordless session. This is the 2FA step.
-    await supabase.auth.signOut(); 
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: employee.email,
-        options: {
-            shouldCreateUser: false,
-        }
-    });
-
-    if (otpError) {
-        console.error("OTP send error:", otpError);
-        return { error: "Could not send OTP. Please try again.", user: null, otpRequired: false };
-    }
-
-    // Signal to the client that OTP is now required for all roles
-    return { error: null, user, otpRequired: true };
+    return { error: null, user };
 }
 
 export async function verifyOtp({ email, otp }: { email: string, otp: string }): Promise<{ success: boolean; error?: string }> {
     const cookieStore = cookies();
     const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        SUPABASE_URL,
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ",
         {
             cookies: {
                 getAll() { return cookieStore.getAll() },

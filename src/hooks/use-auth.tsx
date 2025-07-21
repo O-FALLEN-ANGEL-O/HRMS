@@ -89,8 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const revalidateUser = async () => {
+    setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
     await fetchUser(session?.user ?? null);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -110,7 +112,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         const sessionUser = session?.user ?? null;
         await fetchUser(sessionUser);
-        setLoading(false);
         
         if (event === 'SIGNED_IN' && sessionUser) {
             const { data: profile } = await supabase.from('employees').select('role').eq('id', sessionUser.id).single();
@@ -121,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             router.push('/');
         }
+        setLoading(false);
       }
     );
 
