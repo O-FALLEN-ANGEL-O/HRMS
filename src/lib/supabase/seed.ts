@@ -58,6 +58,7 @@ async function seedData() {
   console.log(`  - ✅ ${departments.length} departments seeded.`);
 
   // 2. Auth Users & Employees (Upsert)
+  let seededCount = 0;
   for(const userData of usersToCreate) {
       // Check if user exists in auth
       const { data: { users: existingUsers } } = await supabase.auth.admin.listUsers({ email: userData.email });
@@ -101,32 +102,36 @@ async function seedData() {
       
       const { error: empError } = await supabase.from('employees').upsert(employeeData, { onConflict: 'id' });
       if(empError) { console.error(`Error seeding employee ${userData.email}`, empError); continue; }
+      seededCount++;
   }
-  console.log(`  - ✅ ${usersToCreate.length} employees seeded.`);
+  console.log(`  - ✅ ${seededCount} employees seeded.`);
   
   const { data: seededEmployees } = await supabase.from('employees').select('id, role, department_id');
   
   // Assign Managers
-  const managers = seededEmployees.filter(e => e.role === 'manager');
-  for (const emp of seededEmployees) {
-      if (emp.role !== 'manager' && emp.role !== 'admin') {
-          const managerInDept = managers.find(m => m.department_id === emp.department_id);
-          if(managerInDept) {
-               await supabase.from('employees').update({ manager_id: managerInDept.id }).eq('id', emp.id);
-          }
-      }
+  if (seededEmployees) {
+    const managers = seededEmployees.filter(e => e.role === 'manager');
+    for (const emp of seededEmployees) {
+        if (emp.role !== 'manager' && emp.role !== 'admin') {
+            const managerInDept = managers.find(m => m.department_id === emp.department_id);
+            if(managerInDept) {
+                await supabase.from('employees').update({ manager_id: managerInDept.id }).eq('id', emp.id);
+            }
+        }
+    }
+    console.log(`  - ✅ Managers assigned.`);
   }
-  console.log(`  - ✅ Managers assigned.`);
+
 
   // 3. Job Openings
   const { data: openings, error: openingError } = await supabase.from('job_openings').upsert([
     { title: 'Senior Frontend Developer', department_id: departments.find(d=>d.name==='Engineering')?.id, company_logo: generateRealisticCompanyLogo() },
     { title: 'Product Manager', department_id: departments.find(d=>d.name==='Product')?.id, company_logo: generateRealisticCompanyLogo() },
   ], { onConflict: 'title' }).select();
-  if(!openingError) console.log(`  - ✅ ${openings.length} job openings seeded.`);
+  if(!openingError) console.log(`  - ✅ ${openings?.length || 0} job openings seeded.`);
 
   // 4. Applicants
-  if (openings.length > 0) {
+  if (openings && openings.length > 0) {
     const applicants = openings.flatMap(opening => 
         Array.from({length: 5}, () => {
             const name = faker.person.fullName();
@@ -145,24 +150,28 @@ async function seedData() {
   }
 
   // 5. Company Posts
-   const { error: postError } = await supabase.from('company_posts').insert(
-    Array.from({length: 5}, () => ({
-        author_id: faker.helpers.arrayElement(seededEmployees).id,
-        title: faker.company.catchPhrase(),
-        content: faker.lorem.paragraphs(3),
-        image_url: `https://placehold.co/800x400.png`,
-    }))
-   );
-   if (!postError) console.log(`  - ✅ 5 Company posts seeded.`);
+   if (seededEmployees && seededEmployees.length > 0) {
+     const { error: postError } = await supabase.from('company_posts').insert(
+      Array.from({length: 5}, () => ({
+          author_id: faker.helpers.arrayElement(seededEmployees).id,
+          title: faker.company.catchPhrase(),
+          content: faker.lorem.paragraphs(3),
+          image_url: `https://placehold.co/800x400.png`,
+      }))
+     );
+     if (!postError) console.log(`  - ✅ 5 Company posts seeded.`);
+   }
   
    // 6. Leave Balances and Requests
-  for(const employee of seededEmployees) {
-    await supabase.from('leave_balances').upsert([
-        { employee_id: employee.id, leave_type: 'Sick Leave', balance: 10 },
-        { employee_id: employee.id, leave_type: 'Casual Leave', balance: 5 },
-    ], { onConflict: 'employee_id, leave_type' });
+  if (seededEmployees && seededEmployees.length > 0) {
+    for(const employee of seededEmployees) {
+      await supabase.from('leave_balances').upsert([
+          { employee_id: employee.id, leave_type: 'Sick Leave', balance: 10 },
+          { employee_id: employee.id, leave_type: 'Casual Leave', balance: 5 },
+      ], { onConflict: 'employee_id, leave_type' });
+    }
+    console.log(`  - ✅ Leave balances seeded for all employees.`);
   }
-  console.log(`  - ✅ Leave balances seeded for all employees.`);
 
 }
 
