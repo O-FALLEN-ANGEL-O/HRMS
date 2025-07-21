@@ -15,8 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { scoreAndParseResume, ScoreAndParseResumeOutput } from '@/ai/flows/score-and-parse-resume';
-import { suggestInterviewQuestions, SuggestInterviewQuestionsOutput } from '@/ai/flows/suggest-interview-questions';
+import { scoreAndParseResumeAction, suggestInterviewQuestionsAction } from './actions';
+import type { ScoreAndParseResumeOutput } from '@/ai/flows/score-and-parse-resume';
 import { Bot, Upload, Camera, Loader2, Save, Trash2, PlusCircle, FileText, Smartphone, Lightbulb } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -38,7 +38,7 @@ function InterviewQuestions({ jobTitle }: { jobTitle: string }) {
       
       try {
         setLoading(true);
-        const result = await suggestInterviewQuestions({ role: jobTitle });
+        const result = await suggestInterviewQuestionsAction({ role: jobTitle });
         setQuestions(result.questions);
       } catch (error) {
         toast({
@@ -171,7 +171,7 @@ export default function ParseResumePage() {
     setResult(null);
     setEditData(null);
     try {
-      const response = await scoreAndParseResume({ jobDescription, resumeDataUri });
+      const response = await scoreAndParseResumeAction({ jobDescription, resumeDataUri });
       setResult(response);
       setEditData(response.parsedData);
       toast({ title: "Analysis Complete", description: "Resume has been parsed and scored." });
