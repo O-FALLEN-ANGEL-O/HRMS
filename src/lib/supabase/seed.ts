@@ -65,6 +65,7 @@ async function seedData() {
       let authUser = existingUsers.find(u => u.email === userData.email);
 
       if (authUser) {
+          // If user exists, forcefully update their password and metadata
           const { data, error } = await supabase.auth.admin.updateUserById(authUser.id, {
               password: userData.password,
               email_confirm: true,
@@ -73,6 +74,7 @@ async function seedData() {
           if (error) { console.error(`Error updating auth user ${userData.email}:`, error); continue; }
           authUser = data.user;
       } else {
+          // If user does not exist, create them
           const { data, error } = await supabase.auth.admin.createUser({
               email: userData.email,
               password: userData.password,
@@ -131,21 +133,24 @@ async function seedData() {
 
   // 4. Applicants
   if (openings && openings.length > 0) {
-    const applicants = openings.flatMap(opening => 
-        Array.from({length: 5}, () => {
-            const name = faker.person.fullName();
-            return {
-                full_name: name,
-                email: faker.internet.email(),
-                phone_number: faker.phone.number(),
-                status: faker.helpers.arrayElement(['Applied', 'Screening', 'Interview', 'Offer']),
-                job_opening_id: opening.id,
-                profile_picture: generateProfilePicture(name),
-            }
-        })
-    );
-    const { error: appError } = await supabase.from('applicants').upsert(applicants, { onConflict: 'email'});
-    if (!appError) console.log(`  - ✅ ${applicants.length} applicants seeded.`);
+    const { count } = await supabase.from('applicants').select('*', { count: 'exact', head: true });
+    if(count === 0) {
+        const applicants = openings.flatMap(opening => 
+            Array.from({length: 5}, () => {
+                const name = faker.person.fullName();
+                return {
+                    full_name: name,
+                    email: faker.internet.email(),
+                    phone_number: faker.phone.number(),
+                    status: faker.helpers.arrayElement(['Applied', 'Screening', 'Interview', 'Offer']),
+                    job_opening_id: opening.id,
+                    profile_picture: generateProfilePicture(name),
+                }
+            })
+        );
+        const { error: appError } = await supabase.from('applicants').insert(applicants);
+        if (!appError) console.log(`  - ✅ ${applicants.length} applicants seeded.`);
+    }
   }
 
   // 5. Company Posts
