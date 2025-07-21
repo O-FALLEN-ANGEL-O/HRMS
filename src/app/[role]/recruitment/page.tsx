@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Applicant = {
   id: string;
@@ -35,11 +36,11 @@ type Applicant = {
 };
 
 const initialApplicants: Applicant[] = [
-  { id: '1', name: 'Aarav Sharma', avatar: 'https://placehold.co/100x100?text=AS', role: 'Senior Frontend Developer', appliedDate: '2023-10-25', status: 'Interview' },
-  { id: '2', name: 'Priya Patel', avatar: 'https://placehold.co/100x100?text=PP', role: 'Product Manager', appliedDate: '2023-10-24', status: 'Applied' },
-  { id: '3', name: 'Rohan Gupta', avatar: 'https://placehold.co/100x100?text=RG', role: 'UI/UX Designer', appliedDate: '2023-10-23', status: 'Screening' },
-  { id: '4', name: 'Sneha Verma', avatar: 'https://placehold.co/100x100?text=SV', role: 'Senior Frontend Developer', appliedDate: '2023-10-22', status: 'Offer' },
-  { id: '5', name: 'Vikram Singh', avatar: 'https://placehold.co/100x100?text=VS', role: 'DevOps Engineer', appliedDate: '2023-10-21', status: 'Hired' },
+  { id: 'app-001', name: 'Aarav Sharma', avatar: 'https://placehold.co/100x100?text=AS', role: 'Senior Frontend Developer', appliedDate: '2023-10-25', status: 'Interview' },
+  { id: 'app-002', name: 'Priya Patel', avatar: 'https://placehold.co/100x100?text=PP', role: 'Product Manager', appliedDate: '2023-10-24', status: 'Applied' },
+  { id: 'app-003', name: 'Rohan Gupta', avatar: 'https://placehold.co/100x100?text=RG', role: 'UI/UX Designer', appliedDate: '2023-10-23', status: 'Screening' },
+  { id: 'app-004', name: 'Sneha Verma', avatar: 'https://placehold.co/100x100?text=SV', role: 'Senior Frontend Developer', appliedDate: '2023-10-22', status: 'Offer' },
+  { id: 'app-005', name: 'Vikram Singh', avatar: 'https://placehold.co/100x100?text=VS', role: 'DevOps Engineer', appliedDate: '2023-10-21', status: 'Hired' },
 ];
 
 
@@ -137,13 +138,21 @@ export default function RecruitmentPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {filteredApplicants.map((applicant) => (
-                                        <TableRow key={applicant.id}>
-                                            <TableCell className="font-medium">{applicant.name}</TableCell>
+                                        <TableRow key={applicant.id} className="cursor-pointer" onClick={() => router.push(`/${role}/recruitment/${applicant.id}`)}>
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-9 w-9">
+                                                        <AvatarImage src={applicant.avatar} alt="Avatar" data-ai-hint="person avatar" />
+                                                        <AvatarFallback>{applicant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                                    </Avatar>
+                                                    {applicant.name}
+                                                </div>
+                                            </TableCell>
                                             <TableCell>{applicant.role}</TableCell>
                                             <TableCell>{applicant.appliedDate}</TableCell>
                                             <TableCell>{getStatusBadge(applicant.status)}</TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => router.push(`/${role}/profile`)}>View Profile</Button>
+                                                <Button variant="ghost" size="sm">View Profile</Button>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -157,5 +166,3 @@ export default function RecruitmentPage() {
     </div>
   );
 }
-
-    
