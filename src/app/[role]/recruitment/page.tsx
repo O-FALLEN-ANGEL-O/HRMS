@@ -107,7 +107,7 @@ export default function RecruitmentPage() {
                         />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <Button variant="outline">
+                        <Button variant="outline" onClick={() => toast({ title: 'Filter Clicked', description: 'This would normally open a filter dialog.' })}>
                             <Filter className="mr-2 h-4 w-4" />
                             <span>Filter by job</span>
                         </Button>
@@ -157,3 +157,5 @@ export default function RecruitmentPage() {
     </div>
   );
 }
+
+    

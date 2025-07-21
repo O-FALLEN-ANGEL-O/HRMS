@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Mail, Phone, Plus, History, Gift, Award } from "lucide-react";
+import { Edit, Mail, Phone, Plus, History, Gift, Award, FileText, BarChart, FileQuestion, Briefcase, Star } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 const MOCK_USERS = {
   Admin: { full_name: 'Admin User', email: 'admin@hrplus.com', avatar_url: '', id: 'PEP01', department: 'Administration', title: 'System Administrator' },
@@ -24,6 +26,7 @@ const MOCK_USERS = {
   Guest: { full_name: 'Guest User', email: 'guest@hrplus.com', avatar_url: '', id: 'PEP06', department: 'N/A', title: 'Guest' },
   'qa-analyst': { full_name: 'QA Analyst', email: 'qa@hrplus.com', avatar_url: '', id: 'PEP07', department: 'Quality', title: 'QA Analyst' },
   'process-manager': { full_name: 'Process Manager', email: 'pm@hrplus.com', avatar_url: '', id: 'PEP08', department: 'Operations', title: 'Process Manager' },
+  'team-leader': { full_name: 'Team Leader', email: 'team-leader@optitalent.com', avatar_url: '', id: 'PEP09', department: 'Support', title: 'Team Leader' },
 };
 
 type UserData = typeof MOCK_USERS[keyof typeof MOCK_USERS];
@@ -189,19 +192,78 @@ export default function ProfilePage() {
                 <TabsContent value="about">
                     <Card>
                         <CardHeader><CardTitle>About</CardTitle></CardHeader>
-                        <CardContent><p>Details about the employee will be shown here.</p></CardContent>
+                        <CardContent className="space-y-4">
+                            <p>This section provides a brief overview of the employee's professional background, skills, and emergency contact information.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="font-semibold mb-2">Emergency Contact</h4>
+                                    <p className="text-sm text-muted-foreground">Name: John Doe (Father)</p>
+                                    <p className="text-sm text-muted-foreground">Phone: (987) 654-3210</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2">Key Skills</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Badge variant="secondary">Project Management</Badge>
+                                        <Badge variant="secondary">Team Leadership</Badge>
+                                        <Badge variant="secondary">Agile Methodologies</Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
                     </Card>
                 </TabsContent>
                 <TabsContent value="performance">
                     <Card>
-                        <CardHeader><CardTitle>Performance</CardTitle></CardHeader>
-                        <CardContent><p>Performance metrics and reviews will be shown here.</p></CardContent>
+                        <CardHeader>
+                            <CardTitle>Performance Metrics</CardTitle>
+                            <CardDescription>Key performance indicators and recent review history.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Metric</TableHead>
+                                        <TableHead>Q2 2024</TableHead>
+                                        <TableHead>Q3 2024</TableHead>
+                                        <TableHead>Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>Overall Rating</TableCell>
+                                        <TableCell>Meets Expectations</TableCell>
+                                        <TableCell>Exceeds Expectations</TableCell>
+                                        <TableCell><Badge className="bg-green-100 text-green-800">Improving</Badge></TableCell>
+                                    </TableRow>
+                                     <TableRow>
+                                        <TableCell>Tasks Completed</TableCell>
+                                        <TableCell>85%</TableCell>
+                                        <TableCell>92%</TableCell>
+                                        <TableCell><Badge className="bg-green-100 text-green-800">Improving</Badge></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                           </Table>
+                        </CardContent>
                     </Card>
                 </TabsContent>
                 <TabsContent value="documents">
                      <Card>
-                        <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
-                        <CardContent><p>Employee documents will be listed here.</p></CardContent>
+                        <CardHeader>
+                            <CardTitle>Documents</CardTitle>
+                            <CardDescription>A list of employee-related documents.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <ul className="space-y-3">
+                                <li className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                                    <div className="flex items-center gap-3"><FileText/><span>Offer Letter.pdf</span></div>
+                                    <Button variant="outline" size="sm">Download</Button>
+                                </li>
+                                <li className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                                    <div className="flex items-center gap-3"><FileText/><span>Employee Handbook.pdf</span></div>
+                                    <Button variant="outline" size="sm">Download</Button>
+                                </li>
+                            </ul>
+                        </CardContent>
                     </Card>
                 </TabsContent>
                 <TabsContent value="bonus-points">
@@ -261,17 +323,34 @@ export default function ProfilePage() {
                 </TabsContent>
                  <TabsContent value="interviews">
                      <Card>
-                        <CardHeader><CardTitle>Scheduled Interviews</CardTitle></CardHeader>
-                        <CardContent><p>Interview schedules will be shown here.</p></CardContent>
+                        <CardHeader>
+                            <CardTitle>Scheduled Interviews</CardTitle>
+                            <CardDescription>A list of upcoming interviews you are scheduled to conduct.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-center py-10 text-muted-foreground">
+                                <Briefcase className="mx-auto h-12 w-12" />
+                                <h3 className="mt-4 text-lg font-semibold">No Upcoming Interviews</h3>
+                                <p className="mt-2 text-sm">You have no interviews scheduled at this time.</p>
+                            </div>
+                        </CardContent>
                     </Card>
                 </TabsContent>
                  <TabsContent value="resignation">
                      <Card>
-                        <CardHeader><CardTitle>Resignation</CardTitle></CardHeader>
-                        <CardContent><p>Resignation details will be shown here.</p></CardContent>
+                        <CardHeader>
+                            <CardTitle>Resignation</CardTitle>
+                             <CardDescription>Manage the resignation process if needed.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                            <p className="text-muted-foreground mb-4">This action is final and will start the offboarding process.</p>
+                            <Button variant="destructive">Initiate Resignation</Button>
+                        </CardContent>
                     </Card>
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
+
+    
