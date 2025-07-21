@@ -11,8 +11,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldQuestion } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -75,6 +76,20 @@ function AnimatedLogo() {
   );
 }
 
+const demoAccounts = [
+    { role: 'Admin', user: 'admin@optitalent.com', pass: 'password' },
+    { role: 'HR', user: 'hr@optitalent.com', pass: 'password' },
+    { role: 'Manager', user: 'manager@optitalent.com', pass: 'password' },
+    { role: 'Recruiter', user: 'recruiter@optitalent.com', pass: 'password' },
+    { role: 'QA Analyst', user: 'qa-analyst@optitalent.com', pass: 'password' },
+    { role: 'Process Manager', user: 'process-manager@optitalent.com', pass: 'password' },
+    { role: 'Team Leader', user: 'team-leader@optitalent.com', pass: 'password' },
+    { role: 'Marketing', user: 'marketing@optitalent.com', pass: 'password' },
+    { role: 'Finance', user: 'finance@optitalent.com', pass: 'password' },
+    { role: 'IT Manager', user: 'it-manager@optitalent.com', pass: 'password' },
+    { role: 'Ops Manager', user: 'operations-manager@optitalent.com', pass: 'password' },
+    { role: 'Employee', user: 'PEP0012', pass: 'password123' },
+];
 
 export default function LoginPage() {
     const router = useRouter();
@@ -87,7 +102,7 @@ export default function LoginPage() {
     const [adminPassword, setAdminPassword] = useState('password');
 
     // State for Employee login
-    const [employeeId, setEmployeeId] = useState('');
+    const [employeeId, setEmployeeId] = useState('PEP0012');
     const [employeePassword, setEmployeePassword] = useState('password123');
 
     const handleAdminLogin = async (e: React.FormEvent) => {
@@ -140,6 +155,7 @@ export default function LoginPage() {
          </div>
       </div>
       <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-background min-h-screen">
+        <div className="w-full max-w-sm space-y-6">
           <Card className="w-full max-w-sm shadow-2xl border-none">
             <CardHeader>
               <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
@@ -223,6 +239,34 @@ export default function LoginPage() {
                 </div>
             </CardFooter>
           </Card>
+
+           <Card className="w-full max-w-sm shadow-lg border-none">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ShieldQuestion className="text-primary"/> Demo Accounts</CardTitle>
+                <CardDescription>Use these credentials to explore different roles.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Username</TableHead>
+                            <TableHead>Password</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {demoAccounts.map(account => (
+                            <TableRow key={account.role}>
+                                <TableCell className="font-medium">{account.role}</TableCell>
+                                <TableCell>{account.user}</TableCell>
+                                <TableCell>{account.pass}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+           </Card>
+        </div>
       </div>
     </div>
   );
