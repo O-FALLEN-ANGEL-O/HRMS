@@ -61,11 +61,11 @@ async function seedData() {
   let seededCount = 0;
   for(const userData of usersToCreate) {
       // Check if user exists in auth
-      const { data: { users: existingUsers } } = await supabase.auth.admin.listUsers({ email: userData.email });
-      let authUser = existingUsers?.[0];
+      const { data: { users: existingUsers } } = await supabase.auth.admin.listUsers();
+      let authUser = existingUsers.find(u => u.email === userData.email);
 
       if (authUser) {
-          // User exists, update them
+          // User exists, force update password and metadata
           const { data, error } = await supabase.auth.admin.updateUserById(authUser.id, {
               password: userData.password,
               email_confirm: true,
@@ -100,7 +100,7 @@ async function seedData() {
           role: userData.role
       };
       
-      const { error: empError } = await supabase.from('employees').upsert(employeeData, { onConflict: 'employee_id' });
+      const { error: empError } = await supabase.from('employees').upsert(employeeData, { onConflict: 'id' });
       if(empError) { console.error(`Error seeding employee ${userData.email}`, empError); continue; }
       seededCount++;
   }
@@ -152,15 +152,18 @@ async function seedData() {
 
   // 5. Company Posts
    if (seededEmployees && seededEmployees.length > 0) {
-     const { error: postError } = await supabase.from('company_posts').insert(
-      Array.from({length: 5}, () => ({
-          author_id: faker.helpers.arrayElement(seededEmployees).id,
-          title: faker.company.catchPhrase(),
-          content: faker.lorem.paragraphs(3),
-          image_url: `https://placehold.co/800x400.png`,
-      }))
-     );
-     if (!postError) console.log(`  - ✅ 5 Company posts seeded.`);
+    const { count } = await supabase.from('company_posts').select('*', { count: 'exact', head: true });
+    if (count === 0) {
+        const { error: postError } = await supabase.from('company_posts').insert(
+        Array.from({length: 5}, () => ({
+            author_id: faker.helpers.arrayElement(seededEmployees).id,
+            title: faker.company.catchPhrase(),
+            content: faker.lorem.paragraphs(3),
+            image_url: `https://placehold.co/800x400.png`,
+        }))
+        );
+        if (!postError) console.log(`  - ✅ 5 Company posts seeded.`);
+    }
    }
   
    // 6. Leave Balances and Requests
@@ -183,7 +186,7 @@ async function main() {
   console.log('---');
   console.log('Sample Logins:');
   const adminUser = usersToCreate.find(u => u.role === 'admin');
-  const managerUser = usersToCreate.find(u => u.role === 'manager');
+  const managerUser = usersTo-create.find(u => u.role === 'manager');
   const employeeUser = usersToCreate.find(u => u.role === 'employee');
   if(adminUser) console.log(`Admin: ${adminUser.employee_id} / ${adminUser.password}`);
   if(managerUser) console.log(`Manager: ${managerUser.employee_id} / ${managerUser.password}`);
