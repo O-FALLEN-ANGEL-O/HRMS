@@ -145,7 +145,7 @@ export default function CompanyFeedPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-headline">Company Feed</h1>
+          <h1 className="font-bold font-headline">Company Feed</h1>
           <p className="text-muted-foreground">
             Stay up-to-date with the latest news and announcements.
           </p>

@@ -84,6 +84,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  h1 {
+    @apply text-2xl md:text-3xl;
   }
 }
 

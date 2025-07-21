@@ -139,7 +139,7 @@ export default function LoginPage() {
             &copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved.
          </div>
       </div>
-      <div className="flex items-center justify-center p-6 sm:p-12 bg-background">
+      <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-background min-h-screen">
           <Card className="w-full max-w-sm shadow-2xl border-none">
             <CardHeader>
               <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>

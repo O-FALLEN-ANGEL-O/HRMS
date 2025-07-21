@@ -28,7 +28,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             </Sidebar>
             <SidebarInset>
                 <AppHeader />
-                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
                     {children}
                 </main>
             </SidebarInset>
