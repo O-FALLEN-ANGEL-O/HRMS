@@ -25,6 +25,8 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => void;
   loading: boolean;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     try {
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const value = { user, login, logout, loading };
+  const value = { user, login, logout, loading, searchTerm, setSearchTerm };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

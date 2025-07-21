@@ -56,19 +56,36 @@ const employeeAwards = [
 ]
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, searchTerm } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
   const [posts, setPosts] = React.useState(initialPosts);
-  const [searchTerm, setSearchTerm] = React.useState('');
   const [searchedEmployee, setSearchedEmployee] = React.useState<typeof initialEmployees[0] | null>(null);
-
 
   const name = user?.profile?.name || user?.email?.split('@')[0] || 'User';
   const role = user?.role || 'employee';
 
   const isManager = role === 'manager' || role === 'hr' || role === 'admin';
+
+  React.useEffect(() => {
+    if (!searchTerm) {
+        setSearchedEmployee(null);
+        return;
+    }
+    const foundEmployee = initialEmployees.find(emp => 
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      emp.id.toLowerCase() === searchTerm.toLowerCase()
+    );
+    setSearchedEmployee(foundEmployee || null);
+    if(!foundEmployee) {
+      toast({
+          title: "Employee Not Found",
+          description: `No employee found with the name or ID "${searchTerm}".`,
+          variant: "destructive"
+      })
+    }
+  }, [searchTerm, toast]);
 
   const handleQuickAction = (label: string) => {
     toast({
@@ -95,26 +112,6 @@ export default function DashboardPage() {
       description: `This would typically expand or navigate to a new page for ${title}.`,
     });
   };
-  
-  const handleSearch = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!searchTerm) {
-          setSearchedEmployee(null);
-          return;
-      }
-      const foundEmployee = initialEmployees.find(emp => 
-        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        emp.id.toLowerCase() === searchTerm.toLowerCase()
-      );
-      setSearchedEmployee(foundEmployee || null);
-      if(!foundEmployee) {
-        toast({
-            title: "Employee Not Found",
-            description: `No employee found with the name or ID "${searchTerm}".`,
-            variant: "destructive"
-        })
-      }
-  }
 
   return (
     <div className="space-y-6">
@@ -183,77 +180,61 @@ export default function DashboardPage() {
 
             {/* Middle Column */}
             <div className="lg:col-span-2 space-y-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Employee Search</CardTitle>
-                        <CardDescription>Find an employee by their name or ID.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSearch} className="flex gap-2">
-                            <Input 
-                                placeholder="Search by name or employee ID..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <Button type="submit" variant="outline" size="icon">
-                                <Search className="h-4 w-4" />
-                            </Button>
-                        </form>
-                        {searchedEmployee && (
-                           <div className="mt-4">
-                             <EmployeeDetailsCard employee={searchedEmployee} />
-                           </div>
-                        )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Feed</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                         {posts.map((post) => (
-                          <Card key={post.id}>
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                 <div className="flex items-center gap-4">
-                                     <Avatar>
-                                      <AvatarImage src={post.avatar} data-ai-hint="person avatar"/>
-                                      <AvatarFallback>{post.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <p className="font-semibold">{post.author}</p>
-                                      <p className="text-sm text-muted-foreground">{post.authorRole} • {post.timestamp}</p>
-                                    </div>
+                {searchedEmployee && (
+                   <div className="mt-4">
+                     <EmployeeDetailsCard employee={searchedEmployee} />
+                   </div>
+                )}
+                {!searchedEmployee && (
+                  <Card>
+                      <CardHeader>
+                          <CardTitle>Feed</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                           {posts.map((post) => (
+                            <Card key={post.id}>
+                              <CardHeader>
+                                <div className="flex items-start justify-between">
+                                   <div className="flex items-center gap-4">
+                                       <Avatar>
+                                        <AvatarImage src={post.avatar} data-ai-hint="person avatar"/>
+                                        <AvatarFallback>{post.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <p className="font-semibold">{post.author}</p>
+                                        <p className="text-sm text-muted-foreground">{post.authorRole} • {post.timestamp}</p>
+                                      </div>
+                                   </div>
+                                  <div className="flex items-center gap-2">
+                                       {post.featured && <Badge>Featured</Badge>}
+                                       <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-muted-foreground mb-4">{post.content}</p>
+                                 {post.image && (
+                                  <div className="rounded-lg overflow-hidden border">
+                                      <img src={post.image} alt="Feed post" className="w-full h-auto object-cover" data-ai-hint={post.imageHint} />
+                                  </div>
+                                 )}
+                              </CardContent>
+                              <CardFooter className="flex justify-between">
+                                 <div className="flex gap-4 text-muted-foreground">
+                                    <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)}>
+                                      Like ({post.likes})
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => handleComment(post.id)}>
+                                      Comment ({post.comments})
+                                    </Button>
                                  </div>
-                                <div className="flex items-center gap-2">
-                                     {post.featured && <Badge>Featured</Badge>}
-                                     <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-muted-foreground mb-4">{post.content}</p>
-                               {post.image && (
-                                <div className="rounded-lg overflow-hidden border">
-                                    <img src={post.image} alt="Feed post" className="w-full h-auto object-cover" data-ai-hint={post.imageHint} />
-                                </div>
-                               )}
-                            </CardContent>
-                            <CardFooter className="flex justify-between">
-                               <div className="flex gap-4 text-muted-foreground">
-                                  <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)}>
-                                    Like ({post.likes})
-                                  </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => handleComment(post.id)}>
-                                    Comment ({post.comments})
-                                  </Button>
-                               </div>
-                                <Button variant="link" onClick={() => router.push(`/${role}/company-feed`)}>See more</Button>
-                            </CardFooter>
-                          </Card>
-                        ))}
-                    </CardContent>
-                </Card>
+                                  <Button variant="link" onClick={() => router.push(`/${role}/company-feed`)}>See more</Button>
+                              </CardFooter>
+                            </Card>
+                          ))}
+                      </CardContent>
+                  </Card>
+                )}
             </div>
 
             {/* Right Column */}
@@ -340,5 +321,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

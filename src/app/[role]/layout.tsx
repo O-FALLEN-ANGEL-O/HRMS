@@ -14,7 +14,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation';
 import {
   Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
   Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon, Star,
+  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon, Star, Search
 } from 'lucide-react';
 
 import { Logo } from '@/components/logo';
@@ -31,6 +31,7 @@ import {
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
@@ -126,11 +127,16 @@ function AppSidebar() {
 }
 
 function AppHeader() {
-  const { user, logout } = useAuth();
+  const { user, logout, setSearchTerm } = useAuth();
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
   const role = user?.role || (params.role as string) || 'employee';
   const { toast } = useToast();
+  
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
 
   const handleLogout = () => {
     logout();
@@ -145,39 +151,82 @@ function AppHeader() {
         description: `Navigating to details for: "${text}"`
     });
   }
+  
+  const handleSearchToggle = () => {
+    setIsSearchOpen(prev => !prev);
+  }
+  
+  React.useEffect(() => {
+    if (isSearchOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [isSearchOpen]);
+  
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Navigate to dashboard if not already there, to show search results.
+    if (!pathname.endsWith('/dashboard')) {
+        router.push(`/${role}/dashboard`);
+    }
+    // The search term is already set in the auth context on input change.
+  }
 
   return (
-    <header className="bg-card border-b px-6 py-3 flex items-center justify-between md:justify-end gap-4">
-        <Sheet>
-            <SheetTrigger asChild>
-                <Button size="icon" variant="outline" className="md:hidden">
-                    <Menu className="h-5 w-5" />
-                </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64 bg-slate-900 text-slate-200 border-none">
-                 <SheetHeader className="sr-only">
-                    <SheetTitle>Main Menu</SheetTitle>
-                    <SheetDescription>Navigation links for the application.</SheetDescription>
-                 </SheetHeader>
-                 <div className="flex items-center justify-center h-16 w-full px-4 shrink-0">
-                    <Logo className="text-white" />
-                </div>
-                 <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
-                    {navItems.map(item => (
-                        <Link
-                            key={item.href}
-                            href={`/${role}${item.href}`}
-                            className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors`}
-                        >
-                            <item.icon className="h-5 w-5" />
-                            <span className="text-sm">{item.label}</span>
-                        </Link>
-                    ))}
-                 </nav>
-            </SheetContent>
-        </Sheet>
-        
+    <header className="bg-card border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        {/* Left section: Mobile menu */}
         <div className="flex items-center gap-2">
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button size="icon" variant="outline" className="md:hidden">
+                        <Menu className="h-5 w-5" />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-64 bg-slate-900 text-slate-200 border-none">
+                     <SheetHeader className="sr-only">
+                        <SheetTitle>Main Menu</SheetTitle>
+                        <SheetDescription>Navigation links for the application.</SheetDescription>
+                     </SheetHeader>
+                     <div className="flex items-center justify-center h-16 w-full px-4 shrink-0">
+                        <Logo className="text-white" />
+                    </div>
+                     <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
+                        {navItems.map(item => (
+                            <Link
+                                key={item.href}
+                                href={`/${role}${item.href}`}
+                                className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors`}
+                            >
+                                <item.icon className="h-5 w-5" />
+                                <span className="text-sm">{item.label}</span>
+                            </Link>
+                        ))}
+                     </nav>
+                </SheetContent>
+            </Sheet>
+        </div>
+
+        {/* Center section: Expandable search */}
+        <div className="flex-1 flex justify-center">
+            <div className={`w-full max-w-sm transition-all duration-300 ${isSearchOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
+                {isSearchOpen && (
+                    <form onSubmit={handleSearchSubmit}>
+                        <Input
+                            ref={searchInputRef}
+                            placeholder="Search employees..."
+                            className="w-full"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onBlur={() => setIsSearchOpen(false)}
+                        />
+                    </form>
+                )}
+            </div>
+        </div>
+
+        {/* Right section: Actions */}
+        <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={handleSearchToggle}>
+              <Search className="h-5 w-5" />
+            </Button>
             <ThemeToggle />
             <Sheet>
                 <SheetTrigger asChild>
@@ -297,5 +346,3 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
-
-    
