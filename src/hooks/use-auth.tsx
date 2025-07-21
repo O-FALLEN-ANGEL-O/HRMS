@@ -65,7 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           department: 'Technology',
           status: 'Active'
       };
+    } else if (userData.role === 'process-manager' && !userData.profile) {
+      userData.profile = { name: 'Process Manager', department: 'Operations' }
     }
+
 
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
