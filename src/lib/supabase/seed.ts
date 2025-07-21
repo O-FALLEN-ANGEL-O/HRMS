@@ -25,14 +25,15 @@ const supabase = createClient(
 // List of all tables in the order they should be cleared
 const ALL_TABLES = [
   'team_members', 'leave_requests', 'helpdesk_messages', 'helpdesk_tickets',
-  'assessment_answers', 'assessment_attempts', 'assessment_questions', 'assessment_sections',
-  'asset_assignments', 'it_assets', 'employee_tasks', 'onboarding_tasks',
+  'assessment_answers', 'assessment_attempts', 'assessment_questions', 'assessment_sections', 'assessments',
+  'asset_assignments', 'it_assets', 'employee_tasks', 'onboarding_tasks', 'software_licenses',
   'payslips', 'expense_claims', 'purchase_orders', 'timesheets',
   'performance_reviews', 'interview_schedules', 'applicants', 'job_openings',
   'company_posts', 'teams', 'budgets', 'employee_compliance_status',
-  'compliance_modules', 'coaching_sessions', 'maintenance_schedules',
-  'production_lines', 'employees', 'departments'
+  'compliance_modules', 'coaching_sessions', 'maintenance_schedules', 'production_lines',
+  'employees', 'departments'
 ];
+
 
 const usersToCreate = [
     { email: 'admin@optitalent.com', password: 'password', role: 'admin', departmentName: 'Administration', full_name: 'Admin User', employee_id: 'PEP0001' },
@@ -56,10 +57,11 @@ const usersToCreate = [
 async function clearData() {
   console.log('🗑️ Clearing existing data...');
   
+  // Clear all public tables
   for (const table of ALL_TABLES) {
     const { error } = await supabase.from(table).delete().gt('id', 0); // Dummy condition for delete all
     if (error && error.code !== '42P01') { // 42P01: undefined_table
-      console.error(`Error clearing table ${table}:`, error);
+      console.error(`Error clearing table ${table}:`, error.message);
     }
   }
 
@@ -89,7 +91,7 @@ async function seedData() {
         { name: 'Operations' }, { name: 'Quality' }, { name: 'Administration' },
     ]).select();
     if(deptError) { console.error("Error seeding departments", deptError); return; }
-    console.log(`✅ ${departments.length} departments seeded.`);
+    console.log(`  - ✅ ${departments.length} departments seeded.`);
 
     // 2. Seed Users & Employees
     let createdEmployees = [];
@@ -104,13 +106,18 @@ async function seedData() {
       if (authError) { console.error(`Error creating auth user ${userData.email}:`, authError); continue; }
       
       const department = departments.find(d => d.name === userData.departmentName);
+      if (!department) {
+        console.warn(`Department '${userData.departmentName}' not found for user ${userData.email}. Skipping employee creation.`);
+        continue;
+      }
+      
       const { data: employee, error: empError } = await supabase.from('employees').insert({
         id: authData.user.id,
         employee_id: userData.employee_id,
         full_name: userData.full_name,
         email: userData.email,
         job_title: faker.person.jobTitle(),
-        department: department?.name,
+        department: department.name,
         hire_date: faker.date.past({ years: 5 }),
         profile_picture_url: `https://placehold.co/400x400.png?text=${userData.full_name.split(' ').map(n=>n[0]).join('')}`,
         status: 'Active',
@@ -120,7 +127,7 @@ async function seedData() {
       
       createdEmployees.push(employee);
     }
-    console.log(`✅ ${createdEmployees.length} employees seeded.`);
+    console.log(`  - ✅ ${createdEmployees.length} employees seeded.`);
 
     if (createdEmployees.length === 0) {
         console.error("No employees were created, stopping seed.");
@@ -129,8 +136,8 @@ async function seedData() {
 
     // 3. Seed Job Openings and Applicants
     const { data: openings } = await supabase.from('job_openings').insert([
-        { title: 'Senior Frontend Developer', department: 'Engineering' },
-        { title: 'Product Manager', department: 'Product' },
+        { title: 'Senior Frontend Developer', department: 'Engineering', status: 'Open' },
+        { title: 'Product Manager', department: 'Product', status: 'Open' },
     ]).select();
 
     if(openings) {
@@ -148,7 +155,7 @@ async function seedData() {
             }
         }
         await supabase.from('applicants').insert(applicants);
-        console.log(`✅ ${applicants.length} applicants seeded.`);
+        console.log(`  - ✅ ${applicants.length} applicants seeded.`);
     }
 
     // 4. Seed Company Posts
@@ -161,7 +168,7 @@ async function seedData() {
         });
     }
     await supabase.from('company_posts').insert(posts);
-    console.log(`✅ ${posts.length} company posts seeded.`);
+    console.log(`  - ✅ ${posts.length} company posts seeded.`);
 
     // 5. Seed Leave Requests
     const leaveRequests = [];
@@ -178,7 +185,7 @@ async function seedData() {
         });
     }
     await supabase.from('leave_requests').insert(leaveRequests);
-    console.log(`✅ ${leaveRequests.length} leave requests seeded.`);
+    console.log(`  - ✅ ${leaveRequests.length} leave requests seeded.`);
     
     // 6. Seed Helpdesk Tickets
     const helpdeskTickets = [];
@@ -194,7 +201,7 @@ async function seedData() {
         });
     }
     await supabase.from('helpdesk_tickets').insert(helpdeskTickets);
-    console.log(`✅ ${helpdeskTickets.length} helpdesk tickets seeded.`);
+    console.log(`  - ✅ ${helpdeskTickets.length} helpdesk tickets seeded.`);
 
     // 7. Seed Performance Reviews
     const managers = createdEmployees.filter(e => e.role === 'manager' || e.role === 'admin' || e.role === 'hr' );
@@ -214,7 +221,7 @@ async function seedData() {
             }
         }
         await supabase.from('performance_reviews').insert(reviews);
-        console.log(`✅ ${reviews.length} performance reviews seeded.`);
+        console.log(`  - ✅ ${reviews.length} performance reviews seeded.`);
     }
 
     // 8. Seed IT Assets
@@ -230,7 +237,28 @@ async function seedData() {
         });
     }
     await supabase.from('it_assets').insert(assets);
-    console.log(`✅ ${assets.length} IT assets seeded.`);
+    console.log(`  - ✅ ${assets.length} IT assets seeded.`);
+
+     // 9. Seed Assessments
+    const { data: assessments } = await supabase.from('assessments').insert([
+        { title: 'Customer Support Aptitude', process_type: 'Chat Support', duration_minutes: 30, passing_score: 75 },
+        { title: 'Technical Support (Level 1)', process_type: 'Technical Support', duration_minutes: 45, passing_score: 80 },
+    ]).select();
+
+    if (assessments) {
+        const { data: sections } = await supabase.from('assessment_sections').insert([
+            { assessment_id: assessments[0].id, title: 'Situational Judgement', section_type: 'mcq', time_limit_minutes: 15 },
+            { assessment_id: assessments[1].id, title: 'Basic Networking', section_type: 'mcq', time_limit_minutes: 20 },
+        ]).select();
+        
+        if (sections) {
+            await supabase.from('assessment_questions').insert([
+                { section_id: sections[0].id, question_text: 'A customer is angry about a late delivery. What is the FIRST step?', question_type: 'mcq', options: '["Offer a refund","Apologize and listen","Explain the delay","Transfer call"]', correct_answer: 'Apologize and listen' },
+                { section_id: sections[1].id, question_text: 'What is a DHCP server used for?', question_type: 'mcq', options: '["Resolve domains","Assign IPs","Block access","Store files"]', correct_answer: 'Assign IPs' }
+            ]);
+        }
+        console.log(`  - ✅ Assessments, sections, and questions seeded.`);
+    }
 }
 
 async function main() {
