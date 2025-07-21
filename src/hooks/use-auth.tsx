@@ -11,8 +11,10 @@ interface UserProfile {
   id: string;
   full_name: string;
   department: string;
+  job_title: string;
   role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
   employee_id: string;
+  profile_picture_url?: string;
 }
 
 interface User {
@@ -53,10 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.error("Error fetching profile:", error);
                 setUser(null);
             } else {
+                 const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
                  setUser({
                     id: sessionUser.id,
                     email: sessionUser.email!,
-                    role: profile.role,
+                    role: userRole,
                     profile: profile
                 });
             }
@@ -74,18 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
-        fetchUser(session?.user ?? null);
-        if (event === 'SIGNED_IN') {
-           const { data: profile } = await supabase
-                .from('employees')
-                .select('role')
-                .eq('id', session?.user.id)
-                .single();
-            if (profile) {
-                 router.push(`/${profile.role}/dashboard`);
-            } else {
-                 router.push(`/employee/dashboard`);
-            }
+        const sessionUser = session?.user ?? null;
+        await fetchUser(sessionUser);
+        
+        if (event === 'SIGNED_IN' && sessionUser) {
+            const userRole = (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
+            router.push(`/${userRole}/dashboard`);
         }
         if (event === 'SIGNED_OUT') {
             router.push('/');
@@ -120,13 +117,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const signUp = async (data: any) => {
     const { email, password, firstName, lastName } = data;
-    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role: 'employee',
+          full_name: `${firstName} ${lastName}`
+        }
+      }
+    });
 
     if (authError) return { user: null, error: authError };
     if (!authData.user) throw new Error("Sign up successful, but no user data returned.");
 
     // Generate a simple employee_id
-    const employee_id = `PEP${String(Math.floor(Math.random() * 900) + 100).padStart(4,'0')}`;
+    const employee_id = `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`;
 
     const { error: profileError } = await supabase
       .from('employees')
@@ -134,12 +140,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: authData.user.id,
         full_name: `${firstName} ${lastName}`,
         email: email,
-        role: 'employee', // All new signups are employees
+        job_title: 'New Hire',
+        department: 'Unassigned',
         employee_id,
+        status: 'Active'
       });
 
     if (profileError) {
         console.error("Error creating profile:", profileError);
+        // Best effort, don't block login if profile fails
         return { user: authData.user, error: profileError };
     }
 
@@ -147,7 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    return supabase.auth.signOut();
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push('/');
   };
 
   const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
