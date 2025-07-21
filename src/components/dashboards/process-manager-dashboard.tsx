@@ -49,6 +49,13 @@ export default function ProcessManagerDashboard() {
     fetchData();
   }, [toast]);
 
+  const handleComplianceClick = (name: string) => {
+    toast({
+        title: "Compliance Item Clicked",
+        description: `Navigating to details for "${name}".`
+    });
+  }
+
   const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   const chartConfig = ticketData ? ticketData.reduce((acc, entry) => {
@@ -118,15 +125,17 @@ export default function ProcessManagerDashboard() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                      {complianceData.map(item => (
-                        <div key={item.name} className="p-3 bg-muted/50 rounded-lg">
-                           <div className='flex justify-between items-center mb-1'>
-                             <p className="text-sm font-medium">{item.name}</p>
-                             <p className="text-sm font-semibold">{item.percentage}%</p>
-                           </div>
-                           <div className="h-2 w-full rounded-full bg-muted">
-                            <div className="h-2 rounded-full bg-primary" style={{width: `${item.percentage}%`}}></div>
-                           </div>
-                        </div>
+                        <Button variant="ghost" className="w-full h-auto p-0" key={item.name} onClick={() => handleComplianceClick(item.name)}>
+                            <div className="w-full p-3 bg-muted/50 rounded-lg text-left">
+                               <div className='flex justify-between items-center mb-1'>
+                                 <p className="text-sm font-medium">{item.name}</p>
+                                 <p className="text-sm font-semibold">{item.percentage}%</p>
+                               </div>
+                               <div className="h-2 w-full rounded-full bg-muted">
+                                <div className="h-2 rounded-full bg-primary" style={{width: `${item.percentage}%`}}></div>
+                               </div>
+                            </div>
+                        </Button>
                      ))}
                 </CardContent>
             </Card>

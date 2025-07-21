@@ -83,6 +83,12 @@ export default function DashboardPage() {
     );
   };
 
+  const handleWidgetAction = (title: string) => {
+    toast({
+      title: `${title} Widget Clicked`,
+      description: `This would typically expand or navigate to a new page for ${title}.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -120,18 +126,18 @@ export default function DashboardPage() {
                         );
                     })}
                 </div>
-                <DashboardCard title="Today's Celebration" icon={Cake} actionIcon={ChevronDown}>
+                <DashboardCard title="Today's Celebration" icon={Cake} actionIcon={ChevronDown} onActionClick={() => handleWidgetAction("Today's Celebration")}>
                     <div className="space-y-3">
                         {celebrations.map((c, i) => <p key={i} className="text-sm text-muted-foreground">{c.type}: <span className="font-semibold text-foreground">{c.name}</span></p>)}
                     </div>
                 </DashboardCard>
-                <DashboardCard title="Core values" icon={Award} actionIcon={ChevronDown}>
+                <DashboardCard title="Core values" icon={Award} actionIcon={ChevronDown} onActionClick={() => handleWidgetAction('Core values')}>
                      <p className="text-sm text-muted-foreground">5 core values</p>
                 </DashboardCard>
-                <DashboardCard title="Referrals / IJP" icon={UserPlus} actionIcon={ChevronDown}>
+                <DashboardCard title="Referrals / IJP" icon={UserPlus} actionIcon={ChevronDown} onActionClick={() => handleWidgetAction('Referrals / IJP')}>
                      <p className="text-sm text-muted-foreground">3 referrals / IJP</p>
                 </DashboardCard>
-                <DashboardCard title="Team planned leaves" icon={CalendarCheck} actionIcon={ChevronDown}>
+                <DashboardCard title="Team planned leaves" icon={CalendarCheck} actionIcon={ChevronDown} onActionClick={() => handleWidgetAction('Team planned leaves')}>
                     <div className="flex items-center">
                         <div className="flex -space-x-2 mr-2">
                         {teamLeaves.map(member => (
@@ -220,9 +226,6 @@ export default function DashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-base font-medium">Calendar</CardTitle>
-                        <Button variant="link" size="sm" onClick={() => router.push(isManager ? `/${role}/leaves/calendar` : `/${role}/leaves`)}>
-                            Go to Calendar
-                        </Button>
                     </CardHeader>
                     <CardContent>
                         <Calendar
@@ -231,6 +234,11 @@ export default function DashboardPage() {
                             className="p-0"
                         />
                     </CardContent>
+                    <CardFooter>
+                        <Button variant="link" size="sm" className="w-full" onClick={() => router.push(isManager ? `/${role}/leaves/calendar` : `/${role}/leaves`)}>
+                            Go to Calendar
+                        </Button>
+                    </CardFooter>
                 </Card>
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">

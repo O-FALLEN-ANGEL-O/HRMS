@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useToast } from '@/hooks/use-toast';
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader'] },
@@ -126,6 +127,7 @@ function AppHeader() {
   const router = useRouter();
   const params = useParams();
   const role = user?.role || (params.role as string) || 'employee';
+  const { toast } = useToast();
 
   const handleLogout = () => {
     logout();
@@ -133,6 +135,13 @@ function AppHeader() {
   };
   
   const navItems = allNavItems.filter((item) => item.roles.includes(role));
+
+  const handleNotificationClick = (text: string) => {
+    toast({
+        title: "Notification Clicked",
+        description: `Navigating to details for: "${text}"`
+    });
+  }
 
   return (
     <header className="bg-card border-b px-6 py-3 flex items-center justify-between md:justify-end gap-4">
@@ -179,11 +188,11 @@ function AppHeader() {
                         <SheetTitle>Notifications</SheetTitle>
                         <SheetDescription>You have {notifications.length} unread notifications.</SheetDescription>
                     </SheetHeader>
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-4 space-y-2">
                         {notifications.map(n => {
                             const Icon = n.icon;
                             return (
-                                <div key={n.id} className="flex items-start gap-3">
+                                <button key={n.id} className="flex items-start gap-3 w-full text-left p-2 rounded-md hover:bg-muted" onClick={() => handleNotificationClick(n.text)}>
                                     <div className="p-2 bg-muted rounded-full">
                                         <Icon className="h-5 w-5 text-muted-foreground"/>
                                     </div>
@@ -191,7 +200,7 @@ function AppHeader() {
                                         <p className="text-sm font-medium">{n.text}</p>
                                         <p className="text-xs text-muted-foreground">{n.time}</p>
                                     </div>
-                                </div>
+                                </button>
                             )
                         })}
                     </div>

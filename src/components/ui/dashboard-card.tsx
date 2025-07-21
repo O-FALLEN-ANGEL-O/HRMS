@@ -12,9 +12,10 @@ interface DashboardCardProps {
   value?: string | number;
   description?: string;
   children?: React.ReactNode;
+  onActionClick?: () => void;
 }
 
-export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value, description, children }: DashboardCardProps) {
+export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value, description, children, onActionClick }: DashboardCardProps) {
   if (value !== undefined) {
     // Stat card variant
     return (
@@ -39,7 +40,7 @@ export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value
             {Icon && <Icon className="h-5 w-5 text-primary" />}
             <span>{title}</span>
         </CardTitle>
-        {ActionIcon && <Button variant="ghost" size="icon" className="h-6 w-6"><ActionIcon className="h-4 w-4 text-muted-foreground" /></Button>}
+        {ActionIcon && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onActionClick}><ActionIcon className="h-4 w-4 text-muted-foreground" /></Button>}
       </CardHeader>
       <CardContent>
         {children}
