@@ -122,7 +122,7 @@ export default function LoginPage() {
           password: employeePassword
         });
         
-        if (result.error || !result.user) {
+        if (result.error || !result.role) {
              toast({
                 variant: 'destructive',
                 title: 'Login Failed',
@@ -131,13 +131,15 @@ export default function LoginPage() {
             setLoading(false);
         } else {
             toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard.' });
-            // revalidateUser will read the new cookie and update the auth context
+            // The revalidateUser call updates the auth context, which can be useful
+            // but the primary redirect is now handled directly.
             await revalidateUser();
+            router.push(`/${result.role}/dashboard`);
         }
     }
 
   // Show a loading state if auth is still resolving and there's no user yet
-  if (authLoading || user) {
+  if (authLoading) {
       return (
         <div className="flex h-screen items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
