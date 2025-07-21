@@ -11,6 +11,7 @@ import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '../ui/textarea';
 import { useTeam } from '@/hooks/use-team';
+import { motion } from 'framer-motion';
 
 // Mock Data
 const initialPendingApprovals = [
@@ -54,38 +55,59 @@ export default function ManagerDashboard() {
     
   const totalTasksCompleted = teamMembers.reduce((sum, member) => sum + (member.tasksCompleted || 0), 0);
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    })
+  };
+
   return (
     <div className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <DashboardCard 
-                title="Team Members"
-                value={teamMembers.length}
-                description="Active members in your team."
-                icon={Users}
-            />
-             <DashboardCard 
-                title="Pending Approvals"
-                value={pendingApprovals.length}
-                description="Items requiring your action."
-                icon={Clock}
-            />
-            <DashboardCard 
-                title="Team Performance"
-                value={`${avgPerformance}%`}
-                description="Average performance score this quarter."
-                icon={TrendingUp}
-            />
-            <DashboardCard 
-                title="Tasks Completed"
-                value={totalTasksCompleted}
-                description="Total tasks completed by team this week."
-                icon={CheckCircle}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+             <motion.div custom={0} initial="hidden" animate="visible" variants={cardVariants}>
+                <DashboardCard 
+                    title="Team Members"
+                    value={teamMembers.length}
+                    description="Active members in your team."
+                    icon={Users}
+                />
+            </motion.div>
+             <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants}>
+                <DashboardCard 
+                    title="Pending Approvals"
+                    value={pendingApprovals.length}
+                    description="Items requiring your action."
+                    icon={Clock}
+                />
+            </motion.div>
+            <motion.div custom={2} initial="hidden" animate="visible" variants={cardVariants}>
+                <DashboardCard 
+                    title="Team Performance"
+                    value={`${avgPerformance}%`}
+                    description="Average performance score this quarter."
+                    icon={TrendingUp}
+                />
+            </motion.div>
+            <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants}>
+                <DashboardCard 
+                    title="Tasks Completed"
+                    value={totalTasksCompleted}
+                    description="Total tasks completed by team this week."
+                    icon={CheckCircle}
+                />
+            </motion.div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div className="lg:col-span-2 space-y-6">
-                 <Card>
+             <motion.div custom={4} initial="hidden" animate="visible" variants={cardVariants} className="lg:col-span-2">
+                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle>Team Overview</CardTitle>
                         <CardDescription>Monitor your team's status and performance.</CardDescription>
@@ -98,45 +120,49 @@ export default function ManagerDashboard() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Recognize a Peer</CardTitle>
-                        <CardDescription>Give an award to a deserving colleague.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form className="space-y-4" onSubmit={handleGiveAward}>
-                            <Input name="empId" placeholder="Enter Employee ID (e.g., EMP001)" required />
-                            <Textarea name="message" placeholder="Reason for award (optional)" />
-                            <Button type="submit" className="w-full">
-                                <Award className="mr-2 h-4 w-4" />
-                                Give Award
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Pending Approvals</CardTitle>
-                        <CardDescription>Actions that require your attention.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {pendingApprovals.map((approval) => (
-                           <div key={approval.id} className="p-3 bg-muted rounded-lg">
-                                <p className="text-sm font-semibold">{approval.type}</p>
-                                <p className="text-sm text-muted-foreground">{approval.name} - {approval.details}</p>
-                                <div className="flex gap-2 mt-2">
-                                    <Button size="sm" className="flex-1" onClick={() => handleApproval(approval.id, true)}>Approve</Button>
-                                    <Button size="sm" variant="outline" className="flex-1" onClick={() => handleApproval(approval.id, false)}>Deny</Button>
-                                </div>
-                           </div>
-                        ))}
-                         {pendingApprovals.length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center py-4">No pending approvals.</p>
-                        )}
-                    </CardContent>
-                </Card>
+            </motion.div>
+            <div className="lg:col-span-1 space-y-6">
+                <motion.div custom={5} initial="hidden" animate="visible" variants={cardVariants}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Recognize a Peer</CardTitle>
+                            <CardDescription>Give an award to a deserving colleague.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form className="space-y-4" onSubmit={handleGiveAward}>
+                                <Input name="empId" placeholder="Enter Employee ID (e.g., EMP001)" required />
+                                <Textarea name="message" placeholder="Reason for award (optional)" />
+                                <Button type="submit" className="w-full">
+                                    <Award className="mr-2 h-4 w-4" />
+                                    Give Award
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+                <motion.div custom={6} initial="hidden" animate="visible" variants={cardVariants}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Pending Approvals</CardTitle>
+                            <CardDescription>Actions that require your attention.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {pendingApprovals.map((approval) => (
+                               <div key={approval.id} className="p-3 bg-muted/50 rounded-lg">
+                                    <p className="text-sm font-semibold">{approval.type}</p>
+                                    <p className="text-sm text-muted-foreground">{approval.name} - {approval.details}</p>
+                                    <div className="flex gap-2 mt-2">
+                                        <Button size="sm" className="flex-1" onClick={() => handleApproval(approval.id, true)}>Approve</Button>
+                                        <Button size="sm" variant="outline" className="flex-1" onClick={() => handleApproval(approval.id, false)}>Deny</Button>
+                                    </div>
+                               </div>
+                            ))}
+                             {pendingApprovals.length === 0 && (
+                                <p className="text-sm text-muted-foreground text-center py-4">No pending approvals.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
         </div>
     </div>

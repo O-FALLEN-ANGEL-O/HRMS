@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { EmployeeDetailsCard } from '@/components/employee-details-card';
 import { supabase } from '@/lib/supabase';
+import { motion } from 'framer-motion';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -138,12 +139,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
        {searchedEmployee === null && !searching && (
-         <Card className="bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg border-none">
+         <Card className="bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg border-none overflow-hidden">
             <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex flex-col sm:flex-row justify-between items-start gap-4"
+                >
                     <div>
-                        <h1 className="text-3xl font-headline tracking-tight">Hello, {name}!</h1>
-                        <p className="text-indigo-200">Hope you are having a great day</p>
+                        <h1 className="text-4xl font-headline tracking-tight font-bold">Hello, {name}!</h1>
+                        <p className="text-indigo-200 mt-1">Hope you are having a great day</p>
                     </div>
                     <div className="flex-shrink-0">
                         <Button 
@@ -154,7 +160,7 @@ export default function DashboardPage() {
                         </Button>
                         <p className="text-xs text-indigo-200 mt-1 text-right">Last punch: 18:00, Yesterday</p>
                     </div>
-                </div>
+                </motion.div>
             </CardContent>
         </Card>
        )}
@@ -166,7 +172,7 @@ export default function DashboardPage() {
                     {quickActions.map(action => {
                         const Icon = action.icon;
                         return (
-                            <Button key={action.label} variant="outline" className="h-16 flex-col gap-1" onClick={() => handleQuickAction(action.label)}>
+                            <Button key={action.label} variant="outline" className="h-20 flex-col gap-2" onClick={() => handleQuickAction(action.label)}>
                                 <Icon className="h-6 w-6 text-primary" />
                                 <span>{action.label}</span>
                             </Button>
@@ -211,9 +217,9 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
                 ) : searchedEmployee ? (
-                   <div className="mt-4">
+                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1}} transition={{ duration: 0.3 }}>
                      <EmployeeDetailsCard employee={searchedEmployee} />
-                   </div>
+                   </motion.div>
                 ) : searchedEmployee === undefined ? (
                     <Card>
                         <CardContent className="p-6 text-center">
