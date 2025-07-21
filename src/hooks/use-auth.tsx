@@ -30,7 +30,6 @@ interface AuthContextType {
   login: (identifier: string, password: string, isEmployeeId?: boolean) => Promise<any>;
   logout: () => Promise<any>;
   signUp: (data: any) => Promise<any>;
-  checkEmployeeId: (employeeId: string) => Promise<{ exists: boolean; isRegistered: boolean }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (identifier: string, password: string, isEmployeeId: boolean = false) => {
     let email = identifier;
     if (isEmployeeId) {
+      if (!identifier) {
+        return { data: null, error: { message: "Employee ID is required." } };
+      }
       const { data: employee, error } = await supabase
         .from('employees')
         .select('email')
@@ -124,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!authData.user) throw new Error("Sign up successful, but no user data returned.");
 
     // Generate a simple employee_id
-    const employee_id = `PEP${String(Math.floor(Math.random() * 900) + 100)}`;
+    const employee_id = `PEP${String(Math.floor(Math.random() * 900) + 100).padStart(4,'0')}`;
 
     const { error: profileError } = await supabase
       .from('employees')
@@ -144,31 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { user: authData.user, error: null };
   }
 
-  const checkEmployeeId = async (employeeId: string): Promise<{ exists: boolean; isRegistered: boolean }> => {
-    const { data, error } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('employee_id', employeeId.toUpperCase())
-        .single();
-
-    if (error || !data) {
-        return { exists: false, isRegistered: false };
-    }
-
-    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers({ perPage: 1 });
-    // This is a simplified check. In a real world scenario you might want to check if the user has ever signed in.
-    // Supabase doesn't directly expose if a password is set. A workaround is to check last_sign_in_at.
-    const authUser = users.find(u => u.id === data.id);
-    const isRegistered = !!(authUser && authUser.last_sign_in_at);
-
-    return { exists: true, isRegistered: true }; // Simplified for now
-  }
-
   const logout = async () => {
     return supabase.auth.signOut();
   };
 
-  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp, checkEmployeeId };
+  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

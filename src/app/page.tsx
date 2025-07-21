@@ -78,7 +78,7 @@ function AnimatedLogo() {
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login, checkEmployeeId } = useAuth();
+    const { login } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
 
@@ -88,9 +88,7 @@ export default function LoginPage() {
 
     // State for Employee login
     const [employeeId, setEmployeeId] = useState('');
-    const [employeePassword, setEmployeePassword] = useState('');
-    const [employeeConfirmPassword, setEmployeeConfirmPassword] = useState('');
-    const [employeeLoginStep, setEmployeeLoginStep] = useState<'enterId' | 'enterPassword' | 'createPassword'>('enterId');
+    const [employeePassword, setEmployeePassword] = useState('password123');
 
     const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -109,33 +107,10 @@ export default function LoginPage() {
         }
     };
 
-    const handleEmployeeIdSubmit = async (e: React.FormEvent) => {
+    const handleEmployeeLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const result = await checkEmployeeId(employeeId);
-        if (result.exists) {
-            if (result.isRegistered) {
-                setEmployeeLoginStep('enterPassword');
-                toast({ title: 'Welcome Back!', description: 'Please enter your password.' });
-            } else {
-                setEmployeeLoginStep('createPassword');
-                toast({ title: 'First Time Login', description: 'Please create a password for your account.' });
-            }
-        } else {
-            toast({ variant: 'destructive', title: 'Invalid ID', description: 'Employee ID not found. Please check and try again.' });
-        }
-        setLoading(false);
-    };
-
-    const handleEmployeePasswordLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (employeeLoginStep === 'createPassword' && employeePassword !== employeeConfirmPassword) {
-            toast({ variant: 'destructive', title: 'Passwords Do Not Match', description: 'Please ensure both passwords are the same.' });
-            return;
-        }
         
-        setLoading(true);
-
         const { data, error } = await login(employeeId, employeePassword, true);
         
         if (error) {
@@ -178,64 +153,31 @@ export default function LoginPage() {
                 </TabsList>
                 
                 <TabsContent value="employee" className="pt-4">
-                  {employeeLoginStep === 'enterId' && (
-                    <form onSubmit={handleEmployeeIdSubmit} className="space-y-4">
+                  <form onSubmit={handleEmployeeLogin} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="employeeId">Employee ID</Label>
                         <Input
                           id="employeeId"
-                          placeholder="e.g., PEP04"
+                          placeholder="e.g., PEP0004"
                           required
                           value={employeeId}
                           onChange={(e) => setEmployeeId(e.target.value)}
                         />
                       </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="employeePassword">Password</Label>
+                          <Input
+                              id="employeePassword"
+                              type="password"
+                              required
+                              value={employeePassword}
+                              onChange={e => setEmployeePassword(e.target.value)}
+                          />
+                      </div>
                       <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Continue'}
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
                       </Button>
                     </form>
-                  )}
-
-                  {(employeeLoginStep === 'enterPassword' || employeeLoginStep === 'createPassword') && (
-                     <form onSubmit={handleEmployeePasswordLogin} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="employeeId-static">Employee ID</Label>
-                            <Input id="employeeId-static" value={employeeId} disabled />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="employeePassword">
-                                {employeeLoginStep === 'enterPassword' ? 'Password' : 'Create Password'}
-                            </Label>
-                            <Input 
-                                id="employeePassword" 
-                                type="password" 
-                                required 
-                                value={employeePassword}
-                                onChange={e => setEmployeePassword(e.target.value)}
-                                autoFocus
-                            />
-                        </div>
-                        {employeeLoginStep === 'createPassword' && (
-                           <div className="space-y-2">
-                                <Label htmlFor="employeeConfirmPassword">Confirm Password</Label>
-                                <Input 
-                                    id="employeeConfirmPassword" 
-                                    type="password" 
-                                    required 
-                                    value={employeeConfirmPassword}
-                                    onChange={e => setEmployeeConfirmPassword(e.target.value)}
-                                />
-                            </div>
-                        )}
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {employeeLoginStep === 'enterPassword' ? 'Sign In' : 'Create Password & Sign In'}
-                        </Button>
-                        <Button variant="link" size="sm" onClick={() => setEmployeeLoginStep('enterId')}>
-                            Use a different Employee ID
-                        </Button>
-                     </form>
-                  )}
                 </TabsContent>
 
                 <TabsContent value="admin" className="pt-4">
