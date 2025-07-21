@@ -25,18 +25,20 @@ const auditFormSections = [
     { id: 's4', title: 'Closing', questions: [{ id: 'q7', text: 'Was the standard closing used?' }, { id: 'q8', text: 'Was further assistance offered?' }] },
 ];
 
-function ViewAuditDialog({ evaluation }: { evaluation: typeof completedEvaluations[0] }) {
+function ViewAuditDialog({ evaluation, children }: { evaluation: typeof completedEvaluations[0], children: React.ReactNode }) {
+    const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         toast({ title: 'Feedback Submitted', description: `Feedback for evaluation ${evaluation.id} has been saved.` });
+        setIsOpen(false);
     };
 
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">View Audit</Button>
+                {children}
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
@@ -126,7 +128,9 @@ export default function QualityPage() {
                                     </TableCell>
                                     <TableCell>{evaluation.date}</TableCell>
                                     <TableCell className="text-right">
-                                        <ViewAuditDialog evaluation={evaluation} />
+                                        <ViewAuditDialog evaluation={evaluation}>
+                                            <Button variant="outline" size="sm">View Audit</Button>
+                                        </ViewAuditDialog>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -137,3 +141,5 @@ export default function QualityPage() {
         </div>
     );
 }
+
+    

@@ -126,6 +126,7 @@ function EditProfileDialog({ employee, children }: { employee: UserData, childre
 
 export default function ProfilePage() {
     const params = useParams();
+    const { toast } = useToast();
     const role = (params.role as string) as keyof typeof MOCK_USERS;
     const userData = MOCK_USERS[role] || MOCK_USERS['Guest'];
 
@@ -143,6 +144,14 @@ export default function ProfilePage() {
             case 'award': return <Award className="h-4 w-4 text-green-500"/>;
             default: return <History className="h-4 w-4 text-muted-foreground"/>;
         }
+    }
+
+    const handleResignation = () => {
+        toast({
+            title: "Resignation Initiated",
+            description: "Your request has been submitted to HR for processing.",
+            variant: "default",
+        });
     }
 
     return (
@@ -344,7 +353,7 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent className="text-center">
                             <p className="text-muted-foreground mb-4">This action is final and will start the offboarding process.</p>
-                            <Button variant="destructive">Initiate Resignation</Button>
+                            <Button variant="destructive" onClick={handleResignation}>Initiate Resignation</Button>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -352,5 +361,7 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
 
     
