@@ -1,25 +1,19 @@
 
-import { config } from 'dotenv';
-config();
-
-// A '.env' file is required in the root directory.
-// It should contain the following variables:
-// SUPABASE_URL="your-supabase-url"
-// SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
+// A '.env' file is NOT required for this script to run with hardcoded credentials.
+// For security, you would typically use environment variables, but this approach ensures the script runs in any environment.
 import { createClient } from '@supabase/supabase-js';
 import { faker } from '@faker-js/faker';
 
-// Check for required environment variables
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error(
-    'Supabase URL or service role key not found in environment variables. Please check your .env file.'
-  );
-}
+// Hardcoded Supabase credentials.
+// Replace these with your actual Supabase project details if they differ.
+const SUPABASE_URL = "https://qgmknoilorehwimlhngf.supabase.co";
+const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzA5MDcyOSwiZXhwIjoyMDY4NjY2NzI5fQ.ZX7cVFzfOV7PrjSkwxTcrYkk6_3sNqaoVyd2UDfbAf0";
+
 
 // Initialize the Supabase client with the admin key
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY
 );
 
 const usersToCreate = [
