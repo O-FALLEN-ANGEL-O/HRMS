@@ -16,6 +16,7 @@ import { Loader2, ShieldQuestion } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { loginWithEmployeeId, verifyOtp } from './actions';
 import type { User } from '@/hooks/use-auth';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -262,24 +263,26 @@ export default function LoginPage() {
                 <CardDescription>Use these credentials to explore different roles.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Employee ID</TableHead>
-                            <TableHead>Password</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {demoAccounts.map(account => (
-                            <TableRow key={account.role}>
-                                <TableCell className="font-medium">{account.role}</TableCell>
-                                <TableCell>{account.user}</TableCell>
-                                <TableCell>{account.pass}</TableCell>
+                 <ScrollArea className="h-64">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Role</TableHead>
+                                <TableHead>Employee ID</TableHead>
+                                <TableHead>Password</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {demoAccounts.map(account => (
+                                <TableRow key={account.role}>
+                                    <TableCell className="font-medium">{account.role}</TableCell>
+                                    <TableCell>{account.user}</TableCell>
+                                    <TableCell>{account.pass}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
             </CardContent>
            </Card>
         </div>
