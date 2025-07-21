@@ -3,13 +3,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { initialEmployees } from '@/app/[role]/employees/page';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase'; // We will create this file
 
 interface User {
   email: string;
   role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
   employeeId?: string;
   isNew?: boolean;
-  // This would be expanded in a real app
   profile?: {
     name?: string;
     department?: string;
@@ -20,9 +21,26 @@ interface User {
   }
 }
 
+// Mock database of users. In a real app, this comes from your backend (e.g., Firestore).
+const mockUsersDb: Record<string, User> = {
+    'olivia.martin@email.com': { email: 'olivia.martin@email.com', role: 'admin' },
+    'manager@optitalent.com': { email: 'manager@optitalent.com', role: 'manager' },
+    'hr@optitalent.com': { email: 'hr@optitalent.com', role: 'hr' },
+    'anika.sharma@email.com': { email: 'anika.sharma@email.com', role: 'employee' },
+    'recruiter@optitalent.com': { email: 'recruiter@optitalent.com', role: 'recruiter' },
+    'qa@optitalent.com': { email: 'qa@optitalent.com', role: 'qa-analyst' },
+    'pm@optitalent.com': { email: 'pm@optitalent.com', role: 'process-manager' },
+    'team-leader@optitalent.com': { email: 'team-leader@optitalent.com', role: 'team-leader' },
+    'marketing.head@optitalent.com': { email: 'marketing.head@optitalent.com', role: 'marketing' },
+    'finance.mgr@optitalent.com': { email: 'finance.mgr@optitalent.com', role: 'finance' },
+    'it.mgr@optitalent.com': { email: 'it.mgr@optitalent.com', role: 'it-manager' },
+    'operations.mgr@optitalent.com': { email: 'operations.mgr@optitalent.com', role: 'operations-manager' },
+};
+
+
 interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
+  login: (email: string, password: string, newUserProfile?: User) => Promise<User | null>;
   logout: () => void;
   loading: boolean;
   searchTerm: string;
@@ -37,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    // This effect now primarily handles restoring session from localStorage
+    // The Firebase onAuthStateChanged listener will handle the real auth state
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -49,40 +69,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (userData: User) => {
-    // In a real app, you'd fetch this from a DB. For now, find the mock user.
-    const fullUserProfile = initialEmployees.find(emp => emp.email === userData.email);
+  const login = async (email: string, password: string, newUserProfile?: User): Promise<User | null> => {
+    // This is a simulation. In a real Firebase app, you'd use signInWithEmailAndPassword
+    // For portfolio purposes, we'll check against our mock DB.
+    
+    // Simulate sign-up
+    if (newUserProfile) {
+        mockUsersDb[email] = newUserProfile;
+    }
+
+    const foundUser = mockUsersDb[email.toLowerCase()];
+
+    if (!foundUser) {
+        throw new Error("No user found with this email.");
+    }
+    
+    // In a real app, password would be checked by Firebase. Here we just accept it.
+    
+    // In a real app, you would fetch this from a DB (like Firestore). For now, find the mock user.
+    const fullUserProfile = initialEmployees.find(emp => emp.email === foundUser.email);
 
     if (fullUserProfile) {
-      userData.profile = {
+      foundUser.profile = {
         name: fullUserProfile.name,
         department: fullUserProfile.department,
         status: fullUserProfile.status,
       }
-      userData.employeeId = fullUserProfile.id;
-    } else if (userData.role === 'employee' && !userData.profile) {
-       userData.profile = {
-          name: userData.isNew ? 'New Employee' : 'Alex Doe',
-          department: 'Technology',
-          status: 'Active'
-      };
-    } else if (userData.role === 'process-manager' && !userData.profile) {
-      userData.profile = { name: 'Process Manager', department: 'Operations' }
-    } else if(userData.role === 'qa-analyst' && !userData.profile) {
-       userData.profile = { name: 'QA Analyst', department: 'Quality' }
-    } else if(userData.role === 'marketing' && !userData.profile) {
-       userData.profile = { name: 'Marketing Head', department: 'Marketing' }
-    } else if(userData.role === 'finance' && !userData.profile) {
-       userData.profile = { name: 'Finance Head', department: 'Finance' }
-    } else if(userData.role === 'it-manager' && !userData.profile) {
-       userData.profile = { name: 'IT Manager', department: 'IT' }
-    } else if(userData.role === 'operations-manager' && !userData.profile) {
-       userData.profile = { name: 'Operations Manager', department: 'Production' }
+      foundUser.employeeId = fullUserProfile.id;
+    } else if (newUserProfile) {
+        foundUser.profile = newUserProfile.profile;
+        foundUser.isNew = true;
     }
 
-
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(foundUser));
+    setUser(foundUser);
+    return foundUser;
   };
 
   const logout = () => {

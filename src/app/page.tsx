@@ -1,13 +1,17 @@
 
 "use client";
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
-import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart, Users as TeamLeaderIcon, Megaphone, Banknote, HardDrive, Factory } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -70,29 +74,31 @@ function AnimatedLogo() {
   );
 }
 
-const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager', icon: LucideIcon, email: string }[] = [
-    { name: "Admin", value: "admin", icon: Shield, email: "olivia.martin@email.com" },
-    { name: "Manager", value: "manager", icon: UserCog, email: "manager@optitalent.com" },
-    { name: "Team Leader", value: "team-leader", icon: TeamLeaderIcon, email: "team-leader@optitalent.com" },
-    { name: "HR", value: "hr", icon: BarChart, email: "hr@optitalent.com" },
-    { name: "Finance Head", value: "finance", icon: Banknote, email: "finance.mgr@optitalent.com" },
-    { name: "Operations", value: "operations-manager", icon: Factory, email: "operations.mgr@optitalent.com" },
-    { name: "Recruiter", value: "recruiter", icon: Briefcase, email: "recruiter@optitalent.com" },
-    { name: "IT Manager", value: "it-manager", icon: HardDrive, email: "it.mgr@optitalent.com"},
-    { name: "Employee", value: "employee", icon: User, email: "anika.sharma@email.com" },
-    { name: "QA Analyst", value: "qa-analyst", icon: Star, email: "qa@optitalent.com" },
-    { name: "Process Manager", value: "process-manager", icon: Settings2, email: "pm@optitalent.com" },
-    { name: "Marketing Head", value: "marketing", icon: Megaphone, email: "marketing.head@optitalent.com"},
-];
-
-
 export default function LoginPage() {
     const router = useRouter();
     const { login } = useAuth();
+    const { toast } = useToast();
+    const [email, setEmail] = useState('manager@optitalent.com');
+    const [password, setPassword] = useState('password');
+    const [loading, setLoading] = useState(false);
 
-    const handleRoleSelect = (role: (typeof ROLES)[number]) => {
-        login({ email: role.email, role: role.value });
-        router.push(`/${role.value}/dashboard`);
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const user = await login(email, password);
+            if (user) {
+                toast({ title: 'Login Successful', description: `Welcome back, ${user.profile?.name || user.email}!` });
+                router.push(`/${user.role}/dashboard`);
+            }
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: (error as Error).message
+            });
+            setLoading(false);
+        }
     };
 
   return (
@@ -109,29 +115,51 @@ export default function LoginPage() {
          </div>
       </div>
       <div className="flex items-center justify-center p-6 sm:p-12 bg-background">
-          <Card className="w-full max-w-2xl shadow-2xl border-none">
-            <CardHeader className="text-center">
-              <CardTitle className="font-headline text-3xl">Select Your Role</CardTitle>
-              <CardDescription>Choose a user role to explore the application.</CardDescription>
+          <Card className="w-full max-w-sm shadow-2xl border-none">
+            <CardHeader>
+              <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
+              <CardDescription>Enter your credentials to access your account.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 pt-4">
-                    {ROLES.map((role) => {
-                        const Icon = role.icon;
-                        return (
-                            <Button 
-                                key={role.value} 
-                                variant="outline" 
-                                className="h-20 flex-col gap-2 text-base"
-                                onClick={() => handleRoleSelect(role)}
-                            >
-                                <Icon className="h-6 w-6 text-primary" />
-                                {role.name}
-                            </Button>
-                        )
-                    })}
-                </div>
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                            id="email" 
+                            type="email" 
+                            placeholder="m@example.com" 
+                            required 
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input 
+                            id="password" 
+                            type="password" 
+                            required 
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                        />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Sign In
+                    </Button>
+                    <Button variant="outline" className="w-full" type="button" disabled={loading}>
+                        Sign in with Google
+                    </Button>
+                </form>
             </CardContent>
+             <CardFooter className="flex flex-col items-center gap-4">
+                <div className="text-center text-sm">
+                    Don&apos;t have an account?{" "}
+                    <Link href="/signup" className="underline">
+                        Sign up
+                    </Link>
+                </div>
+            </CardFooter>
           </Card>
       </div>
     </div>
