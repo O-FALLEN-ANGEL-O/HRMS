@@ -24,23 +24,28 @@ const supabase = createClient(
 
 async function clearData() {
   console.log('🗑️ Clearing existing data...');
-  const { data: tables, error } = await supabase.rpc('get_all_tables');
+  
+  // 1. Get all tables from the public schema
+  const { data: tables, error: tablesError } = await supabase
+    .from('pg_catalog.pg_tables')
+    .select('tablename')
+    .eq('schemaname', 'public');
 
-  if (error) {
-    console.error('Error fetching tables:', error);
+  if (tablesError) {
+    console.error('Error fetching tables:', tablesError);
     return;
   }
 
-  // Disable RLS for deletion - we are using service_role key
-  for (const table of tables) {
-    console.log(`- Deleting from ${table.table_name}`);
-    const { error: deleteError } = await supabase.from(table.table_name).delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
-    if (deleteError) {
-      console.error(`Error clearing ${table.table_name}:`, deleteError.message);
+  // 2. Turn off RLS and truncate all tables in a single transaction
+  const tableNames = tables.map(t => `public.${t.tablename}`).join(', ');
+  if (tableNames) {
+    const { error: truncateError } = await supabase.rpc('truncate_tables', { table_names: tableNames });
+    if (truncateError) {
+      console.error('Error truncating tables:', truncateError);
     }
   }
 
-  // Clear auth users
+  // 3. Clear auth users
   const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
   if (usersError) {
     console.error('Error fetching auth users:', usersError);
@@ -53,28 +58,29 @@ async function clearData() {
   console.log('✅ Data cleared.');
 }
 
+
 async function seedUsersAndEmployees() {
   console.log('🌱 Seeding users and employees...');
   const usersToCreate = [
-    { email: 'admin@optitalent.com', password: 'password', role: 'admin', department: 'Administration' },
-    { email: 'hr@optitalent.com', password: 'password', role: 'hr', department: 'Human Resources' },
-    { email: 'manager@optitalent.com', password: 'password', role: 'manager', department: 'Engineering' },
-    { email: 'recruiter@optitalent.com', password: 'password', role: 'recruiter', department: 'Human Resources' },
-    { email: 'qa-analyst@optitalent.com', password: 'password', role: 'qa-analyst', department: 'Quality' },
-    { email: 'process-manager@optitalent.com', password: 'password', role: 'process-manager', department: 'Operations' },
-    { email: 'team-leader@optitalent.com', password: 'password', role: 'team-leader', department: 'Support' },
-    { email: 'marketing@optitalent.com', password: 'password', role: 'marketing', department: 'Marketing' },
-    { email: 'finance@optitalent.com', password: 'password', role: 'finance', department: 'Finance' },
-    { email: 'it-manager@optitalent.com', password: 'password', role: 'it-manager', department: 'IT' },
-    { email: 'operations-manager@optitalent.com', password: 'password', role: 'operations-manager', department: 'Operations' },
-    { email: 'employee@optitalent.com', password: 'password123', role: 'employee', department: 'Engineering' },
-    { email: 'employee2@optitalent.com', password: 'password123', role: 'employee', department: 'Marketing' },
-    { email: 'employee3@optitalent.com', password: 'password123', role: 'employee', department: 'Support' },
+    { email: 'admin@optitalent.com', password: 'password', role: 'admin', department: 'Administration', full_name: 'Admin User' },
+    { email: 'hr@optitalent.com', password: 'password', role: 'hr', department: 'Human Resources', full_name: 'HR User' },
+    { email: 'manager@optitalent.com', password: 'password', role: 'manager', department: 'Engineering', full_name: 'Manager User' },
+    { email: 'recruiter@optitalent.com', password: 'password', role: 'recruiter', department: 'Human Resources', full_name: 'Recruiter User' },
+    { email: 'qa-analyst@optitalent.com', password: 'password', role: 'qa-analyst', department: 'Quality', full_name: 'QA Analyst' },
+    { email: 'process-manager@optitalent.com', password: 'password', role: 'process-manager', department: 'Operations', full_name: 'Process Manager' },
+    { email: 'team-leader@optitalent.com', password: 'password', role: 'team-leader', department: 'Support', full_name: 'Team Leader' },
+    { email: 'marketing@optitalent.com', password: 'password', role: 'marketing', department: 'Marketing', full_name: 'Marketing Head' },
+    { email: 'finance@optitalent.com', password: 'password', role: 'finance', department: 'Finance', full_name: 'Finance Manager' },
+    { email: 'it-manager@optitalent.com', password: 'password', role: 'it-manager', department: 'IT', full_name: 'IT Manager' },
+    { email: 'operations-manager@optitalent.com', password: 'password', role: 'operations-manager', department: 'Operations', full_name: 'Operations Manager' },
+    { email: 'employee@optitalent.com', password: 'password123', role: 'employee', department: 'Engineering', full_name: 'Anika Sharma' },
+    { email: 'employee2@optitalent.com', password: 'password123', role: 'employee', department: 'Engineering', full_name: 'Rohan Verma' },
+    { email: 'employee3@optitalent.com', password: 'password123', role: 'employee', department: 'Support', full_name: 'Priya Mehta' },
   ];
 
   const createdEmployees = [];
-
   let employeeCounter = 1;
+
   for (const userData of usersToCreate) {
     const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email: userData.email,
@@ -88,26 +94,18 @@ async function seedUsersAndEmployees() {
     }
     
     if (authUser.user) {
-      const firstName = faker.person.firstName();
-      const lastName = faker.person.lastName();
-      
       const employeeData = {
         id: authUser.user.id,
         employee_id: `PEP${(employeeCounter++).toString().padStart(4, '0')}`,
-        full_name: `${firstName} ${lastName}`,
+        full_name: userData.full_name,
         email: userData.email,
         job_title: faker.person.jobTitle(),
         department: userData.department,
-        role: userData.role,
-        status: faker.helpers.arrayElement(['Active', 'On Leave']),
+        role: userData.role as any,
+        status: 'Active',
         hire_date: faker.date.past({ years: 5 }),
         salary: faker.number.int({ min: 40000, max: 150000 }),
         profile_picture_url: `https://placehold.co/400x400.png`,
-        phone_number: faker.phone.number(),
-        address: faker.location.streetAddress(true),
-        emergency_contact_name: faker.person.fullName(),
-        emergency_contact_phone: faker.phone.number(),
-        profile_complete: faker.datatype.boolean(0.8),
       };
       createdEmployees.push(employeeData);
     }
@@ -157,6 +155,7 @@ async function seedCompanyPosts(employees: any[]) {
     const posts = [];
     for (let i = 0; i < 5; i++) {
         const author = faker.helpers.arrayElement(employees.filter(e => ['admin', 'hr', 'manager'].includes(e.role)));
+        if (!author) continue;
         posts.push({
             author_id: author.id,
             title: faker.company.catchPhrase(),
@@ -196,13 +195,17 @@ async function seedHelpdeskTickets(employees: any[]) {
 
 async function seedAssessments(employees: any[]) {
   console.log('🌱 Seeding assessments and related data...');
-  if (employees.length === 0) return;
+  const hrUser = employees.find(e => e.role === 'hr');
+  if (!hrUser) {
+    console.log('⚠️ No HR user found, skipping assessment seeding.');
+    return;
+  }
   
   const assessmentData = [
-    { title: 'Customer Support Aptitude Test', process_type: 'Chat Support', passing_score: 75, duration: 30, created_by: employees.find(e => e.role === 'hr')?.id },
-    { title: 'Technical Support (Level 1)', process_type: 'Technical Support', passing_score: 80, duration: 45, created_by: employees.find(e => e.role === 'hr')?.id },
-    { title: 'Voice Assessment (English)', process_type: 'Voice Process – English', passing_score: 70, duration: 15, created_by: employees.find(e => e.role === 'hr')?.id },
-    { title: 'Typing Skill Test', process_type: 'Chat Support', passing_score: 50, duration: 5, created_by: employees.find(e => e.role === 'hr')?.id },
+    { title: 'Customer Support Aptitude Test', process_type: 'Chat Support', passing_score: 75, duration: 30, created_by: hrUser.id },
+    { title: 'Technical Support (Level 1)', process_type: 'Technical Support', passing_score: 80, duration: 45, created_by: hrUser.id },
+    { title: 'Voice Assessment (English)', process_type: 'Voice Process – English', passing_score: 70, duration: 15, created_by: hrUser.id },
+    { title: 'Typing Skill Test', process_type: 'Chat Support', passing_score: 50, duration: 5, created_by: hrUser.id },
   ];
 
   const { data: insertedAssessments, error: assessError } = await supabase.from('assessments').insert(assessmentData).select();
@@ -282,9 +285,9 @@ async function main() {
   console.log('Admin Email: admin@optitalent.com, Password: password');
   console.log('Manager Email: manager@optitalent.com, Password: password');
   
-  const sampleEmployee = employees.find(e => e.role === 'employee');
+  const sampleEmployee = employees.find(e => e.role === 'employee' && e.email === 'employee@optitalent.com');
   if(sampleEmployee) {
-    console.log(`Employee ID: ${sampleEmployee.employee_id}, Password: password123`);
+    console.log(`Sample Employee ID: ${sampleEmployee.employee_id}, Password: password123`);
   }
 }
 
@@ -292,3 +295,5 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+    
