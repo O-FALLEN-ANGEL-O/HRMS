@@ -134,7 +134,7 @@ export default function SignupPage() {
                 <Input id="password" type="password" required value={formData.password} onChange={handleInputChange}/>
             </div>
             
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+            <div className="space-y-1 mt-2">
               <CriteriaItem met={passwordCriteria.length} text="At least 8 characters" />
               <CriteriaItem met={passwordCriteria.uppercase} text="One uppercase letter" />
               <CriteriaItem met={passwordCriteria.number} text="One number" />
