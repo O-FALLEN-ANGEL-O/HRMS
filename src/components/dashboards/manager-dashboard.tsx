@@ -10,47 +10,9 @@ import { DashboardCard } from '@/components/ui/dashboard-card';
 import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '../ui/textarea';
+import { useTeam } from '@/hooks/use-team';
 
 // Mock Data
-const teamMembers = [
-  {
-    name: 'Anika Sharma',
-    title: 'Senior Software Engineer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'Online',
-    tasksCompleted: 8,
-    tasksPending: 2,
-    performance: 92,
-  },
-  {
-    name: 'Rohan Verma',
-    title: 'UI/UX Designer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'Away',
-    tasksCompleted: 5,
-    tasksPending: 1,
-    performance: 85,
-  },
-   {
-    name: 'Priya Mehta',
-    title: 'Junior Frontend Developer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'In a meeting',
-    tasksCompleted: 10,
-    tasksPending: 0,
-    performance: 98,
-  },
-   {
-    name: 'Vikram Rao',
-    title: 'Backend Engineer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'Online',
-    tasksCompleted: 7,
-    tasksPending: 3,
-    performance: 90,
-  },
-];
-
 const initialPendingApprovals = [
     { id: 1, type: 'Leave Request', name: 'Rohan Verma', details: '3 days PTO for family event.' },
     { id: 2, type: 'Expense Report', name: 'Anika Sharma', details: '$250 for software license.' },
@@ -60,6 +22,7 @@ const initialPendingApprovals = [
 export default function ManagerDashboard() {
   const { toast } = useToast();
   const [pendingApprovals, setPendingApprovals] = useState(initialPendingApprovals);
+  const teamMembers = useTeam();
 
   const handleGiveAward = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,6 +47,12 @@ export default function ManagerDashboard() {
         description: `${item.type} from ${item.name} has been ${approved ? 'approved' : 'denied'}.`,
     });
   }
+  
+  const avgPerformance = teamMembers.length > 0 
+    ? Math.round(teamMembers.reduce((acc, member) => acc + (member.performance || 0), 0) / teamMembers.length)
+    : 0;
+    
+  const totalTasksCompleted = teamMembers.reduce((sum, member) => sum + (member.tasksCompleted || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -102,13 +71,13 @@ export default function ManagerDashboard() {
             />
             <DashboardCard 
                 title="Team Performance"
-                value={`${Math.round(teamMembers.reduce((acc, member) => acc + member.performance, 0) / teamMembers.length)}%`}
+                value={`${avgPerformance}%`}
                 description="Average performance score this quarter."
                 icon={TrendingUp}
             />
             <DashboardCard 
                 title="Tasks Completed"
-                value={teamMembers.reduce((sum, member) => sum + member.tasksCompleted, 0)}
+                value={totalTasksCompleted}
                 description="Total tasks completed by team this week."
                 icon={CheckCircle}
             />

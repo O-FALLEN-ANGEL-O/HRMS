@@ -8,45 +8,16 @@ import { Users, Clock, TrendingUp } from "lucide-react";
 import { TeamCard } from '@/components/team-card';
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock Data
-const teamMembers = [
-  {
-    name: 'Anika Sharma',
-    title: 'Senior Software Engineer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'Online',
-    tasksCompleted: 8,
-    tasksPending: 2,
-    performance: 92,
-  },
-  {
-    name: 'Rohan Verma',
-    title: 'UI/UX Designer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'Away',
-    tasksCompleted: 5,
-    tasksPending: 1,
-    performance: 85,
-  },
-   {
-    name: 'Priya Mehta',
-    title: 'Junior Frontend Developer',
-    avatar: 'https://placehold.co/40x40.png',
-    status: 'In a meeting',
-    tasksCompleted: 10,
-    tasksPending: 0,
-    performance: 98,
-  },
-];
+import { useTeam } from '@/hooks/use-team';
 
 const initialPendingApprovals = [
-    { id: 1, type: 'Leave Request', name: 'Rohan Verma', details: '3 days PTO for family event.' },
+    { id: 1, type: 'Leave Request', name: 'Ava Wilson', details: '1 day Sick Leave.' },
 ];
 
 export default function TeamLeaderDashboard() {
   const { toast } = useToast();
   const [pendingApprovals, setPendingApprovals] = useState(initialPendingApprovals);
+  const teamMembers = useTeam();
 
   const handleApproval = (id: number, approved: boolean) => {
     const item = pendingApprovals.find(p => p.id === id);
@@ -58,6 +29,10 @@ export default function TeamLeaderDashboard() {
         description: `${item.type} from ${item.name} has been ${approved ? 'approved' : 'denied'}.`,
     });
   }
+
+  const avgPerformance = teamMembers.length > 0
+    ? Math.round(teamMembers.reduce((acc, member) => acc + (member.performance || 90), 0) / teamMembers.length)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -76,7 +51,7 @@ export default function TeamLeaderDashboard() {
             />
             <DashboardCard 
                 title="Team Performance"
-                value={`${Math.round(teamMembers.reduce((acc, member) => acc + member.performance, 0) / teamMembers.length)}%`}
+                value={`${avgPerformance}%`}
                 description="Average performance this quarter."
                 icon={TrendingUp}
             />

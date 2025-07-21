@@ -13,19 +13,19 @@ import { useAuth } from "@/hooks/use-auth";
 
 type Member = {
   name: string;
-  title: string;
   avatar: string;
   status: string;
-  tasksCompleted: number;
-  tasksPending: number;
-  performance: number;
+  role: string;
+  performance?: number;
+  tasksCompleted?: number;
+  tasksPending?: number;
 };
 
 const getStatusIndicator = (status: string) => {
     switch (status) {
-      case 'Online': return 'bg-green-500';
+      case 'Active': return 'bg-green-500';
       case 'Away': return 'bg-yellow-500';
-      case 'In a meeting': return 'bg-purple-500';
+      case 'On Leave': return 'bg-purple-500';
       default: return 'bg-gray-400';
     }
 };
@@ -59,7 +59,7 @@ export function TeamCard({ member }: { member: Member }) {
                     </div>
                     <div className="flex-1">
                         <p className="font-semibold">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.title}</p>
+                        <p className="text-xs text-muted-foreground">{member.role}</p>
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -71,10 +71,11 @@ export function TeamCard({ member }: { member: Member }) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
+                {member.performance !== undefined && (
                 <div className="mt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tasks:</span>
-                        <span>{member.tasksCompleted} done / {member.tasksPending} pending</span>
+                        <span>{member.tasksCompleted || 0} done / {member.tasksPending || 0} pending</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Performance:</span>
@@ -82,6 +83,7 @@ export function TeamCard({ member }: { member: Member }) {
                         <span>{member.performance}%</span>
                     </div>
                 </div>
+                )}
             </CardContent>
         </Card>
     );

@@ -2,6 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { initialEmployees } from '@/app/[role]/employees/page';
 
 interface User {
   email: string;
@@ -46,15 +47,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (userData: User) => {
-    // In a real app, you'd fetch profile data from a DB here.
-    // For now, we'll mock some partial data for employees.
-    if (userData.role === 'employee' && !userData.profile) {
+    // In a real app, you'd fetch this from a DB. For now, find the mock user.
+    const fullUserProfile = initialEmployees.find(emp => emp.email === userData.email);
+
+    if (fullUserProfile) {
       userData.profile = {
+        name: fullUserProfile.name,
+        department: fullUserProfile.department,
+        status: fullUserProfile.status,
+      }
+    } else if (userData.role === 'employee' && !userData.profile) {
+       userData.profile = {
           name: userData.isNew ? 'New Employee' : 'Alex Doe',
           department: 'Technology',
           status: 'Active'
       };
     }
+
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };

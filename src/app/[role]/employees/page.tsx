@@ -38,7 +38,7 @@ import { autoAssignRoles } from '@/ai/flows/auto-assign-roles';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
-const initialEmployees = [
+export const initialEmployees = [
   {
     id: "1",
     name: "Olivia Martin",
@@ -51,7 +51,7 @@ const initialEmployees = [
   {
     id: "2",
     name: "Jackson Lee",
-    email: "jackson.lee@email.com",
+    email: "hr@optitalent.com",
     role: "HR",
     department: "Human Resources",
     status: "Active",
@@ -60,7 +60,7 @@ const initialEmployees = [
   {
     id: "3",
     name: "Isabella Nguyen",
-    email: "isabella.nguyen@email.com",
+    email: "manager@optitalent.com",
     role: "Manager",
     department: "Engineering",
     status: "Active",
@@ -78,12 +78,66 @@ const initialEmployees = [
   {
     id: "5",
     name: "Sofia Davis",
-    email: "sofia.davis@email.com",
+    email: "recruiter@optitalent.com",
     role: "Recruiter",
     department: "Human Resources",
     status: "Active",
     avatar: "https://placehold.co/100x100?text=SD",
   },
+  {
+    id: "6",
+    name: "Anika Sharma",
+    email: "anika.sharma@email.com",
+    role: "Employee",
+    department: "Engineering",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=AS",
+  },
+    {
+    id: "7",
+    name: "Rohan Verma",
+    email: "rohan.verma@email.com",
+    role: "Employee",
+    department: "Engineering",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=RV",
+  },
+  {
+    id: "8",
+    name: "Priya Mehta",
+    email: "priya.mehta@email.com",
+    role: "Employee",
+    department: "Engineering",
+    status: "On Leave",
+    avatar: "https://placehold.co/100x100?text=PM",
+  },
+  {
+    id: "9",
+    name: "Liam Smith",
+    email: "team-leader@optitalent.com",
+    role: "Team Leader",
+    department: "Support",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=LS",
+  },
+  {
+    id: "10",
+    name: "Ava Wilson",
+    email: "ava.wilson@email.com",
+    role: "Employee",
+    department: "Support",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=AW",
+  },
+  {
+    id: "11",
+    name: "Noah Brown",
+    email: "noah.brown@email.com",
+    role: "Employee",
+    department: "Support",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=NB",
+  }
 ];
 
 type Employee = typeof initialEmployees[0];

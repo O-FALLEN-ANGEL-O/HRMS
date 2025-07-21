@@ -70,15 +70,15 @@ function AnimatedLogo() {
   );
 }
 
-const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader', icon: LucideIcon }[] = [
-    { name: "Admin", value: "admin", icon: Shield },
-    { name: "Manager", value: "manager", icon: UserCog },
-    { name: "Team Leader", value: "team-leader", icon: TeamLeaderIcon },
-    { name: "HR", value: "hr", icon: BarChart },
-    { name: "Recruiter", value: "recruiter", icon: Briefcase },
-    { name: "Employee", value: "employee", icon: User },
-    { name: "QA Analyst", value: "qa-analyst", icon: Star },
-    { name: "Process Manager", value: "process-manager", icon: Settings2 },
+const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader', icon: LucideIcon, email: string }[] = [
+    { name: "Admin", value: "admin", icon: Shield, email: "olivia.martin@email.com" },
+    { name: "Manager", value: "manager", icon: UserCog, email: "manager@optitalent.com" },
+    { name: "Team Leader", value: "team-leader", icon: TeamLeaderIcon, email: "team-leader@optitalent.com" },
+    { name: "HR", value: "hr", icon: BarChart, email: "hr@optitalent.com" },
+    { name: "Recruiter", value: "recruiter", icon: Briefcase, email: "recruiter@optitalent.com" },
+    { name: "Employee", value: "employee", icon: User, email: "anika.sharma@email.com" },
+    { name: "QA Analyst", value: "qa-analyst", icon: Star, email: "qa@optitalent.com" },
+    { name: "Process Manager", value: "process-manager", icon: Settings2, email: "pm@optitalent.com" },
 ];
 
 
@@ -86,11 +86,9 @@ export default function LoginPage() {
     const router = useRouter();
     const { login } = useAuth();
 
-    const handleRoleSelect = (role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader') => {
-        const userEmail = `${role}@optitalent.com`;
-        const profile = { name: role.charAt(0).toUpperCase() + role.slice(1).replace('-', ' ') };
-        login({ email: userEmail, role, profile });
-        router.push(`/${role}/dashboard`);
+    const handleRoleSelect = (role: (typeof ROLES)[number]) => {
+        login({ email: role.email, role: role.value });
+        router.push(`/${role.value}/dashboard`);
     };
 
   return (
@@ -121,7 +119,7 @@ export default function LoginPage() {
                                 key={role.value} 
                                 variant="outline" 
                                 className="h-20 flex-col gap-2 text-base"
-                                onClick={() => handleRoleSelect(role.value)}
+                                onClick={() => handleRoleSelect(role)}
                             >
                                 <Icon className="h-6 w-6 text-primary" />
                                 {role.name}
