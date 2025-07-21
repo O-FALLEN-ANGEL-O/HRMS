@@ -5,13 +5,18 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { User } from '@/hooks/use-auth';
 
+// Hardcoded Supabase credentials for server-side actions.
+// This is a temporary measure for this specific environment to ensure functionality.
+const SUPABASE_URL = "https://qgmknoilorehwimlhngf.supabase.co";
+const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzA5MDcyOSwiZXhwIjoyMDY4NjY2NzI5fQ.ZX7cVFzfOV7PrjSkwxTcrYkk6_3sNqaoVyd2UDfbAf0";
+
 export async function loginWithEmployeeId({ employeeId, password }: { employeeId: string, password: string }): Promise<{ error: string | null; user: User | null, otpRequired: boolean }> {
     
     // We must create a new client here on the server to use the service_role key
     // This allows us to bypass RLS and query the employees table for the email address
     const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY
     );
     
     if (!employeeId) {
