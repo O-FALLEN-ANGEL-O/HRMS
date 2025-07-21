@@ -9,6 +9,7 @@ import { Users, Briefcase, FileCheck2, UserPlus, Link2 } from "lucide-react";
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '../ui/button';
+import Link from 'next/link';
 
 // Mock Data
 const jobOpenings = [
@@ -109,6 +110,9 @@ export default function RecruiterDashboard() {
                         <p className="text-sm font-medium">Assessments Passed</p>
                         <p className="font-bold text-lg">{walkinStats.passed}</p>
                     </div>
+                    <Button variant="outline" className="w-full" asChild>
+                        <Link href="/walkin-drive" target="_blank">View Drive Page</Link>
+                    </Button>
                     <Button className="w-full" onClick={handleCopyWalkinLink}>
                         <Link2 className="mr-2 h-4 w-4" /> Copy Registration Link
                     </Button>

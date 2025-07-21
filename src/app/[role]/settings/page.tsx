@@ -59,6 +59,13 @@ export default function SettingsPage() {
     });
   };
 
+  const handleLogoutSession = (device: string) => {
+    toast({
+        title: "Session Logged Out",
+        description: `Successfully logged out the session from ${device}.`
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="pb-4">
@@ -145,7 +152,7 @@ export default function SettingsPage() {
                                 <p className="text-sm text-muted-foreground">{session.location} &middot; {session.time}</p>
                             </div>
                         </div>
-                        {!session.current && <Button variant="ghost" size="sm">Log out</Button>}
+                        {!session.current && <Button variant="ghost" size="sm" onClick={() => handleLogoutSession(session.device)}>Log out</Button>}
                     </div>
                 ))}
             </CardContent>

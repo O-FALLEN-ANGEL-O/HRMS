@@ -14,6 +14,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import { useToast } from '@/hooks/use-toast';
 
 const chartConfig = {
   score: {
@@ -38,6 +39,15 @@ const pendingEvaluations = [
 ];
 
 export default function QaAnalystDashboard() {
+  const { toast } = useToast();
+
+  const handleStartReview = (agentName: string, interactionId: string) => {
+    toast({
+      title: "Review Started",
+      description: `You have started reviewing the interaction ${interactionId} for ${agentName}.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -92,7 +102,9 @@ export default function QaAnalystDashboard() {
                                     <TableCell><Badge variant="outline">{evalItem.type}</Badge></TableCell>
                                     <TableCell>{evalItem.date}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button size="sm">Start Review</Button>
+                                        <Button size="sm" onClick={() => handleStartReview(evalItem.agent, evalItem.interactionId)}>
+                                          Start Review
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
