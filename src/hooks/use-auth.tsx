@@ -142,14 +142,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: `${firstName} ${lastName}`,
         email: email,
         job_title: 'New Hire',
-        department_id: null,
         employee_id,
-        status: 'Active'
+        status: 'Active',
+        role: 'employee',
+        emergency_contact: {},
+        skills: []
       });
 
     if (profileError) {
         console.error("Error creating profile:", profileError);
-        return { user: authData.user, error: profileError };
+        // Attempt to delete the auth user if profile creation fails to prevent orphaned users
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        return { user: null, error: profileError };
     }
 
     return { user: authData.user, error: null };
