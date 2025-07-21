@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
-import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart, Users as TeamLeaderIcon } from 'lucide-react';
+import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart, Users as TeamLeaderIcon, Megaphone } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 function AnimatedLogo() {
@@ -70,7 +70,7 @@ function AnimatedLogo() {
   );
 }
 
-const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader', icon: LucideIcon, email: string }[] = [
+const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing', icon: LucideIcon, email: string }[] = [
     { name: "Admin", value: "admin", icon: Shield, email: "olivia.martin@email.com" },
     { name: "Manager", value: "manager", icon: UserCog, email: "manager@optitalent.com" },
     { name: "Team Leader", value: "team-leader", icon: TeamLeaderIcon, email: "team-leader@optitalent.com" },
@@ -79,6 +79,7 @@ const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'r
     { name: "Employee", value: "employee", icon: User, email: "anika.sharma@email.com" },
     { name: "QA Analyst", value: "qa-analyst", icon: Star, email: "qa@optitalent.com" },
     { name: "Process Manager", value: "process-manager", icon: Settings2, email: "pm@optitalent.com" },
+    { name: "Marketing Head", value: "marketing", icon: Megaphone, email: "marketing.head@optitalent.com"},
 ];
 
 
@@ -105,13 +106,13 @@ export default function LoginPage() {
          </div>
       </div>
       <div className="flex items-center justify-center p-6 sm:p-12 bg-background">
-          <Card className="w-full max-w-md shadow-2xl border-none">
+          <Card className="w-full max-w-lg shadow-2xl border-none">
             <CardHeader className="text-center">
               <CardTitle className="font-headline text-3xl">Select Your Role</CardTitle>
               <CardDescription>Choose a user role to explore the application.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
                     {ROLES.map((role) => {
                         const Icon = role.icon;
                         return (

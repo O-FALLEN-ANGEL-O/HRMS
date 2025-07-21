@@ -10,6 +10,7 @@ import EmployeeDashboard from '@/components/dashboards/employee-dashboard';
 import QaAnalystDashboard from '@/components/dashboards/qa-analyst-dashboard';
 import ProcessManagerDashboard from '@/components/dashboards/process-manager-dashboard';
 import TeamLeaderDashboard from '@/components/dashboards/team-leader-dashboard';
+import MarketingDashboard from '@/components/dashboards/marketing-dashboard';
 import { Logo } from '@/components/logo';
 
 export default function AnalyticsPage() {
@@ -42,6 +43,8 @@ export default function AnalyticsPage() {
         return <QaAnalystDashboard />;
       case 'process-manager':
         return <ProcessManagerDashboard />;
+      case 'marketing':
+        return <MarketingDashboard />;
       case 'employee':
       default:
         return <EmployeeDashboard />;
