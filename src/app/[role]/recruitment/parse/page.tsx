@@ -23,6 +23,10 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ParsedData = ScoreAndParseResumeOutput['parsedData'];
+type Project = NonNullable<ParsedData['projects']>[0];
+type WorkExperience = ParsedData['workExperience'][0];
+type Education = ParsedData['education'][0];
+
 
 function InterviewQuestions({ jobTitle }: { jobTitle: string }) {
   const [questions, setQuestions] = useState<string[]>([]);
@@ -183,10 +187,13 @@ export default function ParseResumePage() {
     }
   };
 
-  const handleFieldChange = (section: 'workExperience' | 'education', index: number, field: string, value: string) => {
+  const handleFieldChange = (section: keyof ParsedData, index: number, field: string, value: string) => {
     if (!editData) return;
     const newData = { ...editData };
-    (newData[section] as any[])[index][field] = value;
+    const sectionData = newData[section] as any[];
+    if (sectionData && sectionData[index]) {
+      sectionData[index][field] = value;
+    }
     setEditData(newData);
   };
   
@@ -195,26 +202,36 @@ export default function ParseResumePage() {
     setEditData({ ...editData, [field]: value });
   };
   
-  const handleArrayChange = (field: 'skills' | 'links' | 'certifications' | 'languages', value: string) => {
+  const handleArrayChange = (field: 'skills' | 'links' | 'certifications' | 'languages' | 'hobbies', value: string) => {
      if (!editData) return;
      setEditData({ ...editData, [field]: value.split(',').map(s => s.trim()).filter(Boolean) });
   };
 
-  const handleAddItem = (section: 'workExperience' | 'education') => {
+  const handleAddItem = (section: 'workExperience' | 'education' | 'projects') => {
     if (!editData) return;
     const newData = { ...editData };
+    let newItem;
     if (section === 'workExperience') {
-      (newData.workExperience as any[]).unshift({ company: '', title: '', dates: '' });
+      newItem = { company: '', title: '', dates: '' };
     } else if (section === 'education') {
-      (newData.education as any[]).unshift({ institution: '', degree: '', year: '' });
+      newItem = { institution: '', degree: '', year: '' };
+    } else if (section === 'projects') {
+      newItem = { name: '', description: '', url: '' };
     }
+    
+    const currentSection = newData[section] || [];
+    (newData as any)[section] = [newItem, ...currentSection];
+
     setEditData(newData);
   };
   
-  const handleRemoveItem = (section: 'workExperience' | 'education', index: number) => {
+  const handleRemoveItem = (section: 'workExperience' | 'education' | 'projects', index: number) => {
     if (!editData) return;
     const newData = { ...editData };
-    (newData[section] as any[]).splice(index, 1);
+    const sectionData = newData[section] as any[];
+    if (sectionData) {
+      sectionData.splice(index, 1);
+    }
     setEditData(newData);
   };
 
@@ -377,11 +394,23 @@ export default function ParseResumePage() {
                                 </AccordionContent>
                                 </AccordionItem>
 
+                                <AccordionItem value="summary">
+                                    <AccordionTrigger>Professional Summary</AccordionTrigger>
+                                    <AccordionContent className="pt-4">
+                                        <Textarea
+                                            placeholder="Professional summary or objective..."
+                                            value={editData.summary || ''}
+                                            onChange={(e) => handleSimpleFieldChange('summary', e.target.value)}
+                                            rows={4}
+                                        />
+                                    </AccordionContent>
+                                </AccordionItem>
+
                                 <AccordionItem value="item-2">
                                 <AccordionTrigger>Work Experience</AccordionTrigger>
                                 <AccordionContent className="space-y-4 pt-4">
                                     <Button variant="outline" size="sm" onClick={() => handleAddItem('workExperience')}><PlusCircle className="mr-2 h-4 w-4"/>Add Experience</Button>
-                                    {editData.workExperience.map((exp, index) => (
+                                    {(editData.workExperience || []).map((exp, index) => (
                                     <div key={index} className="space-y-2 p-3 border rounded-md relative">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input placeholder="Company" value={exp.company} onChange={e => handleFieldChange('workExperience', index, 'company', e.target.value)} />
@@ -393,12 +422,27 @@ export default function ParseResumePage() {
                                     ))}
                                 </AccordionContent>
                                 </AccordionItem>
+                                
+                                <AccordionItem value="projects">
+                                    <AccordionTrigger>Projects</AccordionTrigger>
+                                    <AccordionContent className="space-y-4 pt-4">
+                                        <Button variant="outline" size="sm" onClick={() => handleAddItem('projects')}><PlusCircle className="mr-2 h-4 w-4"/>Add Project</Button>
+                                        {(editData.projects || []).map((project, index) => (
+                                        <div key={index} className="space-y-2 p-3 border rounded-md relative">
+                                            <Input placeholder="Project Name" value={project.name} onChange={e => handleFieldChange('projects', index, 'name', e.target.value)} />
+                                            <Textarea placeholder="Project Description" value={project.description} onChange={e => handleFieldChange('projects', index, 'description', e.target.value)} rows={3}/>
+                                            <Input placeholder="Project URL (optional)" value={project.url || ''} onChange={e => handleFieldChange('projects', index, 'url', e.target.value)} />
+                                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('projects', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                        </div>
+                                        ))}
+                                    </AccordionContent>
+                                </AccordionItem>
 
                                 <AccordionItem value="item-3">
                                 <AccordionTrigger>Education</AccordionTrigger>
                                 <AccordionContent className="space-y-4 pt-4">
                                     <Button variant="outline" size="sm" onClick={() => handleAddItem('education')}><PlusCircle className="mr-2 h-4 w-4"/>Add Education</Button>
-                                    {editData.education.map((edu, index) => (
+                                    {(editData.education || []).map((edu, index) => (
                                     <div key={index} className="space-y-2 p-3 border rounded-md relative">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input placeholder="Institution" value={edu.institution} onChange={e => handleFieldChange('education', index, 'institution', e.target.value)} />
@@ -412,7 +456,7 @@ export default function ParseResumePage() {
                                 </AccordionItem>
                                 
                                 <AccordionItem value="item-4">
-                                <AccordionTrigger>Skills & Qualifications</AccordionTrigger>
+                                <AccordionTrigger>Additional Information</AccordionTrigger>
                                 <AccordionContent className="space-y-4 pt-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -430,6 +474,10 @@ export default function ParseResumePage() {
                                     <div>
                                         <Label>Certifications (comma separated)</Label>
                                         <Textarea value={(editData.certifications || []).join(', ')} onChange={(e) => handleArrayChange('certifications', e.target.value)} />
+                                    </div>
+                                     <div>
+                                        <Label>Hobbies (comma separated)</Label>
+                                        <Textarea value={(editData.hobbies || []).join(', ')} onChange={(e) => handleArrayChange('hobbies', e.target.value)} />
                                     </div>
                                     </div>
                                 </AccordionContent>

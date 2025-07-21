@@ -33,6 +33,13 @@ const EducationSchema = z.object({
   year: z.string().describe('The year of graduation or completion.'),
 });
 
+const ProjectSchema = z.object({
+    name: z.string().describe("The name or title of the project."),
+    description: z.string().describe("A brief description of the project."),
+    url: z.string().describe("A URL to the project if available.").optional(),
+});
+
+
 const ScoreAndParseResumeOutputSchema = z.object({
   score: z
     .number()
@@ -47,11 +54,14 @@ const ScoreAndParseResumeOutputSchema = z.object({
     email: z.string().describe("The candidate's email address.").optional(),
     phone: z.string().describe("The candidate's phone number.").optional(),
     links: z.array(z.string()).describe("Array of URLs for social profiles like LinkedIn, GitHub, personal website, etc."),
+    summary: z.string().describe("The professional summary or objective statement from the resume.").optional(),
     skills: z.array(z.string()).describe('An array of key skills extracted from the resume.'),
     workExperience: z.array(WorkExperienceSchema).describe('An array of work experience objects.'),
     education: z.array(EducationSchema).describe('An array of education objects.'),
+    projects: z.array(ProjectSchema).describe("An array of personal or professional projects.").optional(),
     certifications: z.array(z.string()).describe('An array of relevant certifications.'),
     languages: z.array(z.string()).describe('An array of languages spoken by the candidate.'),
+    hobbies: z.array(z.string()).describe("An array of hobbies or interests listed on the resume.").optional(),
   }),
 });
 export type ScoreAndParseResumeOutput = z.infer<typeof ScoreAndParseResumeOutputSchema>;
@@ -70,12 +80,15 @@ You will be provided with a job description and a resume (either as text from a 
 1.  Parse the resume to extract structured information. Be as accurate as possible. Extract the following fields:
     - Candidate's full name.
     - Contact info: email and phone number.
+    - A professional summary or objective statement if present.
     - Social and professional links (e.g., LinkedIn, GitHub, portfolio).
     - A list of key skills (both technical and soft skills).
     - A list of work experiences, including company, job title, and employment dates.
     - A list of educational qualifications, including institution, degree, and year.
+    - A list of personal or professional projects, including name, description, and a URL if available.
     - A list of any certifications mentioned.
     - A list of languages spoken.
+    - A list of hobbies or interests if mentioned.
 2.  Score the resume from 0 to 100 based on how well the candidate's skills and experience match the provided job description.
 3.  Provide a concise justification for the score. Explain the reasoning behind your score, noting how the candidate aligns with the requirements.
 
