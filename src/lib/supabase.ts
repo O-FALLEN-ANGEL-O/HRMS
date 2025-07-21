@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Hardcoded Supabase credentials.
+// This approach ensures the client runs in any environment without needing .env files.
+const supabaseUrl = "https://qgmknoilorehwimlhngf.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnbWtub2lsb3JlaHdpbWxobmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTA3MjksImV4cCI6MjA2ODY2NjcyOX0.x-f4IqCoUCLweM4PS152zHqWT2bdtp-p_nIu0Wcs1rQ"
 
 let supabase: ReturnType<typeof createClient>;
 
