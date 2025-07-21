@@ -59,13 +59,12 @@ async function seedData() {
 
   // 2. Auth Users & Employees (Upsert)
   let seededCount = 0;
+  const { data: { users: existingUsers } } = await supabase.auth.admin.listUsers();
+
   for(const userData of usersToCreate) {
-      // Check if user exists in auth
-      const { data: { users: existingUsers } } = await supabase.auth.admin.listUsers();
       let authUser = existingUsers.find(u => u.email === userData.email);
 
       if (authUser) {
-          // User exists, force update password and metadata
           const { data, error } = await supabase.auth.admin.updateUserById(authUser.id, {
               password: userData.password,
               email_confirm: true,
@@ -74,7 +73,6 @@ async function seedData() {
           if (error) { console.error(`Error updating auth user ${userData.email}:`, error); continue; }
           authUser = data.user;
       } else {
-          // User does not exist, create them
           const { data, error } = await supabase.auth.admin.createUser({
               email: userData.email,
               password: userData.password,
@@ -186,7 +184,7 @@ async function main() {
   console.log('---');
   console.log('Sample Logins:');
   const adminUser = usersToCreate.find(u => u.role === 'admin');
-  const managerUser = usersTo-create.find(u => u.role === 'manager');
+  const managerUser = usersToCreate.find(u => u.role === 'manager');
   const employeeUser = usersToCreate.find(u => u.role === 'employee');
   if(adminUser) console.log(`Admin: ${adminUser.employee_id} / ${adminUser.password}`);
   if(managerUser) console.log(`Manager: ${managerUser.employee_id} / ${managerUser.password}`);
