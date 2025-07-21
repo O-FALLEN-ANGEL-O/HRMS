@@ -6,11 +6,11 @@ import { supabase } from '@/lib/supabase';
 import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
-// Keep the existing profile type
 interface UserProfile {
   id: string;
   full_name: string;
-  department: string;
+  department: { name: string };
+  department_id: string;
   job_title: string;
   role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
   employee_id: string;
@@ -36,21 +36,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// A mock user for deployment build purposes
-const MOCK_USER: User = {
-    id: 'mock-user-id',
-    email: 'admin@optitalent.com',
-    role: 'admin',
-    profile: {
-        id: 'mock-user-id',
-        full_name: 'Admin User',
-        department: 'Administration',
-        job_title: 'Administrator',
-        role: 'admin',
-        employee_id: 'PEP0001',
-    }
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,18 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
-    if (!supabase.auth) {
-        setUser(MOCK_USER);
-        setLoading(false);
-        return;
-    }
-
     const fetchUser = async (sessionUser: SupabaseUser | null) => {
         if (sessionUser) {
             const { data: profile, error } = await supabase
                 .from('employees')
-                .select('*')
+                .select(`*, department:departments(name)`)
                 .eq('id', sessionUser.id)
                 .single();
 
@@ -82,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     id: sessionUser.id,
                     email: sessionUser.email!,
                     role: userRole,
-                    profile: profile
+                    profile: profile as UserProfile,
                 });
             }
         } else {
@@ -119,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const login = async (identifier: string, password: string, isEmployeeId: boolean = false) => {
-    if (!supabase.auth) return { error: { message: "Supabase not configured." }};
     let email = identifier;
     if (isEmployeeId) {
       if (!identifier) {
@@ -140,7 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const signUp = async (data: any) => {
-    if (!supabase.auth) return { error: { message: "Supabase not configured." }};
     const { email, password, firstName, lastName } = data;
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -180,7 +156,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    if (!supabase.auth) return;
     await supabase.auth.signOut();
     setUser(null);
     router.push('/');
