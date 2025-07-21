@@ -1,254 +1,341 @@
--- HR+ (OptiTalent) Supabase Schema
--- This script defines all tables, relationships, and RLS policies.
+-- -------------------------------------------------------------------------------------------------
+-- Users, Roles, and Profiles
+-- -------------------------------------------------------------------------------------------------
 
--- ----------------------------------------------------------------
--- 1. Helper Functions & Custom Types
--- ----------------------------------------------------------------
+-- Enum for user roles
+create type public.user_role as enum (
+  'admin', 
+  'employee', 
+  'hr', 
+  'manager', 
+  'recruiter', 
+  'qa-analyst', 
+  'process-manager', 
+  'team-leader', 
+  'marketing', 
+  'finance', 
+  'it-manager', 
+  'operations-manager',
+  'guest'
+);
 
--- Custom type for user roles
-CREATE TYPE public.app_role AS ENUM ('admin', 'hr', 'manager', 'employee', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager');
+-- Profiles table to store public user data
+create table public.profiles (
+  id uuid references auth.users not null primary key,
+  full_name text,
+  avatar_url text,
+  role public.user_role not null default 'guest',
+  employee_id text unique,
+  department text,
+  job_title text,
+  manager_id uuid references public.profiles(id)
+);
 
--- Function to get the current user's UID from Supabase auth
-CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$
-  SELECT nullif(current_setting('request.jwt.claims', true)::json->>'sub', '')::uuid;
-$$ LANGUAGE sql STABLE;
+-- Function to get the current user's role
+create or replace function public.get_my_role()
+returns public.user_role as $$
+  select role from public.profiles where id = auth.uid();
+$$ language sql stable;
 
--- Function to get the current user's role from the users table
-CREATE OR REPLACE FUNCTION public.get_my_role() RETURNS app_role AS $$
-  SELECT role FROM public.users WHERE id = auth.uid();
-$$ LANGUAGE sql STABLE;
-
--- Function to check if a user is part of another user's team (i.e., reports to them)
-CREATE OR REPLACE FUNCTION public.is_my_team_member(user_id uuid) RETURNS boolean AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = user_id AND manager_id = auth.uid()
+-- Function to check if a user is a manager of another user
+create or replace function public.is_manager_of(employee_uuid uuid)
+returns boolean as $$
+  select exists(
+    select 1 from public.profiles
+    where id = employee_uuid and manager_id = auth.uid()
   );
-$$ LANGUAGE sql STABLE;
+$$ language sql stable;
 
+-- Enable RLS for profiles
+alter table public.profiles enable row level security;
 
--- ----------------------------------------------------------------
--- 2. Tables Definition
--- ----------------------------------------------------------------
+-- Policies for profiles
+create policy "Users can view their own profile" on public.profiles
+  for select using (auth.uid() = id);
 
--- Users Table: Central repository for all users.
-CREATE TABLE public.users (
-  id uuid PRIMARY KEY DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
-  employee_id TEXT UNIQUE,
-  full_name TEXT,
-  email TEXT UNIQUE,
-  role app_role NOT NULL DEFAULT 'employee',
-  department TEXT,
-  job_title TEXT,
-  profile_picture_url TEXT,
-  manager_id uuid REFERENCES public.users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+create policy "Users can update their own profile" on public.profiles
+  for update using (auth.uid() = id) with check (auth.uid() = id);
+
+create policy "Managers can view their team members' profiles" on public.profiles
+  for select using (public.is_manager_of(id));
+  
+create policy "HR/Admin can view all profiles" on public.profiles
+  for select using (public.get_my_role() in ('hr', 'admin'));
+
+create policy "HR/Admin can create profiles" on public.profiles
+  for insert with check (public.get_my_role() in ('hr', 'admin'));
+  
+create policy "HR/Admin can update any profile" on public.profiles
+  for update using (public.get_my_role() in ('hr', 'admin'));
+
+-- -------------------------------------------------------------------------------------------------
+-- Recruitment
+-- -------------------------------------------------------------------------------------------------
+
+-- Enum for applicant status
+create type public.applicant_status as enum ('Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected');
+
+-- Applicants table
+create table public.applicants (
+  id uuid primary key default uuid_generate_v4(),
+  full_name text not null,
+  email text not null unique,
+  role_applied text not null,
+  status public.applicant_status not null default 'Applied',
+  application_date date not null default current_date,
+  resume_url text,
+  parsed_resume_data jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.users IS 'Stores user profile and role information.';
 
--- Job Postings Table
-CREATE TABLE public.jobs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  department TEXT NOT NULL,
-  description TEXT,
-  status TEXT NOT NULL DEFAULT 'Open', -- e.g., Open, Closed, Archived
-  created_by uuid NOT NULL REFERENCES public.users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+-- Interviewer Notes table
+create table public.interviewer_notes (
+  id uuid primary key default uuid_generate_v4(),
+  applicant_id uuid not null references public.applicants(id) on delete cascade,
+  interviewer_id uuid not null references public.profiles(id),
+  note text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.jobs IS 'Stores job postings for recruitment.';
 
--- Applicants Table
-CREATE TABLE public.applicants (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  full_name TEXT NOT NULL,
-  email TEXT,
-  phone TEXT,
-  status TEXT NOT NULL DEFAULT 'Applied', -- Applied, Screening, Interview, Offer, Hired, Rejected
-  job_id uuid REFERENCES public.jobs(id),
-  resume_url TEXT,
-  parsed_resume_data JSONB,
-  match_score INT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+-- Enable RLS
+alter table public.applicants enable row level security;
+alter table public.interviewer_notes enable row level security;
+
+-- Policies for recruitment
+create policy "HR/Recruiters/Admins can manage applicants" on public.applicants
+  for all using (public.get_my_role() in ('hr', 'recruiter', 'admin'));
+  
+create policy "HR/Recruiters/Admins/Managers can manage interviewer notes" on public.interviewer_notes
+  for all using (public.get_my_role() in ('hr', 'recruiter', 'admin', 'manager'));
+  
+-- Enable real-time for recruitment changes
+alter publication supabase_realtime add table public.applicants, public.interviewer_notes;
+
+
+-- -------------------------------------------------------------------------------------------------
+-- Leave Management
+-- -------------------------------------------------------------------------------------------------
+create type public.leave_type as enum ('Sick Leave', 'Casual Leave', 'Paid Time Off', 'Work From Home');
+create type public.leave_status as enum ('Pending', 'Approved', 'Rejected');
+
+create table public.leave_requests (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid not null references public.profiles(id),
+  leave_type public.leave_type not null,
+  start_date date not null,
+  end_date date not null,
+  reason text,
+  status public.leave_status not null default 'Pending',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.applicants IS 'Stores information about job applicants.';
 
--- Applicant Notes Table
-CREATE TABLE public.applicant_notes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  applicant_id uuid NOT NULL REFERENCES public.applicants(id) ON DELETE CASCADE,
-  author_id uuid NOT NULL REFERENCES public.users(id),
-  note TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+alter table public.leave_requests enable row level security;
+
+create policy "Employees can manage their own leave requests" on public.leave_requests
+  for all using (auth.uid() = employee_id);
+  
+create policy "Managers can view and approve/reject their team's leave requests" on public.leave_requests
+  for all using (public.is_manager_of(employee_id));
+
+create policy "HR/Admins can manage all leave requests" on public.leave_requests
+  for all using (public.get_my_role() in ('hr', 'admin'));
+
+-- -------------------------------------------------------------------------------------------------
+-- Helpdesk / Ticketing
+-- -------------------------------------------------------------------------------------------------
+create type public.ticket_category as enum ('IT Support', 'HR Query', 'Payroll Issue', 'Facilities', 'General Inquiry');
+create type public.ticket_priority as enum ('Low', 'Medium', 'High');
+create type public.ticket_status as enum ('Open', 'In Progress', 'Closed');
+
+create table public.helpdesk_tickets (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references public.profiles(id),
+  subject text not null,
+  category public.ticket_category,
+  priority public.ticket_priority,
+  status public.ticket_status not null default 'Open',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.applicant_notes IS 'Internal notes on applicants by the hiring team.';
 
--- Leave Requests Table
-CREATE TABLE public.leave_requests (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES public.users(id),
-  leave_type TEXT NOT NULL, -- Sick, Casual, PTO
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  reason TEXT,
-  status TEXT NOT NULL DEFAULT 'Pending', -- Pending, Approved, Rejected
-  approved_by uuid REFERENCES public.users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+create table public.ticket_messages (
+  id uuid primary key default uuid_generate_v4(),
+  ticket_id uuid not null references public.helpdesk_tickets(id) on delete cascade,
+  sender_id uuid not null references public.profiles(id),
+  message text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.leave_requests IS 'Stores all employee leave requests.';
 
--- Attendance Table
-CREATE TABLE public.attendance (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES public.users(id),
-  check_in_time TIMESTAMPTZ NOT NULL,
-  check_out_time TIMESTAMPTZ,
-  duration_hours NUMERIC,
-  location TEXT,
-  is_remote BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+alter table public.helpdesk_tickets enable row level security;
+alter table public.ticket_messages enable row level security;
+
+create policy "Users can manage their own tickets" on public.helpdesk_tickets
+  for all using (auth.uid() = user_id);
+
+create policy "Users can manage messages on their own tickets" on public.ticket_messages
+  for all using (ticket_id in (select id from public.helpdesk_tickets where user_id = auth.uid()));
+
+create policy "Support staff can manage all tickets and messages" on public.helpdesk_tickets
+  for all using (public.get_my_role() in ('admin', 'hr', 'it-manager'));
+
+create policy "Support staff can manage all messages" on public.ticket_messages
+  for all using (public.get_my_role() in ('admin', 'hr', 'it-manager'));
+
+-- Enable real-time for helpdesk
+alter publication supabase_realtime add table public.helpdesk_tickets, public.ticket_messages;
+
+
+-- -------------------------------------------------------------------------------------------------
+-- Company Feed
+-- -------------------------------------------------------------------------------------------------
+create table public.company_posts (
+  id uuid primary key default uuid_generate_v4(),
+  author_id uuid not null references public.profiles(id),
+  title text not null,
+  content text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.attendance IS 'Records employee check-in and check-out times.';
 
--- Company Feed/Posts Table
-CREATE TABLE public.company_posts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id uuid NOT NULL REFERENCES public.users(id),
-  content TEXT NOT NULL,
-  image_url TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+alter table public.company_posts enable row level security;
+
+create policy "All users can view company posts" on public.company_posts
+  for select using (true);
+  
+create policy "HR/Admins can create and manage posts" on public.company_posts
+  for all using (public.get_my_role() in ('hr', 'admin'));
+  
+-- Enable real-time for feed
+alter publication supabase_realtime add table public.company_posts;
+
+-- -------------------------------------------------------------------------------------------------
+-- Assessments
+-- -------------------------------------------------------------------------------------------------
+
+create type public.assessment_question_type as enum ('mcq', 'typing', 'audio', 'voice_input', 'video_input');
+create type public.assessment_process_type as enum ('Chat Support', 'Voice Process – English', 'Voice Process – Kannada', 'Technical Support', 'IT / Developer Role');
+
+create table public.assessments (
+  id uuid primary key default uuid_generate_v4(),
+  title text not null,
+  process_type public.assessment_process_type not null,
+  duration_minutes integer not null,
+  passing_score integer not null,
+  created_by uuid references public.profiles(id),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-COMMENT ON TABLE public.company_posts IS 'Stores posts for the company feed.';
 
--- Helpdesk Tickets Table
-CREATE TABLE public.helpdesk_tickets (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES public.users(id),
-  subject TEXT NOT NULL,
-  description TEXT,
-  category TEXT NOT NULL, -- IT, HR, Finance
-  priority TEXT NOT NULL DEFAULT 'Medium', -- Low, Medium, High
-  status TEXT NOT NULL DEFAULT 'Open', -- Open, In Progress, Closed
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+create table public.assessment_sections (
+  id uuid primary key default uuid_generate_v4(),
+  assessment_id uuid not null references public.assessments(id) on delete cascade,
+  title text not null,
+  time_limit_minutes integer not null,
+  section_order integer
 );
-COMMENT ON TABLE public.helpdesk_tickets IS 'Stores employee support tickets.';
 
--- Ticket Comments Table
-CREATE TABLE public.ticket_comments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  ticket_id uuid NOT NULL REFERENCES public.helpdesk_tickets(id) ON DELETE CASCADE,
-  author_id uuid NOT NULL REFERENCES public.users(id),
-  comment TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+create table public.assessment_questions (
+  id uuid primary key default uuid_generate_v4(),
+  section_id uuid not null references public.assessment_sections(id) on delete cascade,
+  question_text text not null,
+  question_type public.assessment_question_type not null,
+  options jsonb, -- For MCQ options
+  correct_answer text,
+  typing_prompt text,
+  audio_prompt_url text,
+  question_order integer
 );
-COMMENT ON TABLE public.ticket_comments IS 'Comments on helpdesk tickets.';
 
-
--- ----------------------------------------------------------------
--- 3. Row-Level Security (RLS) Policies
--- ----------------------------------------------------------------
-
--- Enable RLS for all tables
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.applicants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.applicant_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leave_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.company_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.helpdesk_tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ticket_comments ENABLE ROW LEVEL SECURITY;
-
-
--- --- Users Table Policies ---
--- Users can view their own profile.
-CREATE POLICY "Users can view their own profile" ON public.users FOR SELECT USING (id = auth.uid());
--- Users can update their own profile.
-CREATE POLICY "Users can update their own profile" ON public.users FOR UPDATE USING (id = auth.uid());
--- HR, Admins, and Managers can view profiles. Managers can only see their team.
-CREATE POLICY "Admins, HR and Managers can view user profiles" ON public.users FOR SELECT USING (
-  get_my_role() IN ('admin', 'hr') OR
-  (get_my_role() = 'manager' AND is_my_team_member(id))
+create table public.assessment_attempts (
+    id uuid primary key default uuid_generate_v4(),
+    assessment_id uuid not null references public.assessments(id) on delete cascade,
+    user_id uuid not null references public.profiles(id),
+    status text not null default 'in_progress', -- e.g., in_progress, completed
+    score integer,
+    started_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    completed_at timestamp with time zone
 );
--- HR and Admins can create and update any user profile.
-CREATE POLICY "Admins and HR can manage user profiles" ON public.users FOR ALL USING (get_my_role() IN ('admin', 'hr'));
+
+create table public.assessment_answers (
+    id uuid primary key default uuid_generate_v4(),
+    attempt_id uuid not null references public.assessment_attempts(id) on delete cascade,
+    question_id uuid not null references public.assessment_questions(id) on delete cascade,
+    answer_text text,
+    is_correct boolean
+);
 
 
--- --- Leave Requests Table Policies ---
--- Employees can see their own leave requests.
-CREATE POLICY "Employees can view their own leave requests" ON public.leave_requests FOR SELECT USING (user_id = auth.uid());
--- Employees can create their own leave requests.
-CREATE POLICY "Employees can create leave requests for themselves" ON public.leave_requests FOR INSERT WITH CHECK (user_id = auth.uid());
--- Managers can view their team's leave requests.
-CREATE POLICY "Managers can view their team's leave requests" ON public.leave_requests FOR SELECT USING (is_my_team_member(user_id));
--- Managers can approve/reject their team's leave requests.
-CREATE POLICY "Managers can update their team's leave requests" ON public.leave_requests FOR UPDATE USING (is_my_team_member(user_id));
--- Admins and HR can manage all leave requests.
-CREATE POLICY "Admins and HR can manage all leave requests" ON public.leave_requests FOR ALL USING (get_my_role() IN ('admin', 'hr'));
+alter table public.assessments enable row level security;
+alter table public.assessment_sections enable row level security;
+alter table public.assessment_questions enable row level security;
+alter table public.assessment_attempts enable row level security;
+alter table public.assessment_answers enable row level security;
 
+-- Policies for Assessments
+create policy "HR/Admin/Recruiters can manage assessments" on public.assessments
+  for all using (public.get_my_role() in ('hr', 'admin', 'recruiter'));
 
--- --- Attendance Table Policies ---
--- Employees can manage their own attendance records.
-CREATE POLICY "Employees can manage own attendance" ON public.attendance FOR ALL USING (user_id = auth.uid());
--- Managers can view their team's attendance.
-CREATE POLICY "Managers can view team attendance" ON public.attendance FOR SELECT USING (is_my_team_member(user_id));
--- Admins and HR can manage all attendance records.
-CREATE POLICY "Admins and HR can manage all attendance" ON public.attendance FOR ALL USING (get_my_role() IN ('admin', 'hr'));
+create policy "HR/Admin/Recruiters can manage assessment sections" on public.assessment_sections
+  for all using (public.get_my_role() in ('hr', 'admin', 'recruiter'));
 
+create policy "HR/Admin/Recruiters can manage assessment questions" on public.assessment_questions
+  for all using (public.get_my_role() in ('hr', 'admin', 'recruiter'));
+  
+create policy "Authenticated users can view assigned assessments" on public.assessments
+  for select using (true); -- In a real app, you'd link this to an assignment table
 
--- --- Recruitment-related Tables Policies (Jobs, Applicants, Notes) ---
--- All authenticated users can view job postings.
-CREATE POLICY "All users can view jobs" ON public.jobs FOR SELECT USING (true);
--- Recruiters, HR, and Admins can manage all recruitment data.
-CREATE POLICY "Recruitment team can manage jobs" ON public.jobs FOR ALL USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
-CREATE POLICY "Recruitment team can manage applicants" ON public.applicants FOR ALL USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
-CREATE POLICY "Hiring team can manage applicant notes" ON public.applicant_notes FOR ALL USING (get_my_role() IN ('admin', 'hr', 'recruiter', 'manager'));
+create policy "Users can manage their own assessment attempts and answers" on public.assessment_attempts
+  for all using (auth.uid() = user_id);
+  
+create policy "Users can manage their own answers" on public.assessment_answers
+  for all using (attempt_id in (select id from public.assessment_attempts where user_id = auth.uid()));
+  
+create policy "HR/Admin/Recruiters can view all attempts and answers" on public.assessment_attempts
+  for select using (public.get_my_role() in ('hr', 'admin', 'recruiter'));
 
+create policy "HR/Admin/Recruiters can view all answers" on public.assessment_answers
+  for select using (public.get_my_role() in ('hr', 'admin', 'recruiter'));
+  
+-- -------------------------------------------------------------------------------------------------
+-- Payroll & Onboarding
+-- -------------------------------------------------------------------------------------------------
 
--- --- General Access Tables (Company Feed, Helpdesk) ---
--- All authenticated users can view the company feed.
-CREATE POLICY "All users can view company feed" ON public.company_posts FOR SELECT USING (true);
--- HR and Admins can create company posts.
-CREATE POLICY "Admins and HR can create posts" ON public.company_posts FOR INSERT WITH CHECK (get_my_role() IN ('admin', 'hr'));
--- All users can manage their own tickets.
-CREATE POLICY "Users can manage their own tickets" ON public.helpdesk_tickets FOR ALL USING (user_id = auth.uid());
--- IT, HR, and Admins can view all tickets.
-CREATE POLICY "Support staff can view all tickets" ON public.helpdesk_tickets FOR SELECT USING (get_my_role() IN ('admin', 'hr', 'it-manager'));
--- Authenticated users can comment on tickets they have access to.
-CREATE POLICY "Users can comment on accessible tickets" ON public.ticket_comments FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.helpdesk_tickets
-      WHERE id = ticket_id -- This implicitly uses the RLS from helpdesk_tickets
-    )
-  );
+create table public.payslips (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid not null references public.profiles(id),
+  period_start date not null,
+  period_end date not null,
+  data jsonb,
+  generated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
--- ----------------------------------------------------------------
--- 4. Enable Real-time Updates (Publications)
--- ----------------------------------------------------------------
+create table public.onboarding_tasks (
+    id uuid primary key default uuid_generate_v4(),
+    title text not null,
+    description text
+);
 
--- Create publications for real-time features
-CREATE PUBLICATION supabase_realtime FOR ALL TABLES;
+create table public.employee_tasks (
+    id uuid primary key default uuid_generate_v4(),
+    employee_id uuid not null references public.profiles(id),
+    task_id uuid not null references public.onboarding_tasks(id),
+    is_completed boolean not null default false,
+    completed_at timestamp with time zone
+);
 
--- Specifically enable real-time on key tables.
--- Supabase Studio UI is often easier for this, but here is the SQL way.
--- This tells Supabase to broadcast changes on these tables.
--- Assuming the publication 'supabase_realtime' is what your Supabase project uses.
+alter table public.payslips enable row level security;
+alter table public.onboarding_tasks enable row level security;
+alter table public.employee_tasks enable row level security;
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.company_posts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.helpdesk_tickets;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.ticket_comments;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_requests;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.attendance;
+-- Policies
+create policy "Employees can view their own payslips" on public.payslips
+  for select using (auth.uid() = employee_id);
+  
+create policy "Finance/HR/Admins can manage all payslips" on public.payslips
+  for all using (public.get_my_role() in ('finance', 'hr', 'admin'));
+  
+create policy "Employees can view their own tasks" on public.employee_tasks
+  for select using (auth.uid() = employee_id);
 
-
--- ----------------------------------------------------------------
--- 5. Indexes for Performance
--- ----------------------------------------------------------------
-
-CREATE INDEX idx_users_manager_id ON public.users(manager_id);
-CREATE INDEX idx_leave_requests_user_id ON public.leave_requests(user_id);
-CREATE INDEX idx_attendance_user_id ON public.attendance(user_id);
-CREATE INDEX idx_helpdesk_tickets_user_id ON public.helpdesk_tickets(user_id);
-CREATE INDEX idx_ticket_comments_ticket_id ON public.ticket_comments(ticket_id);
+create policy "HR/Admins can manage all tasks" on public.onboarding_tasks
+  for all using (public.get_my_role() in ('hr', 'admin'));
+  
+create policy "HR/Admins/Managers can manage employee tasks" on public.employee_tasks
+  for all using (public.get_my_role() in ('hr', 'admin') or public.is_manager_of(employee_id));
