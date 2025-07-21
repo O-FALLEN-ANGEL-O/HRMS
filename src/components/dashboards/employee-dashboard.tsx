@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Calendar, Wallet, Settings, Bell } from "lucide-react";
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 // Mock Data
 const myTasks = [
@@ -28,14 +31,18 @@ const companyAnnouncements = [
 ];
 
 const quickLinks = [
-    { text: "My Profile", icon: FileText, href: "/employee/profile" },
-    { text: "Leave Balance", icon: Calendar, href: "/employee/leaves" },
-    { text: "Payslips", icon: Wallet, href: "/employee/payroll" },
-    { text: "Settings", icon: Settings, href: "/employee/settings" },
+    { text: "My Profile", icon: FileText, href: "/profile" },
+    { text: "Leave Balance", icon: Calendar, href: "/leaves" },
+    { text: "Payslips", icon: Wallet, href: "/payroll" },
+    { text: "Settings", icon: Settings, href: "/settings" },
 ];
 
 
 export default function EmployeeDashboard() {
+    const { user } = useAuth();
+    const router = useRouter();
+    const role = user?.role || 'employee';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -96,9 +103,11 @@ export default function EmployeeDashboard() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {quickLinks.map(link => (
-                         <Button key={link.text} variant="ghost" className="w-full justify-start">
-                            <link.icon className="mr-2 h-4 w-4" />
-                            {link.text}
+                         <Button asChild key={link.text} variant="ghost" className="w-full justify-start">
+                            <Link href={`/${role}${link.href}`}>
+                                <link.icon className="mr-2 h-4 w-4" />
+                                {link.text}
+                            </Link>
                         </Button>
                     ))}
                 </CardContent>

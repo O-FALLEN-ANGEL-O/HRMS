@@ -66,6 +66,12 @@ export default function OnboardingPage() {
       toast({ title: "Copied!", description: "Email content copied to clipboard." });
     }
   };
+  
+  const handleSendEmail = () => {
+      if (result) {
+        toast({ title: "Email Sent!", description: `Welcome email has been sent to the new hire.` });
+      }
+  }
 
   return (
     <div>
@@ -126,7 +132,7 @@ export default function OnboardingPage() {
                   <Button variant="outline" onClick={copyToClipboard} className="w-full">
                     <Clipboard className="mr-2 h-4 w-4" /> Copy
                   </Button>
-                  <Button className="w-full">
+                  <Button className="w-full" onClick={handleSendEmail}>
                     <Send className="mr-2 h-4 w-4" /> Send Email
                   </Button>
                 </div>

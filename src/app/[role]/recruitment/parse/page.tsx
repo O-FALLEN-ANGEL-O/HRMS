@@ -16,11 +16,67 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { scoreAndParseResume, ScoreAndParseResumeOutput } from '@/ai/flows/score-and-parse-resume';
-import { Bot, Upload, Camera, Loader2, Save, Trash2, PlusCircle, FileText, Smartphone } from 'lucide-react';
+import { suggestInterviewQuestions, SuggestInterviewQuestionsOutput } from '@/ai/flows/suggest-interview-questions';
+import { Bot, Upload, Camera, Loader2, Save, Trash2, PlusCircle, FileText, Smartphone, Lightbulb } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ParsedData = ScoreAndParseResumeOutput['parsedData'];
+
+function InterviewQuestions({ jobTitle }: { jobTitle: string }) {
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchQuestions() {
+      if (!jobTitle) {
+          setLoading(false);
+          return;
+      };
+      
+      try {
+        setLoading(true);
+        const result = await suggestInterviewQuestions({ role: jobTitle });
+        setQuestions(result.questions);
+      } catch (error) {
+        toast({
+          title: "Failed to load questions",
+          description: "Could not generate AI-powered interview questions.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchQuestions();
+  }, [jobTitle, toast]);
+  
+  if (loading) {
+    return (
+        <div className="flex flex-col items-center justify-center h-48">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mb-3" />
+            <p className="text-muted-foreground text-sm">Generating interview questions...</p>
+        </div>
+    )
+  }
+
+  if (questions.length === 0) {
+      return <p className="text-muted-foreground text-sm text-center py-4">No questions generated. The job title might be too generic.</p>
+  }
+
+  return (
+    <ul className="space-y-3">
+        {questions.map((q, i) => (
+            <li key={i} className="flex items-start gap-3">
+                <Lightbulb className="h-4 w-4 mt-1 text-yellow-400 flex-shrink-0" />
+                <span className="text-sm">{q}</span>
+            </li>
+        ))}
+    </ul>
+  )
+}
 
 export default function ParseResumePage() {
   const [result, setResult] = useState<ScoreAndParseResumeOutput | null>(null);
@@ -39,15 +95,15 @@ export default function ParseResumePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const getCameraPermission = async () => {
-      if (!isCameraOpen) {
-        if (videoRef.current?.srcObject) {
-            const stream = videoRef.current.srcObject as MediaStream;
-            stream.getTracks().forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
-        return;
+    if (!isCameraOpen) {
+      if (videoRef.current?.srcObject) {
+          const stream = videoRef.current.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
+          videoRef.current.srcObject = null;
       }
+      return;
+    }
+    const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
@@ -187,7 +243,7 @@ export default function ParseResumePage() {
         <p className="text-muted-foreground">Upload a resume to automatically parse details and score against a job description.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
@@ -293,86 +349,105 @@ export default function ParseResumePage() {
                       </div>
                     </CardContent>
                   </Card>
+                  
+                   <Tabs defaultValue="parsed-data">
+                        <TabsList>
+                            <TabsTrigger value="parsed-data">Parsed Data</TabsTrigger>
+                            <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="parsed-data">
+                           <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="w-full">
+                                <AccordionItem value="item-1">
+                                <AccordionTrigger>Contact Information</AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Name</Label>
+                                        <Input value={editData.name || ''} onChange={(e) => handleSimpleFieldChange('name', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Email</Label>
+                                        <Input value={editData.email || ''} onChange={(e) => handleSimpleFieldChange('email', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Phone</Label>
+                                        <Input value={editData.phone || ''} onChange={(e) => handleSimpleFieldChange('phone', e.target.value)} />
+                                    </div>
+                                    </div>
+                                </AccordionContent>
+                                </AccordionItem>
 
-                  <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="w-full">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>Contact Information</AccordionTrigger>
-                      <AccordionContent className="space-y-4 pt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Name</Label>
-                            <Input value={editData.name || ''} onChange={(e) => handleSimpleFieldChange('name', e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Email</Label>
-                            <Input value={editData.email || ''} onChange={(e) => handleSimpleFieldChange('email', e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Phone</Label>
-                            <Input value={editData.phone || ''} onChange={(e) => handleSimpleFieldChange('phone', e.target.value)} />
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
+                                <AccordionItem value="item-2">
+                                <AccordionTrigger>Work Experience</AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-4">
+                                    <Button variant="outline" size="sm" onClick={() => handleAddItem('workExperience')}><PlusCircle className="mr-2 h-4 w-4"/>Add Experience</Button>
+                                    {editData.workExperience.map((exp, index) => (
+                                    <div key={index} className="space-y-2 p-3 border rounded-md relative">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Input placeholder="Company" value={exp.company} onChange={e => handleFieldChange('workExperience', index, 'company', e.target.value)} />
+                                        <Input placeholder="Job Title" value={exp.title} onChange={e => handleFieldChange('workExperience', index, 'title', e.target.value)} />
+                                        </div>
+                                        <Input placeholder="Dates (e.g., Jan 2020 - Present)" value={exp.dates} onChange={e => handleFieldChange('workExperience', index, 'dates', e.target.value)} />
+                                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('workExperience', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                    </div>
+                                    ))}
+                                </AccordionContent>
+                                </AccordionItem>
 
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger>Work Experience</AccordionTrigger>
-                      <AccordionContent className="space-y-4 pt-4">
-                        <Button variant="outline" size="sm" onClick={() => handleAddItem('workExperience')}><PlusCircle className="mr-2 h-4 w-4"/>Add Experience</Button>
-                        {editData.workExperience.map((exp, index) => (
-                          <div key={index} className="space-y-2 p-3 border rounded-md relative">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <Input placeholder="Company" value={exp.company} onChange={e => handleFieldChange('workExperience', index, 'company', e.target.value)} />
-                              <Input placeholder="Job Title" value={exp.title} onChange={e => handleFieldChange('workExperience', index, 'title', e.target.value)} />
-                            </div>
-                            <Input placeholder="Dates (e.g., Jan 2020 - Present)" value={exp.dates} onChange={e => handleFieldChange('workExperience', index, 'dates', e.target.value)} />
-                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('workExperience', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="item-3">
-                      <AccordionTrigger>Education</AccordionTrigger>
-                      <AccordionContent className="space-y-4 pt-4">
-                         <Button variant="outline" size="sm" onClick={() => handleAddItem('education')}><PlusCircle className="mr-2 h-4 w-4"/>Add Education</Button>
-                        {editData.education.map((edu, index) => (
-                          <div key={index} className="space-y-2 p-3 border rounded-md relative">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <Input placeholder="Institution" value={edu.institution} onChange={e => handleFieldChange('education', index, 'institution', e.target.value)} />
-                              <Input placeholder="Degree" value={edu.degree} onChange={e => handleFieldChange('education', index, 'degree', e.target.value)} />
-                            </div>
-                            <Input placeholder="Year" value={edu.year} onChange={e => handleFieldChange('education', index, 'year', e.target.value)} />
-                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('education', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                    
-                    <AccordionItem value="item-4">
-                      <AccordionTrigger>Skills & Qualifications</AccordionTrigger>
-                      <AccordionContent className="space-y-4 pt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>Skills (comma separated)</Label>
-                            <Textarea value={(editData.skills || []).join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} />
-                          </div>
-                           <div>
-                            <Label>Languages (comma separated)</Label>
-                            <Textarea value={(editData.languages || []).join(', ')} onChange={(e) => handleArrayChange('languages', e.target.value)} />
-                          </div>
-                           <div>
-                            <Label>Links (comma separated)</Label>
-                            <Textarea value={(editData.links || []).join(', ')} onChange={(e) => handleArrayChange('links', e.target.value)} />
-                          </div>
-                          <div>
-                            <Label>Certifications (comma separated)</Label>
-                            <Textarea value={(editData.certifications || []).join(', ')} onChange={(e) => handleArrayChange('certifications', e.target.value)} />
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                                <AccordionItem value="item-3">
+                                <AccordionTrigger>Education</AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-4">
+                                    <Button variant="outline" size="sm" onClick={() => handleAddItem('education')}><PlusCircle className="mr-2 h-4 w-4"/>Add Education</Button>
+                                    {editData.education.map((edu, index) => (
+                                    <div key={index} className="space-y-2 p-3 border rounded-md relative">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Input placeholder="Institution" value={edu.institution} onChange={e => handleFieldChange('education', index, 'institution', e.target.value)} />
+                                        <Input placeholder="Degree" value={edu.degree} onChange={e => handleFieldChange('education', index, 'degree', e.target.value)} />
+                                        </div>
+                                        <Input placeholder="Year" value={edu.year} onChange={e => handleFieldChange('education', index, 'year', e.target.value)} />
+                                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7" onClick={() => handleRemoveItem('education', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                    </div>
+                                    ))}
+                                </AccordionContent>
+                                </AccordionItem>
+                                
+                                <AccordionItem value="item-4">
+                                <AccordionTrigger>Skills & Qualifications</AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Skills (comma separated)</Label>
+                                        <Textarea value={(editData.skills || []).join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Languages (comma separated)</Label>
+                                        <Textarea value={(editData.languages || []).join(', ')} onChange={(e) => handleArrayChange('languages', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Links (comma separated)</Label>
+                                        <Textarea value={(editData.links || []).join(', ')} onChange={(e) => handleArrayChange('links', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Certifications (comma separated)</Label>
+                                        <Textarea value={(editData.certifications || []).join(', ')} onChange={(e) => handleArrayChange('certifications', e.target.value)} />
+                                    </div>
+                                    </div>
+                                </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </TabsContent>
+                         <TabsContent value="ai-insights">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Suggested Interview Questions</CardTitle>
+                                    <CardDescription>AI-generated questions based on the candidate's primary job title.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <InterviewQuestions jobTitle={editData.workExperience[0]?.title || ''} />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                   </Tabs>
 
                   <div className="flex justify-end gap-2 pt-4">
                     <Button variant="outline" onClick={resetAll}>Cancel & Clear</Button>

@@ -38,10 +38,10 @@ export function TeamCard({ member }: { member: Member }) {
     const handleAction = (action: string) => {
         if(action === 'profile') {
             router.push(`/${user?.role}/profile`);
-        } else {
+        } else if (action === 'message') {
             toast({
-                title: `Action: ${action}`,
-                description: `Sent message to ${member.name}.`
+                title: `Message Sent`,
+                description: `Your message to ${member.name} has been sent.`
             })
         }
     }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { MapPin, Calendar, Clock, Briefcase } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const openRoles = [
     { title: "Chat Support Agent", description: "Provide top-notch support to customers via live chat." },
@@ -14,6 +15,15 @@ const openRoles = [
 ];
 
 export default function WalkInDrivePage() {
+    const { toast } = useToast();
+
+    const handleRegister = () => {
+        toast({
+            title: "Registration Successful!",
+            description: "We've received your registration for the walk-in drive. See you there!",
+        });
+    };
+
     return (
         <div className="min-h-screen bg-muted/40 flex flex-col items-center justify-center p-4">
             <div className="max-w-4xl w-full space-y-8">
@@ -73,7 +83,7 @@ export default function WalkInDrivePage() {
                 </Card>
 
                 <div className="text-center">
-                    <Button size="lg" className="px-12 py-6 text-lg">
+                    <Button size="lg" className="px-12 py-6 text-lg" onClick={handleRegister}>
                         Register Now
                     </Button>
                 </div>
