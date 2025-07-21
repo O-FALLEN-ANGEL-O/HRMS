@@ -80,7 +80,16 @@ function AnimatedLogo() {
 
 const demoAccounts = [
     { role: 'Admin', user: 'PEP0001', pass: 'password' },
+    { role: 'HR', user: 'PEP0002', pass: 'password' },
     { role: 'Manager', user: 'PEP0003', pass: 'password' },
+    { role: 'Recruiter', user: 'PEP0004', pass: 'password' },
+    { role: 'QA Analyst', user: 'PEP0005', pass: 'password' },
+    { role: 'Process Manager', user: 'PEP0006', pass: 'password' },
+    { role: 'Team Leader', user: 'PEP0007', pass: 'password' },
+    { role: 'Marketing', user: 'PEP0008', pass: 'password' },
+    { role: 'Finance', user: 'PEP0009', pass: 'password' },
+    { role: 'IT Manager', user: 'PEP0010', pass: 'password' },
+    { role: 'Ops Manager', user: 'PEP0011', pass: 'password' },
     { role: 'Employee', user: 'PEP0012', pass: 'password123' },
 ];
 
@@ -122,13 +131,12 @@ export default function LoginPage() {
             });
             setLoading(false);
         } else {
-            // Check user role to decide next step
-            if (result.user.role === 'admin' || result.user.role === 'manager') {
+            if (result.otpRequired) {
                 setTempUser(result.user);
                 setLoginStep('otp');
                 toast({
                     title: 'OTP Required',
-                    description: `For demonstration, your OTP is 123456. This would be sent to the number ending in ***${result.user.profile.phone_number?.slice(-4)}`,
+                    description: `An OTP has been sent to ${result.user.email}. Please check your inbox.`,
                     duration: 10000,
                 });
                 setLoading(false);
@@ -142,9 +150,11 @@ export default function LoginPage() {
 
      const handleOtpVerification = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!tempUser) return;
+
         setLoading(true);
         
-        const result = await verifyOtp(otp);
+        const result = await verifyOtp({ email: tempUser.email, otp });
 
         if (result.success) {
             await revalidateUser();
@@ -190,7 +200,7 @@ export default function LoginPage() {
                 {loginStep === 'password' ? 'Welcome Back' : 'Verify Your Identity'}
                 </CardTitle>
               <CardDescription>
-                {loginStep === 'password' ? 'Enter your employee credentials to sign in.' : `An OTP has been sent to the mobile number of ${tempUser?.profile?.full_name}.`}
+                {loginStep === 'password' ? 'Enter your employee credentials to sign in.' : `An OTP has been sent to the email address of ${tempUser?.profile?.full_name}.`}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -226,7 +236,7 @@ export default function LoginPage() {
                     <Label htmlFor="otp">One-Time Password</Label>
                     <Input
                         id="otp"
-                        placeholder="Enter 6-digit code"
+                        placeholder="Enter 6-digit code from email"
                         required
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
