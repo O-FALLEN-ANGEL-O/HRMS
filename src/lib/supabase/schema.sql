@@ -1,8 +1,8 @@
 -- ----------------------------------------------------------------
---                   HR+ SUpaBASE SCHEMA
+--                   OptiTalent HRMS Supabase Schema
 -- ----------------------------------------------------------------
 -- This script defines the complete database structure for the
--- HR+ application, including tables for all modules,
+-- OptiTalent application, including tables for all modules,
 -- Row-Level Security (RLS) policies, and helper functions.
 -- ----------------------------------------------------------------
 
@@ -54,6 +54,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 2. Core Tables
 -- ----------------------------------------------------------------
 
+-- Departments Table
+CREATE TABLE IF NOT EXISTS departments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Employees Table (replaces public.users, links to auth.users)
 -- Stores detailed employee information.
 CREATE TABLE IF NOT EXISTS employees (
@@ -62,10 +69,11 @@ CREATE TABLE IF NOT EXISTS employees (
   full_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   job_title TEXT,
-  department TEXT,
+  department_id uuid REFERENCES departments(id),
   manager_id uuid REFERENCES employees(id),
   hire_date DATE,
   status employee_status DEFAULT 'Active',
+  role user_role NOT NULL DEFAULT 'employee',
   profile_picture_url TEXT,
   phone_number TEXT,
   emergency_contact_name TEXT,
@@ -74,12 +82,18 @@ CREATE TABLE IF NOT EXISTS employees (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Department Heads (explicit mapping)
+CREATE TABLE IF NOT EXISTS department_heads (
+    department_id uuid PRIMARY KEY REFERENCES departments(id) ON DELETE CASCADE,
+    head_id uuid NOT NULL REFERENCES employees(id) ON DELETE CASCADE
+);
+
 -- Teams Table
 -- Defines teams within the organization.
 CREATE TABLE IF NOT EXISTS teams (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  department TEXT NOT NULL,
+  department_id uuid NOT NULL REFERENCES departments(id),
   team_lead_id uuid REFERENCES employees(id),
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -201,7 +215,7 @@ CREATE TABLE IF NOT EXISTS assessment_answers (
 CREATE TABLE IF NOT EXISTS job_openings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
-    department TEXT,
+    department_id uuid NOT NULL REFERENCES departments(id),
     status TEXT DEFAULT 'Open', -- e.g., Open, Closed
     created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -286,10 +300,10 @@ CREATE TABLE IF NOT EXISTS timesheets (
 
 CREATE TABLE IF NOT EXISTS budgets (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    department TEXT NOT NULL,
+    department_id uuid NOT NULL REFERENCES departments(id),
     year INT NOT NULL,
     allocated_amount NUMERIC(15, 2),
-    UNIQUE(department, year)
+    UNIQUE(department_id, year)
 );
 
 -- IT & Operations Tables
@@ -387,50 +401,49 @@ CREATE TABLE IF NOT EXISTS employee_compliance_status (
     UNIQUE(employee_id, module_id)
 );
 
+-- Employee Awards Tables
+CREATE TABLE IF NOT EXISTS employee_awards (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    giver_id uuid NOT NULL REFERENCES employees(id),
+    receiver_id uuid NOT NULL REFERENCES employees(id),
+    reason TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS weekly_award_stats (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id uuid NOT NULL REFERENCES employees(id),
+    total_awards INT DEFAULT 0,
+    week_start_date DATE NOT NULL,
+    UNIQUE(employee_id, week_start_date)
+);
+
+CREATE TABLE IF NOT EXISTS typing_test_scores (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    applicant_id uuid NOT NULL REFERENCES applicants(id),
+    score INT NOT NULL,
+    accuracy NUMERIC(5,2),
+    attempt INT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
 
 -- ----------------------------------------------------------------
 -- 4. Enable Real-time & Row-Level Security (RLS)
 -- ----------------------------------------------------------------
-
--- Enable RLS on all tables
-ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE company_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE leave_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE leave_balances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE helpdesk_tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE helpdesk_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessment_sections ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessment_questions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessment_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assessment_answers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE job_openings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE applicants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE walkin_registrations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE onboarding_tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE employee_tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payslips ENABLE ROW LEVEL SECURITY;
-ALTER TABLE expense_claims ENABLE ROW LEVEL SECURITY;
-ALTER TABLE purchase_orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE timesheets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE it_assets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE asset_assignments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE software_licenses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE access_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE production_lines ENABLE ROW LEVEL SECURITY;
-ALTER TABLE maintenance_schedules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE marketing_campaigns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE performance_reviews ENABLE ROW LEVEL SECURITY;
-ALTER TABLE coaching_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE compliance_modules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE employee_compliance_status ENABLE ROW LEVEL SECURITY;
+DO $$
+DECLARE
+  tbl_name TEXT;
+BEGIN
+  FOR tbl_name IN 
+    SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+  LOOP
+    EXECUTE 'ALTER TABLE public.' || quote_ident(tbl_name) || ' ENABLE ROW LEVEL SECURITY;';
+  END LOOP;
+END $$;
 
 
 -- Enable real-time on key tables
--- This publishes changes to subscribed clients.
 ALTER PUBLICATION supabase_realtime ADD TABLE company_posts, helpdesk_tickets, helpdesk_messages;
 
 
@@ -439,55 +452,40 @@ ALTER PUBLICATION supabase_realtime ADD TABLE company_posts, helpdesk_tickets, h
 -- ----------------------------------------------------------------
 
 -- Employees Table Policies
--- Allow employees to see their own profile.
 CREATE POLICY "Employees can see their own profile" ON employees FOR SELECT
   USING (auth.uid() = id);
--- Allow managers to see their direct reports' profiles.
 CREATE POLICY "Managers can see their team members" ON employees FOR SELECT
   USING (is_manager_of(auth.uid(), id));
--- Allow HR/Admins to see all profiles.
 CREATE POLICY "HR/Admins can see all profiles" ON employees FOR SELECT
   USING (get_my_role() IN ('admin', 'hr'));
--- Allow employees to update their own profile.
 CREATE POLICY "Employees can update their own profile" ON employees FOR UPDATE
   USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
--- Allow HR/Admins to update all profiles.
 CREATE POLICY "HR/Admins can update all profiles" ON employees FOR UPDATE
   USING (get_my_role() IN ('admin', 'hr'));
 
 
 -- Leave Requests Table Policies
--- Employees can view their own leave requests.
 CREATE POLICY "Employees can see own leave requests" ON leave_requests FOR SELECT
   USING (employee_id = auth.uid());
--- Managers can see their team members' leave requests.
 CREATE POLICY "Managers can see team leave requests" ON leave_requests FOR SELECT
   USING (is_manager_of(auth.uid(), employee_id));
--- HR/Admins can see all leave requests.
 CREATE POLICY "HR/Admins can see all leave requests" ON leave_requests FOR SELECT
   USING (get_my_role() IN ('admin', 'hr'));
--- Employees can create their own leave requests.
 CREATE POLICY "Employees can create leave requests" ON leave_requests FOR INSERT
   WITH CHECK (employee_id = auth.uid());
--- Managers can approve/reject their team's leave requests.
 CREATE POLICY "Managers can update team leave requests" ON leave_requests FOR UPDATE
   USING (is_manager_of(auth.uid(), employee_id));
--- HR/Admins can update all leave requests.
 CREATE POLICY "HR/Admins can update all leave requests" ON leave_requests FOR UPDATE
   USING (get_my_role() IN ('admin', 'hr'));
 
 
 -- Helpdesk Tickets Table Policies
--- Users can see their own tickets.
 CREATE POLICY "Users see their own tickets" ON helpdesk_tickets FOR SELECT
   USING (employee_id = auth.uid());
--- IT/HR can see all tickets in their respective categories.
 CREATE POLICY "Support staff see relevant tickets" ON helpdesk_tickets FOR SELECT
-  USING (get_my_role() IN ('it-manager', 'hr'));
--- Users can create tickets for themselves.
+  USING (get_my_role() IN ('it-manager', 'hr', 'admin'));
 CREATE POLICY "Users can create tickets" ON helpdesk_tickets FOR INSERT
   WITH CHECK (employee_id = auth.uid());
--- Support staff can update tickets.
 CREATE POLICY "Support staff can update tickets" ON helpdesk_tickets FOR UPDATE
   USING (get_my_role() IN ('it-manager', 'hr', 'admin'));
 
@@ -499,13 +497,10 @@ CREATE POLICY "Authenticated users can see team members" ON team_members FOR SEL
 
 
 -- Policies for Assessment Tables
--- Recruiters/HR can manage assessments.
 CREATE POLICY "HR/Recruiters can manage assessments" ON assessments FOR ALL
   USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
--- Employees can view assessments (to take them).
 CREATE POLICY "Employees can view assessments" ON assessments FOR SELECT
   USING (auth.role() = 'authenticated');
--- Same logic for sections and questions.
 CREATE POLICY "HR/Recruiters can manage assessment sections" ON assessment_sections FOR ALL
   USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
 CREATE POLICY "Employees can view assessment sections" ON assessment_sections FOR SELECT
@@ -514,56 +509,32 @@ CREATE POLICY "HR/Recruiters can manage assessment questions" ON assessment_ques
   USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
 CREATE POLICY "Employees can view assessment questions" ON assessment_questions FOR SELECT
   USING (auth.role() = 'authenticated');
--- Employees can create and update their own attempts.
 CREATE POLICY "Employees can manage own attempts" ON assessment_attempts FOR ALL
   USING (employee_id = auth.uid()) WITH CHECK (employee_id = auth.uid());
--- HR/Recruiters can view all attempts.
 CREATE POLICY "HR/Recruiters can view all attempts" ON assessment_attempts FOR SELECT
   USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
--- Employees can submit their own answers.
 CREATE POLICY "Employees can submit their own answers" ON assessment_answers FOR INSERT
   WITH CHECK (
     (SELECT employee_id FROM assessment_attempts WHERE id = attempt_id) = auth.uid()
   );
--- HR/Recruiters can view all answers.
 CREATE POLICY "HR/Recruiters can view all answers" ON assessment_answers FOR SELECT
   USING (get_my_role() IN ('admin', 'hr', 'recruiter'));
 
 -- Default restrictive policies (example for one table, apply to all sensitive tables)
--- For example, for payslips:
 CREATE POLICY "Employees can view their own payslips" ON payslips FOR SELECT
   USING (employee_id = auth.uid());
 CREATE POLICY "Finance/HR/Admins can manage payslips" ON payslips FOR ALL
   USING (get_my_role() IN ('admin', 'hr', 'finance'));
-
--- Similar policies should be created for all other tables based on role access requirements.
--- E.g., Only Finance/Admin can see/manage `budgets`.
--- Only IT Manager/Admin can see/manage `it_assets`.
--- Only Marketing Manager/Admin can see/manage `marketing_campaigns`.
--- This is a template; a full implementation would require policies for all tables.
-
--- Default Deny (Implicit): If no policy matches, access is denied.
--- It's good practice to ensure no table is left without a policy.
--- The provided policies cover the main workflows but should be extended for all tables.
--- for the full project.
-
--- Example for a finance table:
 CREATE POLICY "Finance/Admin can manage budgets" ON budgets FOR ALL
   USING (get_my_role() IN ('finance', 'admin'));
-
--- Example for an IT table:
 CREATE POLICY "IT/Admin can manage assets" ON it_assets FOR ALL
   USING (get_my_role() IN ('it-manager', 'admin'));
-
--- Example for an Operations table:
 CREATE POLICY "Operations/Admin can manage production lines" ON production_lines FOR ALL
   USING (get_my_role() IN ('operations-manager', 'admin'));
-
--- Example for a Recruitment table:
-CREATE POLICY "Recruiters/HR/Admins can manage openings and applicants" ON job_openings FOR ALL
+CREATE POLICY "Recruiters/HR/Admins can manage openings" ON job_openings FOR ALL
   USING (get_my_role() IN ('recruiter', 'hr', 'admin'));
-CREATE POLICY "Recruiters/HR/Admins can view applicants" ON applicants FOR SELECT
+CREATE POLICY "Public can see openings" on job_openings for select using (true);
+CREATE POLICY "Recruiters/HR/Admins can manage applicants" ON applicants FOR ALL
   USING (get_my_role() IN ('recruiter', 'hr', 'admin'));
-
--- It is critical to create specific, granular policies for each table.
--- The examples above show the pattern to follow for the remaining tables.
+CREATE POLICY "Public can create applicants" on applicants for insert with check (true);
+CREATE POLICY "Public can create walkin registrations" on walkin_registrations for insert with check (true);

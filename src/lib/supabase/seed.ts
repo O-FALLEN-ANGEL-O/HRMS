@@ -1,4 +1,3 @@
-
 // A '.env' file is required in the root directory.
 // It should contain the following variables:
 // SUPABASE_URL="your-supabase-url"
@@ -22,7 +21,7 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// List of all tables in the order they should be cleared
+// List of all tables in the order they should be cleared and seeded
 const ALL_TABLES = [
   'team_members', 'leave_requests', 'helpdesk_messages', 'helpdesk_tickets',
   'assessment_answers', 'assessment_attempts', 'assessment_questions', 'assessment_sections', 'assessments',
@@ -31,7 +30,7 @@ const ALL_TABLES = [
   'performance_reviews', 'interview_schedules', 'applicants', 'job_openings',
   'company_posts', 'teams', 'budgets', 'employee_compliance_status',
   'compliance_modules', 'coaching_sessions', 'maintenance_schedules', 'production_lines',
-  'employees', 'departments'
+  'department_heads', 'employees', 'departments'
 ];
 
 
@@ -68,7 +67,7 @@ async function clearData() {
   // Clear auth users
   const { data: authUsers, error: usersError } = await supabase.auth.admin.listUsers();
   if (usersError) {
-    console.error('Error fetching auth users:', usersError);
+    console.error('Error fetching auth users:', usersError.message);
   } else {
     for (const user of authUsers.users) {
       const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
@@ -81,7 +80,7 @@ async function clearData() {
 }
 
 async function seedData() {
-  console.log('🌱 Seeding data...');
+    console.log('🌱 Seeding data...');
 
     // 1. Seed Departments
     const { data: departments, error: deptError } = await supabase.from('departments').insert([
@@ -116,8 +115,9 @@ async function seedData() {
         employee_id: userData.employee_id,
         full_name: userData.full_name,
         email: userData.email,
+        role: userData.role,
         job_title: faker.person.jobTitle(),
-        department: department.name,
+        department_id: department.id,
         hire_date: faker.date.past({ years: 5 }),
         profile_picture_url: `https://placehold.co/400x400.png?text=${userData.full_name.split(' ').map(n=>n[0]).join('')}`,
         status: 'Active',
@@ -133,11 +133,22 @@ async function seedData() {
         console.error("No employees were created, stopping seed.");
         return;
     }
+    
+    // Assign managers
+    const managers = createdEmployees.filter(e => e.role === 'manager');
+    const nonManagers = createdEmployees.filter(e => e.role !== 'manager' && e.role !== 'admin');
+    for (const emp of nonManagers) {
+        const manager = managers.find(m => m.department_id === emp.department_id) || faker.helpers.arrayElement(managers);
+        if (manager) {
+            await supabase.from('employees').update({ manager_id: manager.id }).eq('id', emp.id);
+        }
+    }
+    console.log(`  - ✅ Managers assigned.`);
 
     // 3. Seed Job Openings and Applicants
     const { data: openings } = await supabase.from('job_openings').insert([
-        { title: 'Senior Frontend Developer', department: 'Engineering', status: 'Open' },
-        { title: 'Product Manager', department: 'Product', status: 'Open' },
+        { title: 'Senior Frontend Developer', department_id: departments.find(d => d.name === 'Engineering')?.id },
+        { title: 'Product Manager', department_id: departments.find(d => d.name === 'Product')?.id },
     ]).select();
 
     if(openings) {
@@ -204,14 +215,14 @@ async function seedData() {
     console.log(`  - ✅ ${helpdeskTickets.length} helpdesk tickets seeded.`);
 
     // 7. Seed Performance Reviews
-    const managers = createdEmployees.filter(e => e.role === 'manager' || e.role === 'admin' || e.role === 'hr' );
-    if (managers.length > 0) {
+    const managerUsers = createdEmployees.filter(e => e.role === 'manager' || e.role === 'admin' || e.role === 'hr' );
+    if (managerUsers.length > 0) {
         const reviews = [];
         for (const emp of createdEmployees) {
             if (emp.role !== 'manager' && emp.role !== 'admin') {
                  reviews.push({
                     employee_id: emp.id,
-                    reviewer_id: faker.helpers.arrayElement(managers).id,
+                    reviewer_id: faker.helpers.arrayElement(managerUsers).id,
                     review_period: 'Q2 2024',
                     goals: faker.lorem.sentence(),
                     achievements: faker.lorem.sentence(),
@@ -241,8 +252,8 @@ async function seedData() {
 
      // 9. Seed Assessments
     const { data: assessments } = await supabase.from('assessments').insert([
-        { title: 'Customer Support Aptitude', process_type: 'Chat Support', duration_minutes: 30, passing_score: 75 },
-        { title: 'Technical Support (Level 1)', process_type: 'Technical Support', duration_minutes: 45, passing_score: 80 },
+        { title: 'Customer Support Aptitude', process_type: 'Chat Support', duration_minutes: 30, passing_score: 75, created_by_id: managerUsers[0].id },
+        { title: 'Technical Support (Level 1)', process_type: 'Technical Support', duration_minutes: 45, passing_score: 80, created_by_id: managerUsers[0].id },
     ]).select();
 
     if (assessments) {
@@ -253,12 +264,29 @@ async function seedData() {
         
         if (sections) {
             await supabase.from('assessment_questions').insert([
-                { section_id: sections[0].id, question_text: 'A customer is angry about a late delivery. What is the FIRST step?', question_type: 'mcq', options: '["Offer a refund","Apologize and listen","Explain the delay","Transfer call"]', correct_answer: 'Apologize and listen' },
-                { section_id: sections[1].id, question_text: 'What is a DHCP server used for?', question_type: 'mcq', options: '["Resolve domains","Assign IPs","Block access","Store files"]', correct_answer: 'Assign IPs' }
+                { section_id: sections[0].id, question_text: 'A customer is angry about a late delivery. What is the FIRST step?', question_type: 'mcq', options: JSON.stringify(['Offer a refund','Apologize and listen','Explain the delay','Transfer call']), correct_answer: 'Apologize and listen' },
+                { section_id: sections[1].id, question_text: 'What is a DHCP server used for?', question_type: 'mcq', options: JSON.stringify(['Resolve domains','Assign IPs','Block access','Store files']), correct_answer: 'Assign IPs' }
             ]);
         }
         console.log(`  - ✅ Assessments, sections, and questions seeded.`);
     }
+
+    // 10. Seed Employee Awards
+    const awards = [];
+    for (let i = 0; i < 20; i++) {
+        const giver = faker.helpers.arrayElement(createdEmployees);
+        let receiver = faker.helpers.arrayElement(createdEmployees);
+        while (receiver.id === giver.id) {
+            receiver = faker.helpers.arrayElement(createdEmployees);
+        }
+        awards.push({
+            giver_id: giver.id,
+            receiver_id: receiver.id,
+            reason: faker.lorem.sentence()
+        });
+    }
+    await supabase.from('employee_awards').insert(awards);
+    console.log(`  - ✅ ${awards.length} employee awards seeded.`);
 }
 
 async function main() {
