@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,7 +94,7 @@ const demoAccounts = [
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login } = useAuth();
+    const { login, user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
 
@@ -104,6 +105,13 @@ export default function LoginPage() {
     // State for Employee login
     const [employeeId, setEmployeeId] = useState('PEP0012');
     const [employeePassword, setEmployeePassword] = useState('password123');
+
+    useEffect(() => {
+        // If the auth state is no longer loading and a user object exists, redirect them.
+        if (!authLoading && user) {
+            router.push(`/${user.role}/dashboard`);
+        }
+    }, [user, authLoading, router]);
 
     const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -140,6 +148,23 @@ export default function LoginPage() {
         }
     }
 
+  // Show a loading state if auth is still resolving and there's no user yet
+  if (authLoading) {
+      return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      );
+  }
+
+  // If user is already logged in, this page will redirect, so we can return null or a loading spinner.
+  if (user) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full lg:grid lg:grid-cols-2">

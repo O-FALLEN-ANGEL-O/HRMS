@@ -43,19 +43,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   React.useEffect(() => {
-    if (!loading && !user) {
+    // Wait until loading is complete before running any checks
+    if (loading) {
+      return;
+    }
+
+    // If loading is done and there's still no user, redirect to login
+    if (!user) {
       router.push('/');
       return;
     }
     
-    // Redirect if role in URL doesn't match authenticated user's role
-    if (!loading && user && params.role !== user.role) {
+    // If user is logged in, check if the URL role matches their actual role
+    if (user && params.role !== user.role) {
       const pagePath = pathname.split('/').slice(2).join('/');
-      if (pagePath) {
-        router.push(`/${user.role}/${pagePath}`);
-      } else {
-        router.push(`/${user.role}/dashboard`);
-      }
+      const newPath = pagePath ? `/${user.role}/${pagePath}` : `/${user.role}/dashboard`;
+      router.push(newPath);
     }
   }, [user, loading, router, params, pathname]);
   
@@ -69,6 +72,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     );
   }
-
-  return <LayoutContent>{children}</LayoutContent>;
+  
+  // Render children only if user is confirmed and matches the role in the URL
+  if (user && user.role === params.role) {
+      return <LayoutContent>{children}</LayoutContent>;
+  }
+  
+  // Render a loading state while redirecting if roles don't match
+  return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <LoadingLogo />
+          <p className="text-muted-foreground">Redirecting...</p>
+        </div>
+      </div>
+  );
 }
