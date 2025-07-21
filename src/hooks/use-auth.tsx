@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -61,32 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
-  const fetchUser = async (sessionUser: SupabaseUser | null) => {
-      if (sessionUser) {
-          const { data: profile, error } = await supabase
-              .from('employees')
-              .select(`*, department:departments(name)`)
-              .eq('id', sessionUser.id)
-              .single();
-
-          if (error) {
-              console.error("Error fetching profile:", error);
-              setUser(null);
-          } else {
-               const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
-               setUser({
-                  id: sessionUser.id,
-                  email: sessionUser.email!,
-                  role: userRole,
-                  profile: profile as UserProfile,
-              });
-          }
-      } else {
-          setUser(null);
-      }
-      setLoading(false);
-  };
-
   useEffect(() => {
     // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
     if (!supabase || !supabase.auth) {
@@ -94,29 +68,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
     }
-    
-    const revalidateUser = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      await fetchUser(session?.user ?? null);
-      setLoading(false);
-    }
-    // Fetch user on initial load
-    revalidateUser();
+
+    const checkUser = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profile, error } = await supabase
+            .from('employees')
+            .select(`*, department:departments(name)`)
+            .eq('id', session.user.id)
+            .single();
+
+            if (!error && profile) {
+                const userRole = profile?.role || (session.user.app_metadata.role as UserProfile['role']) || 'employee';
+                setUser({
+                  id: session.user.id,
+                  email: session.user.email!,
+                  role: userRole,
+                  profile: profile as UserProfile,
+                });
+            }
+        } else {
+             // Check for our manual user profile cookie
+            const userProfileCookie = document.cookie.split('; ').find(row => row.startsWith('user-profile='));
+            if (userProfileCookie) {
+                try {
+                    const userData = JSON.parse(decodeURIComponent(userProfileCookie.split('=')[1]));
+                    setUser(userData);
+                } catch (e) {
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
+        }
+        setLoading(false);
+    };
+
+    checkUser();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
         setLoading(true);
-        const sessionUser = session?.user ?? null;
-        await fetchUser(sessionUser);
-        
-        if (event === 'SIGNED_IN' && sessionUser) {
-            const { data: profile } = await supabase.from('employees').select('role').eq('id', sessionUser.id).single();
-            const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
-            router.push(`/${userRole}/dashboard`);
+        if (event === 'SIGNED_IN' && session?.user) {
+           const { data: profile } = await supabase.from('employees').select('*, department:departments(name)').eq('id', session.user.id).single();
+            if(profile) {
+              const userRole = profile?.role || 'employee';
+              setUser({
+                    id: session.user.id,
+                    email: session.user.email!,
+                    role: userRole,
+                    profile: profile as UserProfile,
+              });
+              router.push(`/${userRole}/dashboard`);
+            }
         }
         if (event === 'SIGNED_OUT') {
+            document.cookie = 'user-profile=; Max-Age=-99999999; path=/;';
             setUser(null);
             router.push('/');
         }
@@ -183,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     if (!supabase) return;
+    document.cookie = 'user-profile=; Max-Age=-99999999; path=/;';
     await supabase.auth.signOut();
     setUser(null);
     router.push('/');
