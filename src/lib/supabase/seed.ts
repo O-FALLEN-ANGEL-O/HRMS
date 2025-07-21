@@ -1,4 +1,7 @@
 
+import { config } from 'dotenv';
+config();
+
 // A '.env' file is required in the root directory.
 // It should contain the following variables:
 // SUPABASE_URL="your-supabase-url"
