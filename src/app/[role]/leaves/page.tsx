@@ -23,56 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-
-type LeaveRequest = {
-    id: string;
-    employee: string;
-    leaveType: 'Sick Leave' | 'Casual Leave' | 'Paid Time Off' | 'Work From Home';
-    dates: string;
-    days: number;
-    status: 'Pending' | 'Approved' | 'Rejected';
-    reason: string;
-};
-
-const initialLeaveRequests: LeaveRequest[] = [
-  {
-    id: 'LR-001',
-    employee: 'Ravi Kumar',
-    leaveType: 'Sick Leave',
-    dates: '2023-11-10 to 2023-11-11',
-    days: 2,
-    status: 'Pending',
-    reason: 'Fever and cold.'
-  },
-  {
-    id: 'LR-002',
-    employee: 'Sunita Sharma',
-    leaveType: 'Casual Leave',
-    dates: '2023-11-15',
-    days: 1,
-    status: 'Approved',
-    reason: 'Personal appointment.'
-  },
-    {
-    id: 'LR-003',
-    employee: 'John Doe',
-    leaveType: 'Paid Time Off',
-    dates: '2023-12-20 to 2023-12-28',
-    days: 7,
-    status: 'Pending',
-    reason: 'Family vacation for the holidays.'
-  },
-  {
-    id: 'LR-004',
-    employee: 'Michael Johnson',
-    leaveType: 'Sick Leave',
-    dates: '2023-11-01',
-    days: 1,
-    status: 'Rejected',
-    reason: 'Did not provide medical certificate as per policy.'
-  },
-];
-
+import { leaveBalances, leaveRequests as initialLeaveRequests, type LeaveRequest } from '@/lib/mock-data/leaves';
 
 function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) {
     const [open, setOpen] = useState(false);

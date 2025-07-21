@@ -6,11 +6,13 @@ export type LeaveBalance = {
 
 export type LeaveRequest = {
     id: string;
-    leaveType: string;
-    date: string;
+    employee: string;
+    leaveType: 'Sick Leave' | 'Casual Leave' | 'Paid Time Off' | 'Work From Home';
+    dates: string;
+    days: number;
     status: 'Pending' | 'Approved' | 'Rejected';
     reason: string;
-}
+};
 
 export const leaveBalances: LeaveBalance[] = [
     { type: 'Sick Leave', balance: 10 },
@@ -20,32 +22,40 @@ export const leaveBalances: LeaveBalance[] = [
 ];
 
 export const leaveRequests: LeaveRequest[] = [
+  {
+    id: 'LR-001',
+    employee: 'Ravi Kumar',
+    leaveType: 'Sick Leave',
+    dates: '2023-11-10 to 2023-11-11',
+    days: 2,
+    status: 'Pending',
+    reason: 'Fever and cold.'
+  },
+  {
+    id: 'LR-002',
+    employee: 'Sunita Sharma',
+    leaveType: 'Casual Leave',
+    dates: '2023-11-15',
+    days: 1,
+    status: 'Approved',
+    reason: 'Personal appointment.'
+  },
     {
-        id: "LR-001",
-        leaveType: "Sick Leave",
-        date: "2024-07-20",
-        status: "Approved",
-        reason: "Fever and cold."
-    },
-    {
-        id: "LR-002",
-        leaveType: "Casual Leave",
-        date: "2024-08-01",
-        status: "Pending",
-        reason: "Family function."
-    },
-    {
-        id: "LR-003",
-        leaveType: "Earned Leave",
-        date: "2024-06-15",
-        status: "Rejected",
-        reason: "Not enough notice provided."
-    },
-    {
-        id: "LR-004",
-        leaveType: "Sick Leave",
-        date: "2024-05-10",
-        status: "Approved",
-        reason: "Doctor's appointment."
-    }
+    id: 'LR-003',
+    employee: 'John Doe',
+    leaveType: 'Paid Time Off',
+    dates: '2023-12-20 to 2023-12-28',
+    days: 7,
+    status: 'Pending',
+    reason: 'Family vacation for the holidays.'
+  },
+  {
+    id: 'LR-004',
+    employee: 'Michael Johnson',
+    leaveType: 'Sick Leave',
+    dates: '2023-11-01',
+    days: 1,
+    status: 'Rejected',
+    reason: 'Did not provide medical certificate as per policy.'
+  },
 ];
