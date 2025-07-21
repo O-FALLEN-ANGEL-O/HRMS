@@ -6,7 +6,7 @@ import { initialEmployees } from '@/app/[role]/employees/page';
 
 interface User {
   email: string;
-  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager';
+  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
   employeeId?: string;
   isNew?: boolean;
   // This would be expanded in a real app
@@ -75,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        userData.profile = { name: 'Finance Head', department: 'Finance' }
     } else if(userData.role === 'it-manager' && !userData.profile) {
        userData.profile = { name: 'IT Manager', department: 'IT' }
+    } else if(userData.role === 'operations-manager' && !userData.profile) {
+       userData.profile = { name: 'Operations Manager', department: 'Production' }
     }
 
 

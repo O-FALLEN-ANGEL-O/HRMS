@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
-import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart, Users as TeamLeaderIcon, Megaphone, Banknote, HardDrive } from 'lucide-react';
+import { Briefcase, User, Shield, UserCog, Star, Settings2, BarChart, Users as TeamLeaderIcon, Megaphone, Banknote, HardDrive, Factory } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 function AnimatedLogo() {
@@ -70,12 +70,13 @@ function AnimatedLogo() {
   );
 }
 
-const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager', icon: LucideIcon, email: string }[] = [
+const ROLES: { name: string, value: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager', icon: LucideIcon, email: string }[] = [
     { name: "Admin", value: "admin", icon: Shield, email: "olivia.martin@email.com" },
     { name: "Manager", value: "manager", icon: UserCog, email: "manager@optitalent.com" },
     { name: "Team Leader", value: "team-leader", icon: TeamLeaderIcon, email: "team-leader@optitalent.com" },
     { name: "HR", value: "hr", icon: BarChart, email: "hr@optitalent.com" },
     { name: "Finance Head", value: "finance", icon: Banknote, email: "finance.mgr@optitalent.com" },
+    { name: "Operations", value: "operations-manager", icon: Factory, email: "operations.mgr@optitalent.com" },
     { name: "Recruiter", value: "recruiter", icon: Briefcase, email: "recruiter@optitalent.com" },
     { name: "IT Manager", value: "it-manager", icon: HardDrive, email: "it.mgr@optitalent.com"},
     { name: "Employee", value: "employee", icon: User, email: "anika.sharma@email.com" },
@@ -114,7 +115,7 @@ export default function LoginPage() {
               <CardDescription>Choose a user role to explore the application.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 pt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 pt-4">
                     {ROLES.map((role) => {
                         const Icon = role.icon;
                         return (
