@@ -1,3 +1,4 @@
+
 // A '.env' file is required in the root directory.
 // It should contain the following variables:
 // SUPABASE_URL="your-supabase-url"
@@ -40,14 +41,16 @@ const usersToCreate = [
     { email: 'employee5@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', full_name: 'Noah Brown', employee_id: 'PEP0016' },
 ];
 
-const ALL_TABLES = [
+// This is the order in which we should delete from tables to avoid foreign key constraints.
+const DELETION_ORDER = [
   'team_members', 'leave_requests', 'helpdesk_tickets',
-  'assessment_answers', 'assessment_attempts', 'assessment_questions', 'assessment_sections', 'assessments',
-  'asset_assignments', 'it_assets', 'employee_tasks', 'onboarding_tasks',
+  'assessment_answers', 'assessment_attempts', 'assessment_questions', 'assessment_sections',
+  'asset_assignments', 'it_assets', 'onboarding_tasks',
   'payroll_records', 'expense_claims', 'purchase_orders', 'timesheets',
   'performance_reviews', 'interview_schedules', 'applicants', 'job_openings',
   'company_posts', 'teams', 'budgets', 'employee_compliance_status', 'employee_awards', 'weekly_award_stats',
   'compliance_modules', 'coaching_sessions', 'maintenance_schedules', 'production_lines',
+  'payslips', 'leave_balances', 'access_requests',
   'employees', 'departments'
 ];
 
@@ -55,9 +58,9 @@ const ALL_TABLES = [
 async function clearData() {
   console.log('🗑️ Clearing existing data...');
   
-  for (const table of ALL_TABLES) {
-    const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    if (error && error.code !== '42P01') {
+  for (const table of DELETION_ORDER) {
+    const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Use a dummy neq to delete all
+    if (error && error.code !== '42P01') { // 42P01: undefined_table
       console.error(`Error clearing table ${table}:`, error.message);
     }
   }
