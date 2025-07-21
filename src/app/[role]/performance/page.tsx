@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -13,8 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { generatePerformanceReview, GeneratePerformanceReviewOutput } from '@/ai/flows/generate-performance-review';
-import { Bot } from 'lucide-react';
+import { generatePerformanceReviewAction } from './actions';
+import type { GeneratePerformanceReviewOutput } from '@/ai/flows/generate-performance-review';
+import { Bot, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function PerformancePage() {
@@ -37,7 +39,7 @@ export default function PerformancePage() {
     };
 
     try {
-      const response = await generatePerformanceReview(input);
+      const response = await generatePerformanceReviewAction(input);
       setResult(response);
       toast({
         title: "Review Generated",
@@ -111,13 +113,14 @@ export default function PerformancePage() {
               <Textarea id="areasForImprovement" name="areasForImprovement" placeholder="e.g., Could improve documentation of design decisions..." required />
             </div>
             <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {loading ? 'Generating...' : 'Generate Review'}
             </Button>
           </form>
 
            <div className="rounded-lg border bg-muted/30 p-4 space-y-4 h-full flex flex-col">
             <h3 className="text-lg font-semibold">Generated Review</h3>
-            {loading && <div className="flex items-center justify-center h-full"><p>Generating review...</p></div>}
+            {loading && <div className="flex items-center justify-center h-full"><Loader2 className="mr-4 h-6 w-6 animate-spin" />Generating review...</div>}
             {result ? (
               <div className="space-y-4 flex-grow overflow-y-auto">
                 <div className="flex items-center justify-between">
@@ -130,7 +133,7 @@ export default function PerformancePage() {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+              !loading && <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>Fill out the form to generate a review.</p>
               </div>
             )}
