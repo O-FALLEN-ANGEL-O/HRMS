@@ -1,34 +1,47 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Briefcase, Building, User, Clock, CheckCircle } from 'lucide-react';
-import { initialEmployees } from '@/app/[role]/employees/page';
-
-type Employee = typeof initialEmployees[0];
+import { supabase } from '@/lib/supabase';
 
 interface EmployeeDetailsCardProps {
-    employee: Employee;
+    employee: any;
 }
 
 export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
   
-  const manager = initialEmployees.find(emp => emp.role === 'Manager' && emp.department === employee.department);
+  const [manager, setManager] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchManager = async () => {
+        if (!employee.department?.name) return;
+        const { data } = await supabase
+            .from('employees')
+            .select('full_name')
+            .eq('role', 'manager')
+            .eq('department_id', employee.department_id)
+            .limit(1)
+            .single();
+        setManager(data);
+    }
+    fetchManager();
+  }, [employee]);
 
   return (
     <Card className="border-primary/50">
       <CardHeader>
         <div className="flex items-center gap-4">
            <Avatar className="w-16 h-16">
-              <AvatarImage src={employee.avatar} alt={employee.name} data-ai-hint="person avatar" />
-              <AvatarFallback>{employee.name.split(" ").map(n => n[0]).join('')}</AvatarFallback>
+              <AvatarImage src={employee.profile_picture_url} alt={employee.full_name} data-ai-hint="person avatar" />
+              <AvatarFallback>{employee.full_name.split(" ").map((n: string) => n[0]).join('')}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className='font-headline'>{employee.name} ({employee.id})</CardTitle>
-              <CardDescription>{employee.role}</CardDescription>
+              <CardTitle className='font-headline'>{employee.full_name} ({employee.employee_id})</CardTitle>
+              <CardDescription>{employee.job_title}</CardDescription>
             </div>
         </div>
       </CardHeader>
@@ -39,12 +52,12 @@ export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
         </div>
         <div className="flex items-center gap-3">
             <Building className="h-4 w-4 text-muted-foreground" />
-            <span>{employee.department} Department</span>
+            <span>{employee.department?.name || 'N/A'} Department</span>
         </div>
         {manager && (
             <div className="flex items-center gap-3">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span>Reports to {manager.name}</span>
+                <span>Reports to {manager.full_name}</span>
             </div>
         )}
          <div className="flex items-center gap-3">
@@ -62,3 +75,5 @@ export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
     </Card>
   );
 }
+
+    

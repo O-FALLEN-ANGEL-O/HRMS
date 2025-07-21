@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusCircle, MoreHorizontal, Bot } from "lucide-react"
 import {
   Table,
@@ -30,153 +30,25 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { suggestRoleAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
-export const initialEmployees = [
-  {
-    id: "1",
-    name: "Olivia Martin",
-    email: "olivia.martin@email.com",
-    role: "Admin",
-    department: "Operations",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=OM",
-  },
-  {
-    id: "2",
-    name: "Jackson Lee",
-    email: "hr@optitalent.com",
-    role: "HR",
-    department: "Human Resources",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=JL",
-  },
-  {
-    id: "3",
-    name: "Isabella Nguyen",
-    email: "manager@optitalent.com",
-    role: "Manager",
-    department: "Engineering",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=IN",
-  },
-  {
-    id: "4",
-    name: "William Kim",
-    email: "will@email.com",
-    role: "Employee",
-    department: "Marketing",
-    status: "On Leave",
-    avatar: "https://placehold.co/100x100?text=WK",
-  },
-  {
-    id: "5",
-    name: "Sofia Davis",
-    email: "recruiter@optitalent.com",
-    role: "Recruiter",
-    department: "Human Resources",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=SD",
-  },
-  {
-    id: "6",
-    name: "Anika Sharma",
-    email: "anika.sharma@email.com",
-    role: "Employee",
-    department: "Engineering",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=AS",
-  },
-    {
-    id: "7",
-    name: "Rohan Verma",
-    email: "rohan.verma@email.com",
-    role: "Employee",
-    department: "Engineering",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=RV",
-  },
-  {
-    id: "8",
-    name: "Priya Mehta",
-    email: "priya.mehta@email.com",
-    role: "Employee",
-    department: "Engineering",
-    status: "On Leave",
-    avatar: "https://placehold.co/100x100?text=PM",
-  },
-  {
-    id: "9",
-    name: "Liam Smith",
-    email: "team-leader@optitalent.com",
-    role: "Team Leader",
-    department: "Support",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=LS",
-  },
-  {
-    id: "10",
-    name: "Ava Wilson",
-    email: "ava.wilson@email.com",
-    role: "Employee",
-    department: "Support",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=AW",
-  },
-  {
-    id: "11",
-    name: "Noah Brown",
-    email: "noah.brown@email.com",
-    role: "Employee",
-    department: "Support",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=NB",
-  },
-  {
-    id: "12",
-    name: "Emma Jones",
-    email: "finance.mgr@optitalent.com",
-    role: "Manager",
-    department: "Finance",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=EJ"
-  },
-  {
-    id: "13",
-    name: "Lucas Garcia",
-    email: "lucas.g@email.com",
-    role: "Employee",
-    department: "Finance",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=LG"
-  },
-  {
-    id: "14",
-    name: "Mason Rodriguez",
-    email: "it.mgr@optitalent.com",
-    role: "Manager",
-    department: "IT",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=MR"
-  },
-  {
-    id: "15",
-    name: "Ethan Martinez",
-    email: "ethan.m@email.com",
-    role: "Employee",
-    department: "IT",
-    status: "Active",
-    avatar: "https://placehold.co/100x100?text=EM"
-  }
-];
-
-type Employee = typeof initialEmployees[0];
+type Employee = {
+    id: string;
+    employee_id: string;
+    full_name: string;
+    email: string;
+    role: string;
+    department: { name: string };
+    status: string;
+    profile_picture_url: string;
+};
 
 function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employee: Employee) => void; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -209,33 +81,10 @@ function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employ
   }
 
   const handleSave = () => {
-    const name = nameRef.current?.value;
-    const email = emailRef.current?.value;
-    const department = departmentRef.current?.value;
-    
-    if (!name || !email || !department || !suggestedRole) {
-      toast({ title: "Missing Information", description: "Please fill all fields and suggest a role.", variant: "destructive" });
-      return;
-    }
-    
-    const newEmployee: Employee = {
-        id: (Math.random() * 1000).toString(),
-        name,
-        email,
-        department,
-        role: suggestedRole,
-        status: "Active",
-        avatar: `https://placehold.co/100x100?text=${name.split(' ').map(n => n[0]).join('')}`
-    };
-    onAddEmployee(newEmployee);
+    // This is a simplified version. In a real app, you'd have a more robust way to handle this,
+    // likely involving a proper user creation flow and not just adding to a local state.
+    toast({ title: "Employee Added", description: `This is a mock action. In a real app, this would create a new user.` });
     setIsOpen(false);
-    // Reset fields
-    setSuggestedRole('');
-    if(nameRef.current) nameRef.current.value = '';
-    if(emailRef.current) emailRef.current.value = '';
-    if(departmentRef.current) departmentRef.current.value = '';
-    if(jobTitleRef.current) jobTitleRef.current.value = '';
-    toast({ title: "Employee Added", description: `${name} has been added to the system.` });
   }
 
   return (
@@ -284,15 +133,55 @@ function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employ
 }
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('employees')
+            .select(`
+                id,
+                employee_id,
+                full_name,
+                email,
+                role,
+                status,
+                profile_picture_url,
+                department:departments(name)
+            `);
+        
+        if (error) {
+            toast({ title: "Error fetching employees", description: error.message, variant: 'destructive' });
+            setEmployees([]);
+        } else {
+            setEmployees(data as any);
+        }
+        setLoading(false);
+    }
+    fetchEmployees();
+  }, [toast]);
+
 
   const handleAddEmployee = (newEmployee: Employee) => {
     setEmployees(prev => [...prev, newEmployee]);
   }
 
-  const handleDeactivate = (employeeId: string) => {
-    setEmployees(prev => prev.map(emp => emp.id === employeeId ? {...emp, status: 'Inactive'} : emp));
+  const handleDeactivate = async (employeeId: string) => {
+    const { error } = await supabase
+        .from('employees')
+        .update({ status: 'Inactive' })
+        .eq('id', employeeId);
+
+    if (error) {
+        toast({ title: 'Error', description: 'Could not deactivate employee.', variant: 'destructive' });
+    } else {
+        setEmployees(prev => prev.map(emp => emp.id === employeeId ? {...emp, status: 'Inactive'} : emp));
+        toast({ title: 'Success', description: 'Employee has been deactivated.' });
+    }
   };
 
   return (
@@ -311,6 +200,9 @@ export default function EmployeesPage() {
       </div>
       <Card>
         <CardContent>
+          {loading ? (
+             <div className='text-center p-10'>Loading employees...</div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -329,16 +221,16 @@ export default function EmployeesPage() {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <Avatar className="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src={employee.avatar} alt="Avatar" data-ai-hint="person avatar" />
-                        <AvatarFallback>{employee.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarImage src={employee.profile_picture_url} alt="Avatar" data-ai-hint="person avatar" />
+                        <AvatarFallback>{employee.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       <div className="grid gap-0.5">
-                        <p className="font-medium">{employee.name}</p>
+                        <p className="font-medium">{employee.full_name}</p>
                         <p className="text-sm text-muted-foreground hidden md:inline">{employee.email}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{employee.department}</TableCell>
+                  <TableCell className="hidden md:table-cell">{employee.department.name}</TableCell>
                   <TableCell>{employee.role}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
@@ -366,8 +258,11 @@ export default function EmployeesPage() {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
     </div>
   )
 }
+
+    

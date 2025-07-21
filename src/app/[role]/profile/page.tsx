@@ -16,31 +16,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 
-const MOCK_USERS = {
-  admin: { full_name: 'Admin User', email: 'admin@hrplus.com', avatar_url: '', id: 'PEP01', department: 'Administration', title: 'System Administrator' },
-  hr: { full_name: 'HR User', email: 'hr@hrplus.com', avatar_url: '', id: 'PEP02', department: 'Human Resources', title: 'HR Generalist' },
-  manager: { full_name: 'Manager User', email: 'manager@hrplus.com', avatar_url: '', id: 'PEP03', department: 'Engineering', title: 'Engineering Manager' },
-  employee: { full_name: 'Employee User', email: 'employee@hrplus.com', avatar_url: '', id: 'PEP04', department: 'Marketing', title: 'Marketing Specialist' },
-  recruiter: { full_name: 'Recruiter User', email: 'recruiter@hrplus.com', avatar_url: '', id: 'PEP05', department: 'Human Resources', title: 'Talent Acquisition' },
-  guest: { full_name: 'Guest User', email: 'guest@hrplus.com', avatar_url: '', id: 'PEP06', department: 'N/A', title: 'Guest' },
-  'qa-analyst': { full_name: 'QA Analyst', email: 'qa@hrplus.com', avatar_url: '', id: 'PEP07', department: 'Quality', title: 'QA Analyst' },
-  'process-manager': { full_name: 'Process Manager', email: 'pm@hrplus.com', avatar_url: '', id: 'PEP08', department: 'Operations', title: 'Process Manager' },
-  'team-leader': { full_name: 'Team Leader', email: 'team-leader@optitalent.com', avatar_url: '', id: 'PEP09', department: 'Support', title: 'Team Leader' },
-  'marketing': { full_name: 'Marketing Head', email: 'marketing.head@optitalent.com', avatar_url: '', id: 'PEP10', department: 'Marketing', title: 'Head of Marketing & Sales'},
-  'finance': { full_name: 'Finance Head', email: 'finance.mgr@optitalent.com', avatar_url: '', id: 'PEP11', department: 'Finance', title: 'Head of Finance'},
-  'it-manager': { full_name: 'IT Manager', email: 'it.mgr@optitalent.com', avatar_url: '', id: 'PEP12', department: 'IT', title: 'IT Manager'},
-  'operations-manager': { full_name: 'Operations Manager', email: 'operations.mgr@optitalent.com', avatar_url: '', id: 'PEP13', department: 'Operations', title: 'Operations Manager'},
-};
-
-type UserData = typeof MOCK_USERS[keyof typeof MOCK_USERS];
-
-
-function AwardPointsDialog({ employee, children }: { employee: UserData, children: React.ReactNode}) {
+function AwardPointsDialog({ employeeId, employeeName, children }: { employeeId: string, employeeName: string, children: React.ReactNode}) {
     const { toast } = useToast();
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        toast({ title: 'Points Awarded!', description: `You have awarded points to ${employee.full_name}` });
+        toast({ title: 'Points Awarded!', description: `You have awarded points to ${employeeName}` });
     };
     return (
         <Dialog>
@@ -52,7 +34,7 @@ function AwardPointsDialog({ employee, children }: { employee: UserData, childre
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4 py-4">
-                        <Input defaultValue={employee.id} disabled />
+                        <Input defaultValue={employeeId} disabled />
                         <Input type="number" placeholder="Points" required />
                         <Textarea placeholder="Reason for award (e.g., great teamwork!)" required />
                     </div>
@@ -93,7 +75,7 @@ function RedeemPointsDialog({ children }: { children: React.ReactNode}) {
     )
 }
 
-function EditProfileDialog({ employee, children }: { employee: UserData, children: React.ReactNode}) {
+function EditProfileDialog({ employee, children }: { employee: any, children: React.ReactNode}) {
     const { toast } = useToast();
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -129,10 +111,8 @@ function EditProfileDialog({ employee, children }: { employee: UserData, childre
 
 
 export default function ProfilePage() {
-    const params = useParams();
+    const { user } = useAuth();
     const { toast } = useToast();
-    const role = (params.role as string) as keyof typeof MOCK_USERS;
-    const userData = MOCK_USERS[role] || MOCK_USERS['guest'];
 
     const bonusHistory = [
         { type: "redeem", action: "Redeem request created for 2,500 points", date: "19/07/2025" },
@@ -158,22 +138,26 @@ export default function ProfilePage() {
         });
     }
 
+    if (!user || !user.profile) {
+        return <div>Loading profile...</div>;
+    }
+
     return (
         <div className="space-y-6">
             <Card>
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-start gap-6">
                         <Avatar className="w-24 h-24 border-4 border-background ring-2 ring-primary">
-                            <AvatarImage src={userData.avatar_url || `https://placehold.co/100x100.png`} data-ai-hint="person portrait" alt={userData.full_name} />
-                            <AvatarFallback>{userData.full_name.substring(0, 2)}</AvatarFallback>
+                            <AvatarImage src={user.profile.profile_picture_url || `https://placehold.co/100x100.png`} data-ai-hint="person portrait" alt={user.profile.full_name} />
+                            <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
-                                    <h1 className="text-3xl font-bold font-headline">{userData.full_name} ({userData.id})</h1>
-                                    <p className="text-muted-foreground">{userData.department} / {userData.title}</p>
+                                    <h1 className="text-3xl font-bold font-headline">{user.profile.full_name} ({user.profile.employee_id})</h1>
+                                    <p className="text-muted-foreground">{user.profile.department} / {user.profile.job_title}</p>
                                 </div>
-                                 <EditProfileDialog employee={userData}>
+                                 <EditProfileDialog employee={user.profile}>
                                     <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
                                 </EditProfileDialog>
                             </div>
@@ -181,7 +165,7 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                     <Mail className="text-muted-foreground h-4 w-4" />
-                                    <span>{userData.email}</span>
+                                    <span>{user.email}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Phone className="text-muted-foreground h-4 w-4" />
@@ -284,19 +268,19 @@ export default function ProfilePage() {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>My Points</CardTitle>
-                                <AwardPointsDialog employee={userData}>
+                                <AwardPointsDialog employeeId={user.profile.employee_id} employeeName={user.profile.full_name}>
                                     <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Award Points</Button>
                                 </AwardPointsDialog>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                <div className="flex items-center gap-4">
                                     <Avatar className="w-16 h-16">
-                                        <AvatarImage src={userData.avatar_url || `https://placehold.co/64x64.png`} data-ai-hint="person portrait" alt={userData.full_name} />
-                                        <AvatarFallback>{userData.full_name.substring(0, 2)}</AvatarFallback>
+                                        <AvatarImage src={user.profile.profile_picture_url || `https://placehold.co/64x64.png`} data-ai-hint="person portrait" alt={user.profile.full_name} />
+                                        <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold text-lg">{userData.full_name}</p>
-                                        <p className="text-sm text-muted-foreground">{userData.id}</p>
+                                        <p className="font-semibold text-lg">{user.profile.full_name}</p>
+                                        <p className="text-sm text-muted-foreground">{user.profile.employee_id}</p>
                                     </div>
                                </div>
                                <Separator/>
@@ -365,3 +349,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    

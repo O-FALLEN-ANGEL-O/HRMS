@@ -45,7 +45,7 @@ async function clearData() {
   for (const table of ALL_TABLES) {
     const { error } = await supabase.from(table).delete().gt('id', 0);
     if (error && error.code !== '42P01') { // 42P01: table does not exist
-      console.error(`Error clearing table ${table}:`, error.message);
+      console.error(`Error clearing table ${table}:`, error);
     }
   }
 
@@ -105,7 +105,7 @@ async function seedUsersAndEmployees() {
     });
 
     if (authError) {
-      console.error(`Error creating auth user ${userData.email}:`, authError.message);
+      console.error(`Error creating auth user ${userData.email}:`, authError);
       continue;
     }
     
@@ -131,7 +131,7 @@ async function seedUsersAndEmployees() {
   if (createdEmployees.length > 0) {
       const { error: insertError } = await supabase.from('employees').insert(createdEmployees);
       if (insertError) {
-        console.error('Error inserting employees:', insertError.message);
+        console.error('Error inserting employees:', insertError);
       } else {
         console.log(`✅ ${createdEmployees.length} users and employees seeded.`);
       }
@@ -142,6 +142,7 @@ async function seedUsersAndEmployees() {
 
 async function seedDepartmentHeads(employees: any[], departments: any[]) {
     console.log('🌱 Seeding department heads...');
+    if (!employees || employees.length === 0) return;
     const headsToInsert = [];
     const departmentHeads = employees.filter(e => ['manager', 'hr', 'admin', 'it-manager', 'finance', 'marketing'].includes(e.role));
 
@@ -161,6 +162,7 @@ async function seedDepartmentHeads(employees: any[], departments: any[]) {
 
 async function seedJobOpenings(employees: any[]) {
     console.log('🌱 Seeding job openings...');
+    if (!employees || employees.length === 0) return;
     const recruiters = employees.filter(e => e.role === 'recruiter');
     if(recruiters.length === 0) return;
 
@@ -183,14 +185,15 @@ async function seedJobOpenings(employees: any[]) {
     return data;
 }
 
-async function seedApplicantsAndInterviews(jobOpenings: any[], employees: any[]) {
+async function seedApplicantsAndInterviews(jobOpenings: any[] | null, employees: any[]) {
     console.log('🌱 Seeding applicants and interviews...');
-    if(!jobOpenings || jobOpenings.length === 0) return;
+    if(!jobOpenings || jobOpenings.length === 0 || !employees || employees.length === 0) return;
 
     const applicantsToInsert = [];
     const interviewsToInsert = [];
     const typingScoresToInsert = [];
     const recruiters = employees.filter(e => e.role === 'recruiter');
+    if (recruiters.length === 0) return;
 
     for(const opening of jobOpenings) {
         for(let i=0; i<faker.number.int({min: 5, max: 15}); i++) {
@@ -248,6 +251,7 @@ async function seedApplicantsAndInterviews(jobOpenings: any[], employees: any[])
 
 async function seedPerformanceAndPayroll(employees: any[]) {
     console.log('🌱 Seeding performance reviews and payroll...');
+    if (!employees || employees.length === 0) return;
     const managers = employees.filter(e => e.role === 'manager' || e.role === 'admin' || e.role === 'hr');
     const recordsToInsert = [];
     const payrollToInsert = [];
@@ -285,6 +289,7 @@ async function seedPerformanceAndPayroll(employees: any[]) {
 
 async function seedEmployeeAwards(employees: any[]) {
     console.log('🌱 Seeding employee awards...');
+    if (!employees || employees.length === 0) return;
     const awardsToInsert = [];
     for(let i=0; i<30; i++) {
         const giver = faker.helpers.arrayElement(employees);
@@ -336,3 +341,5 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+    

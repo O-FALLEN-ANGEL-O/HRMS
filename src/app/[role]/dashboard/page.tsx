@@ -1,20 +1,19 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy, MoreHorizontal, Search } from 'lucide-react';
+import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy, MoreHorizontal, Search, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useRouter } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { initialEmployees } from '../employees/page';
 import { EmployeeDetailsCard } from '@/components/employee-details-card';
+import { supabase } from '@/lib/supabase';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -61,30 +60,53 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
   const [posts, setPosts] = React.useState(initialPosts);
-  const [searchedEmployee, setSearchedEmployee] = React.useState<(typeof initialEmployees)[0] | null | undefined>(null);
+  const [searchedEmployee, setSearchedEmployee] = React.useState<any | null | undefined>(null);
+  const [searching, setSearching] = useState(false);
 
-  const name = user?.profile?.name || user?.email?.split('@')[0] || 'User';
+  const name = user?.profile?.full_name || user?.email?.split('@')[0] || 'User';
   const role = user?.role || 'employee';
 
   const isManager = role === 'manager' || role === 'hr' || role === 'admin';
 
-  React.useEffect(() => {
-    if (!searchTerm) {
-        setSearchedEmployee(null);
-        return;
+  useEffect(() => {
+    const searchEmployee = async () => {
+        if (!searchTerm) {
+            setSearchedEmployee(null);
+            return;
+        }
+
+        setSearching(true);
+        // Search by name (case-insensitive) or by exact employee_id
+        const { data, error } = await supabase
+            .from('employees')
+            .select(`*, department:departments(name)`)
+            .or(`full_name.ilike.%${searchTerm}%,employee_id.eq.${searchTerm.toUpperCase()}`)
+            .limit(1)
+            .single();
+
+        if (error) {
+            console.warn("Search error:", error.message);
+            setSearchedEmployee(undefined); // Use undefined to signify not found
+            toast({
+                title: "Employee Not Found",
+                description: `No employee found with the name or ID "${searchTerm}".`,
+                variant: "destructive"
+            });
+        } else {
+            setSearchedEmployee(data);
+        }
+        setSearching(false);
     }
-    const foundEmployee = initialEmployees.find(emp => 
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      emp.id.toLowerCase() === searchTerm.toLowerCase()
-    );
-    setSearchedEmployee(foundEmployee);
-    if(!foundEmployee) {
-      toast({
-          title: "Employee Not Found",
-          description: `No employee found with the name or ID "${searchTerm}".`,
-          variant: "destructive"
-      })
+    
+    // Debounce search
+    const handler = setTimeout(() => {
+        searchEmployee();
+    }, 500);
+
+    return () => {
+        clearTimeout(handler);
     }
+    
   }, [searchTerm, toast]);
 
   const handleQuickAction = (label: string) => {
@@ -115,7 +137,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-       {searchedEmployee === null && (
+       {searchedEmployee === null && !searching && (
          <Card className="bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg border-none">
             <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
@@ -182,7 +204,13 @@ export default function DashboardPage() {
 
             {/* Middle Column */}
             <div className="lg:col-span-2 space-y-6">
-                {searchedEmployee ? (
+                {searching ? (
+                    <Card>
+                        <CardContent className="p-6 text-center flex items-center justify-center h-48">
+                           <Loader2 className="mr-2 h-6 w-6 animate-spin" /> Searching...
+                        </CardContent>
+                    </Card>
+                ) : searchedEmployee ? (
                    <div className="mt-4">
                      <EmployeeDetailsCard employee={searchedEmployee} />
                    </div>
@@ -332,3 +360,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
