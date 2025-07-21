@@ -137,6 +137,42 @@ export const initialEmployees = [
     department: "Support",
     status: "Active",
     avatar: "https://placehold.co/100x100?text=NB",
+  },
+  {
+    id: "12",
+    name: "Emma Jones",
+    email: "finance.mgr@optitalent.com",
+    role: "Manager",
+    department: "Finance",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=EJ"
+  },
+  {
+    id: "13",
+    name: "Lucas Garcia",
+    email: "lucas.g@email.com",
+    role: "Employee",
+    department: "Finance",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=LG"
+  },
+  {
+    id: "14",
+    name: "Mason Rodriguez",
+    email: "it.mgr@optitalent.com",
+    role: "Manager",
+    department: "IT",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=MR"
+  },
+  {
+    id: "15",
+    name: "Ethan Martinez",
+    email: "ethan.m@email.com",
+    role: "Employee",
+    department: "IT",
+    status: "Active",
+    avatar: "https://placehold.co/100x100?text=EM"
   }
 ];
 

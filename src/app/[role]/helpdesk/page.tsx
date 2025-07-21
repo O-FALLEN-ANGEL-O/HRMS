@@ -24,9 +24,10 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { categorizeTicket } from '@/ai/flows/categorize-ticket';
 
 type Message = {
-    from: 'user' | 'support';
+    from: 'user' | 'support' | 'system';
     text: string;
     time: string;
 };
@@ -34,7 +35,7 @@ type Message = {
 type Ticket = {
     id: string;
     subject: string;
-    department: 'IT' | 'HR' | 'Finance';
+    department: 'IT Support' | 'HR Query' | 'Payroll Issue' | 'Facilities' | 'General Inquiry';
     status: 'Open' | 'In Progress' | 'Closed';
     priority: 'High' | 'Medium' | 'Low';
     lastUpdate: string;
@@ -45,7 +46,7 @@ const initialTickets: Ticket[] = [
   {
     id: 'HD-001',
     subject: 'Laptop running slow',
-    department: 'IT',
+    department: 'IT Support',
     status: 'Open',
     priority: 'High',
     lastUpdate: '2 hours ago',
@@ -57,7 +58,7 @@ const initialTickets: Ticket[] = [
   {
     id: 'HD-002',
     subject: 'Cannot access shared drive',
-    department: 'IT',
+    department: 'IT Support',
     status: 'In Progress',
     priority: 'Medium',
     lastUpdate: '1 day ago',
@@ -70,7 +71,7 @@ const initialTickets: Ticket[] = [
   {
     id: 'HD-003',
     subject: 'Question about payslip',
-    department: 'Finance',
+    department: 'Payroll Issue',
     status: 'Closed',
     priority: 'Low',
     lastUpdate: '3 days ago',
@@ -86,42 +87,58 @@ const initialTickets: Ticket[] = [
 
 function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => void}) {
     const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setLoading(true);
+
         const formData = new FormData(e.currentTarget);
         const subject = formData.get('subject') as string;
-        const department = formData.get('department') as 'IT' | 'HR' | 'Finance';
         const description = formData.get('description') as string;
 
-        if (!subject || !department || !description) {
+        if (!subject || !description) {
             toast({
                 title: "Missing Information",
                 description: "Please fill out all fields to create a ticket.",
                 variant: "destructive"
             });
+            setLoading(false);
             return;
         }
 
-        const newTicket: Ticket = {
-            id: `HD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
-            subject,
-            department,
-            status: 'Open',
-            priority: 'Medium', // Default priority
-            lastUpdate: 'Just now',
-            messages: [
-                { from: 'user', text: description, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-            ]
-        };
+        try {
+            const aiResult = await categorizeTicket({ subject, description });
 
-        onNewTicket(newTicket);
-        toast({
-            title: "Ticket Created!",
-            description: `Your ticket ${newTicket.id} has been submitted.`
-        });
-        setOpen(false);
+            const newTicket: Ticket = {
+                id: `HD-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
+                subject,
+                department: aiResult.category,
+                priority: aiResult.priority,
+                status: 'Open',
+                lastUpdate: 'Just now',
+                messages: [
+                    { from: 'user', text: description, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+                    { from: 'system', text: `AI has categorized this ticket as "${aiResult.category}" with ${aiResult.priority} priority.`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+                ]
+            };
+    
+            onNewTicket(newTicket);
+            toast({
+                title: "Ticket Created!",
+                description: `Your ticket ${newTicket.id} has been submitted and categorized by AI.`
+            });
+            setOpen(false);
+        } catch(err) {
+            toast({
+                title: "AI Categorization Failed",
+                description: "Could not categorize ticket. Please try again.",
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -132,23 +149,10 @@ function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => voi
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create a New Ticket</DialogTitle>
-                    <DialogDescription>Describe your issue, and we'll route it to the right department.</DialogDescription>
+                    <DialogDescription>Describe your issue. Our AI will automatically route it to the right department.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="department">Department</Label>
-                            <Select name="department" required>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="IT">IT Support</SelectItem>
-                                    <SelectItem value="HR">HR</SelectItem>
-                                    <SelectItem value="Finance">Finance</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="subject">Subject</Label>
                             <Input id="subject" name="subject" placeholder="e.g., Password Reset" required />
@@ -159,7 +163,7 @@ function NewTicketDialog({ onNewTicket }: { onNewTicket: (ticket: Ticket) => voi
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Submit Ticket</Button>
+                        <Button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit Ticket'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -217,7 +221,7 @@ export default function HelpdeskPage() {
         
         setTickets(currentTickets => {
             return currentTickets.map(ticket => {
-                if (ticket.id === selectedTicket.id) {
+                if (ticket.id === selectedTicket?.id) {
                     const updatedTicket = { ...ticket, messages: [...ticket.messages, botMessage] };
                     if(selectedTicket && ticket.id === selectedTicket.id) {
                         setSelectedTicket(updatedTicket);
@@ -321,12 +325,14 @@ export default function HelpdeskPage() {
                     <div className="space-y-6 p-6">
                         {selectedTicket.messages.map((message, index) => (
                             <div key={index} className={cn("flex items-end gap-3", message.from === 'user' ? 'justify-end' : 'justify-start')}>
-                                {message.from === 'support' && (
+                                {message.from !== 'user' && (
                                     <Avatar className="h-8 w-8">
                                         <AvatarFallback><Bot/></AvatarFallback>
                                     </Avatar>
                                 )}
-                                <div className={cn("max-w-xs md:max-w-md rounded-lg p-3", message.from === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                                <div className={cn("max-w-xs md:max-w-md rounded-lg p-3", 
+                                  message.from === 'user' ? 'bg-primary text-primary-foreground' : 
+                                  message.from === 'system' ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800' : 'bg-muted')}>
                                     <p className="text-sm">{message.text}</p>
                                     <p className="text-xs opacity-70 mt-1 flex items-center gap-1">
                                        <Clock className='h-3 w-3'/> {message.time}
