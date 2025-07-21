@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Briefcase, FileText, Send, User, MessageSquare, Star, Percent, Type, Clipboard, ShieldAlert, Award, Calendar } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Briefcase, FileText, Send, User, MessageSquare, Star, Percent, Type, Clipboard, ShieldAlert, Award, Calendar } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert } from "@/components/ui/alert";
 
 
 // Mock Data - In a real app, this would be fetched based on applicantId
@@ -108,10 +108,10 @@ export default function ApplicantProfilePage() {
         <div className="space-y-6">
             <Alert variant="destructive" className="border-yellow-500/50 text-yellow-900 dark:text-yellow-200 [&>svg]:text-yellow-500">
                 <ShieldAlert className="h-4 w-4" />
-                <CardTitle className="text-yellow-600 dark:text-yellow-300">Temporary Applicant Profile</CardTitle>
-                <CardDescription className="text-yellow-700 dark:text-yellow-400">
+                <AlertTitle className="text-yellow-600 dark:text-yellow-300">Temporary Applicant Profile</AlertTitle>
+                <AlertDescription className="text-yellow-700 dark:text-yellow-400">
                     This profile is for recruitment purposes only and will be automatically deleted 30 days after the position is closed.
-                </CardDescription>
+                </AlertDescription>
             </Alert>
             <Card>
                 <CardContent className="p-6">
