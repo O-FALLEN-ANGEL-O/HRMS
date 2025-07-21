@@ -95,20 +95,17 @@ export default function LoginPage() {
     const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        try {
-            const user = await login(adminEmail, adminPassword);
-            if (user) {
-                toast({ title: 'Login Successful', description: `Welcome back, ${user.profile?.name || user.email}!` });
-                router.push(`/${user.role}/dashboard`);
-            }
-        } catch (error) {
+        const { error } = await login(adminEmail, adminPassword);
+        if (error) {
             toast({
                 variant: 'destructive',
                 title: 'Login Failed',
-                description: (error as Error).message
+                description: error.message
             });
-        } finally {
             setLoading(false);
+        } else {
+            // The onAuthStateChange listener in useAuth will handle the redirect
+            toast({ title: 'Login Successful', description: `Redirecting...` });
         }
     };
 
@@ -138,21 +135,18 @@ export default function LoginPage() {
         }
         
         setLoading(true);
-        try {
-            // Using employeeId as "email" for the login function in this simulated flow
-            const user = await login(employeeId, employeePassword);
-             if (user) {
-                toast({ title: 'Login Successful', description: `Welcome, ${user.profile?.name || user.email}!` });
-                router.push(`/${user.role}/dashboard`);
-            }
-        } catch (error) {
+
+        const { data, error } = await login(employeeId, employeePassword, true);
+        
+        if (error) {
              toast({
                 variant: 'destructive',
                 title: 'Login Failed',
-                description: (error as Error).message
+                description: error.message
             });
-        } finally {
             setLoading(false);
+        } else {
+            toast({ title: 'Login Successful', description: `Redirecting...` });
         }
     }
 

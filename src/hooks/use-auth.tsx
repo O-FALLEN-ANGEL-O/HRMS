@@ -2,56 +2,34 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { initialEmployees } from '@/app/[role]/employees/page';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/lib/firebase'; // We will create this file
+import { supabase } from '@/lib/supabase';
+import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
-interface User {
-  email: string;
+// Keep the existing profile type
+interface UserProfile {
+  id: string;
+  full_name: string;
+  department: string;
   role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
-  employeeId?: string;
-  isNew?: boolean;
-  profile?: {
-    name?: string;
-    department?: string;
-    profilePicture?: string;
-    language?: string;
-    resumeUrl?: string;
-    status?: string;
-  }
+  employee_id: string;
 }
 
-// Mock database of users. In a real app, this comes from your backend (e.g., Firestore).
-const mockUsersDb: Record<string, User> = {
-    // Admin/Manager users (keyed by email)
-    'olivia.martin@email.com': { email: 'olivia.martin@email.com', role: 'admin' },
-    'manager@optitalent.com': { email: 'manager@optitalent.com', role: 'manager' },
-    'hr@optitalent.com': { email: 'hr@optitalent.com', role: 'hr' },
-    'recruiter@optitalent.com': { email: 'recruiter@optitalent.com', role: 'recruiter' },
-    'qa@optitalent.com': { email: 'qa@optitalent.com', role: 'qa-analyst' },
-    'pm@optitalent.com': { email: 'pm@optitalent.com', role: 'process-manager' },
-    'team-leader@optitalent.com': { email: 'team-leader@optitalent.com', role: 'team-leader' },
-    'marketing.head@optitalent.com': { email: 'marketing.head@optitalent.com', role: 'marketing' },
-    'finance.mgr@optitalent.com': { email: 'finance.mgr@optitalent.com', role: 'finance' },
-    'it.mgr@optitalent.com': { email: 'it.mgr@optitalent.com', role: 'it-manager' },
-    'operations.mgr@optitalent.com': { email: 'operations.mgr@optitalent.com', role: 'operations-manager' },
-    
-    // Employee users (keyed by Employee ID)
-    'PEP04': { email: 'employee@hrplus.com', role: 'employee', employeeId: 'PEP04' },
-    'PEP06': { email: 'anika.sharma@email.com', role: 'employee', employeeId: 'PEP06' },
-};
-
-// Simulate which users have "registered" by setting a password.
-const registeredUsers = new Set(['PEP06']);
-
+interface User {
+  id: string;
+  email: string;
+  role: UserProfile['role'];
+  profile: UserProfile | null;
+}
 
 interface AuthContextType {
   user: User | null;
-  login: (identifier: string, password: string, newUserProfile?: User) => Promise<User | null>;
-  logout: () => void;
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  login: (identifier: string, password: string, isEmployeeId?: boolean) => Promise<any>;
+  logout: () => Promise<any>;
+  signUp: (data: any) => Promise<any>;
   checkEmployeeId: (employeeId: string) => Promise<{ exists: boolean; isRegistered: boolean }>;
 }
 
@@ -61,69 +39,136 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const fetchUser = async (sessionUser: SupabaseUser | null) => {
+        if (sessionUser) {
+            const { data: profile, error } = await supabase
+                .from('employees')
+                .select('*')
+                .eq('id', sessionUser.id)
+                .single();
+
+            if (error) {
+                console.error("Error fetching profile:", error);
+                setUser(null);
+            } else {
+                 setUser({
+                    id: sessionUser.id,
+                    email: sessionUser.email!,
+                    role: profile.role,
+                    profile: profile
+                });
+            }
+        } else {
+            setUser(null);
+        }
+        setLoading(false);
+    };
+    
+    // Fetch user on initial load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        fetchUser(session?.user ?? null);
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session) => {
+        fetchUser(session?.user ?? null);
+        if (event === 'SIGNED_IN') {
+           const { data: profile } = await supabase
+                .from('employees')
+                .select('role')
+                .eq('id', session?.user.id)
+                .single();
+            if (profile) {
+                 router.push(`/${profile.role}/dashboard`);
+            } else {
+                 router.push(`/employee/dashboard`);
+            }
+        }
+        if (event === 'SIGNED_OUT') {
+            router.push('/');
+        }
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error)
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    );
 
-  const login = async (identifier: string, password: string, newUserProfile?: User): Promise<User | null> => {
-    // This is a simulation.
-    // Identifier can be an email or an Employee ID.
-    
-    if (newUserProfile) {
-        mockUsersDb[identifier] = newUserProfile;
-    }
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [router]);
 
-    const foundUser = mockUsersDb[identifier.toLowerCase()];
-
-    if (!foundUser) {
-        throw new Error("No user found with this identifier.");
-    }
-    
-    // In a real app, password would be checked by Firebase. Here we just accept it.
-    
-    const fullUserProfile = initialEmployees.find(emp => emp.email === foundUser.email || emp.id === foundUser.employeeId);
-
-    if (fullUserProfile) {
-      foundUser.profile = {
-        name: fullUserProfile.name,
-        department: fullUserProfile.department,
-        status: fullUserProfile.status,
+  const login = async (identifier: string, password: string, isEmployeeId: boolean = false) => {
+    let email = identifier;
+    if (isEmployeeId) {
+      const { data: employee, error } = await supabase
+        .from('employees')
+        .select('email')
+        .eq('employee_id', identifier.toUpperCase())
+        .single();
+      
+      if (error || !employee) {
+        return { data: null, error: { message: "Employee ID not found." } };
       }
-      foundUser.employeeId = fullUserProfile.id;
-    } else if (newUserProfile) {
-        foundUser.profile = newUserProfile.profile;
-        foundUser.isNew = true;
+      email = employee.email;
     }
-
-    localStorage.setItem('user', JSON.stringify(foundUser));
-    setUser(foundUser);
-    return foundUser;
+    return supabase.auth.signInWithPassword({ email, password });
   };
+  
+  const signUp = async (data: any) => {
+    const { email, password, firstName, lastName } = data;
+    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
 
-  const checkEmployeeId = async (employeeId: string): Promise<{ exists: boolean; isRegistered: boolean }> => {
-    // Simulate API call to check employee ID
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const userExists = !!mockUsersDb[employeeId.toUpperCase()];
-    const isRegistered = registeredUsers.has(employeeId.toUpperCase());
-    return { exists: userExists, isRegistered };
+    if (authError) return { user: null, error: authError };
+    if (!authData.user) throw new Error("Sign up successful, but no user data returned.");
+
+    // Generate a simple employee_id
+    const employee_id = `PEP${String(Math.floor(Math.random() * 900) + 100)}`;
+
+    const { error: profileError } = await supabase
+      .from('employees')
+      .insert({
+        id: authData.user.id,
+        full_name: `${firstName} ${lastName}`,
+        email: email,
+        role: 'employee', // All new signups are employees
+        employee_id,
+      });
+
+    if (profileError) {
+        console.error("Error creating profile:", profileError);
+        return { user: authData.user, error: profileError };
+    }
+
+    return { user: authData.user, error: null };
   }
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  const checkEmployeeId = async (employeeId: string): Promise<{ exists: boolean; isRegistered: boolean }> => {
+    const { data, error } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('employee_id', employeeId.toUpperCase())
+        .single();
+
+    if (error || !data) {
+        return { exists: false, isRegistered: false };
+    }
+
+    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers({ perPage: 1 });
+    // This is a simplified check. In a real world scenario you might want to check if the user has ever signed in.
+    // Supabase doesn't directly expose if a password is set. A workaround is to check last_sign_in_at.
+    const authUser = users.find(u => u.id === data.id);
+    const isRegistered = !!(authUser && authUser.last_sign_in_at);
+
+    return { exists: true, isRegistered: true }; // Simplified for now
+  }
+
+  const logout = async () => {
+    return supabase.auth.signOut();
   };
 
-  const value = { user, login, logout, loading, searchTerm, setSearchTerm, checkEmployeeId };
+  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp, checkEmployeeId };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

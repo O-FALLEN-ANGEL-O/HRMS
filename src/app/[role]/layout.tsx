@@ -1,304 +1,39 @@
 
 
-// Updated Responsive Sidebar with:
-// - Animated toggle on hover/click
-// - Adaptive mobile drawer
-// - Role-specific filtered nav
-// - Lucide icons
-
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter, useParams } from 'next/navigation';
-import {
-  Briefcase, CircleUser, Home, LogOut, Users, BarChart, FileQuestion,
-  Newspaper, CalendarDays, Menu, FileText, CreditCard,
-  PackagePlus, Settings, Bell, Fingerprint, AreaChart as AnalyticsIcon, Star, Search
-} from 'lucide-react';
-
-import { Logo } from '@/components/logo';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  TooltipProvider, Tooltip, TooltipTrigger, TooltipContent
-} from '@/components/ui/tooltip';
-import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription, SheetHeader } from '@/components/ui/sheet';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
+import AppSidebar from '@/components/app-sidebar';
+import AppHeader from '@/components/app-header';
+import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { LoadingLogo } from '@/components/loading-logo';
 
-const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Home', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'] },
-  { href: '/analytics', icon: AnalyticsIcon, label: 'Analytics', roles: ['admin', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'employee', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'] },
-  { href: '/recruitment', icon: Briefcase, label: 'Recruitment', roles: ['admin', 'hr', 'recruiter'] },
-  { href: '/employees', icon: Users, label: 'Employees', roles: ['admin', 'hr'] },
-  { href: '/leaves', icon: CalendarDays, label: 'Leaves', roles: ['admin', 'employee', 'manager', 'hr', 'team-leader'] },
-  { href: '/attendance', icon: Fingerprint, label: 'Attendance', roles: ['admin', 'employee', 'manager', 'hr', 'team-leader'] },
-  { href: '/performance', icon: BarChart, label: 'Performance', roles: ['admin', 'manager', 'hr'] },
-  { href: '/quality', icon: Star, label: 'Quality', roles: ['qa-analyst'] },
-  { href: '/onboarding', icon: PackagePlus, label: 'Onboarding', roles: ['admin', 'hr'] },
-  { href: '/payroll', icon: CreditCard, label: 'Payroll', roles: ['admin', 'employee', 'finance'] },
-  { href: '/assessments', icon: FileText, label: 'Assessments', roles: ['hr', 'recruiter', 'employee'] },
-  { href: '/helpdesk', icon: FileQuestion, label: 'Helpdesk', roles: ['admin', 'employee', 'manager', 'hr', 'it-manager'] },
-  { href: '/company-feed', icon: Newspaper, label: 'Company Feed', roles: ['admin', 'employee', 'manager', 'hr', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'] },
-];
-
-const notifications = [
-    { id: 1, icon: Users, text: "New applicant for 'Software Engineer'", time: '2m ago' },
-    { id: 2, icon: CalendarDays, text: "Your leave request has been approved", time: '1h ago' },
-    { id: 3, icon: CreditCard, text: "Payroll for July has been processed", time: '5h ago' },
-];
-
-function AppSidebar() {
-  const pathname = usePathname();
-  const params = useParams();
-  const { user } = useAuth();
-  const role = user?.role || (params.role as string) || 'employee';
-
-  const [isExpanded, setIsExpanded] = React.useState(false);
-
-  const getBasePath = (path: string) => '/' + path.split('/').slice(2).join('/');
-  const currentBasePath = getBasePath(pathname);
-
-  const navItems = allNavItems.filter((item) => item.roles.includes(role));
-
-  const SidebarNav = ({ mobile = false }: { mobile?: boolean }) => (
-    <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
-        {navItems.map((item) => {
-        const isActive = item.href === '/dashboard'
-            ? currentBasePath === '/dashboard' || currentBasePath === '' || pathname === `/${role}`
-            : currentBasePath.startsWith(item.href) && item.href !== '/dashboard';
-
-        const linkContent = (
-          <div className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors ${isActive ? 'bg-primary/80' : ''}`}>
-              <item.icon className="h-5 w-5" />
-              {(isExpanded || mobile) && <span className="text-sm">{item.label}</span>}
-          </div>
-        );
-
+function LayoutContent({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
+    if (!user) {
+        // This case should ideally be handled by the redirect, but as a fallback
         return (
-          <Tooltip key={item.href}>
-            <TooltipTrigger asChild>
-              <Link href={`/${role}${item.href}`}>
-                {linkContent}
-              </Link>
-            </TooltipTrigger>
-            {!isExpanded && !mobile && (
-              <TooltipContent side="right">
-                <p>{item.label}</p>
-              </TooltipContent>
-            )}
-          </Tooltip>
+            <div className="flex h-screen w-screen items-center justify-center">
+                <LoadingLogo />
+            </div>
         );
-        })}
-    </nav>
-  )
-  
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <aside
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
-        data-collapsible={isExpanded ? '' : 'icon'}
-        className={`
-          group hidden md:flex flex-col fixed top-0 left-0 z-50 h-full bg-slate-900 text-slate-200 transition-all duration-300
-          ${isExpanded ? 'w-64' : 'w-20'}
-        `}
-      >
-        <TooltipProvider delayDuration={0}>
-            <div className={`flex items-center h-16 w-full px-4 shrink-0 ${isExpanded ? 'justify-start' : 'justify-center'}`}>
-                <Logo className="text-white" />
-            </div>
-            <SidebarNav/>
-            <div className="mt-auto p-4">
-              {/* Weekly winners removed from here */}
-            </div>
-        </TooltipProvider>
-      </aside>
-    </>
-  );
-}
-
-function AppHeader() {
-  const { user, logout, setSearchTerm } = useAuth();
-  const router = useRouter();
-  const params = useParams();
-  const pathname = usePathname();
-  const role = user?.role || (params.role as string) || 'employee';
-  const { toast } = useToast();
-  
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
-
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-  
-  const navItems = allNavItems.filter((item) => item.roles.includes(role));
-
-  const handleNotificationClick = (text: string) => {
-    toast({
-        title: "Notification Clicked",
-        description: `Navigating to details for: "${text}"`
-    });
-  }
-  
-  const handleSearchToggle = () => {
-    setIsSearchOpen(prev => !prev);
-  }
-  
-  React.useEffect(() => {
-    if (isSearchOpen) {
-      searchInputRef.current?.focus();
     }
-  }, [isSearchOpen]);
-  
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Navigate to dashboard if not already there, to show search results.
-    if (!pathname.endsWith('/dashboard')) {
-        router.push(`/${role}/dashboard`);
-    }
-    // The search term is already set in the auth context on input change.
-  }
-
-  return (
-    <header className="bg-card border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-        {/* Left section: Mobile menu */}
-        <div className="flex items-center gap-2">
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button size="icon" variant="outline" className="md:hidden">
-                        <Menu className="h-5 w-5" />
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-64 bg-slate-900 text-slate-200 border-none">
-                     <SheetHeader className="sr-only">
-                        <SheetTitle>Main Menu</SheetTitle>
-                        <SheetDescription>Navigation links for the application.</SheetDescription>
-                     </SheetHeader>
-                     <div className="flex items-center justify-center h-16 w-full px-4 shrink-0">
-                        <Logo className="text-white" />
-                    </div>
-                     <nav className="flex flex-col items-start mt-6 space-y-2 w-full px-2 flex-grow">
-                        {navItems.map(item => (
-                            <Link
-                                key={item.href}
-                                href={`/${role}${item.href}`}
-                                className={`flex items-center w-full gap-4 px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors`}
-                            >
-                                <item.icon className="h-5 w-5" />
-                                <span className="text-sm">{item.label}</span>
-                            </Link>
-                        ))}
-                     </nav>
-                </SheetContent>
-            </Sheet>
-        </div>
-
-        {/* Center section: Expandable search */}
-        <div className="flex-1 flex justify-center">
-            <div className={`w-full max-w-sm transition-all duration-300 ${isSearchOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
-                {isSearchOpen && (
-                    <form onSubmit={handleSearchSubmit}>
-                        <Input
-                            ref={searchInputRef}
-                            placeholder="Search employees..."
-                            className="w-full"
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onBlur={() => setIsSearchOpen(false)}
-                        />
-                    </form>
-                )}
-            </div>
-        </div>
-
-        {/* Right section: Actions */}
-        <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={handleSearchToggle}>
-              <Search className="h-5 w-5" />
-            </Button>
-            <ThemeToggle />
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
-                    </Button>
-                </SheetTrigger>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle>Notifications</SheetTitle>
-                        <SheetDescription>You have {notifications.length} unread notifications.</SheetDescription>
-                    </SheetHeader>
-                    <div className="mt-4 space-y-2">
-                        {notifications.map(n => {
-                            const Icon = n.icon;
-                            return (
-                                <button key={n.id} className="flex items-start gap-3 w-full text-left p-2 rounded-md hover:bg-muted" onClick={() => handleNotificationClick(n.text)}>
-                                    <div className="p-2 bg-muted rounded-full">
-                                        <Icon className="h-5 w-5 text-muted-foreground"/>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium">{n.text}</p>
-                                        <p className="text-xs text-muted-foreground">{n.time}</p>
-                                    </div>
-                                </button>
-                            )
-                        })}
-                    </div>
-                </SheetContent>
-            </Sheet>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 text-left">
-                    <Avatar className="h-10 w-10 cursor-pointer">
-                      <AvatarImage
-                        src={`https://placehold.co/100x100?text=${(user?.profile?.name || user?.email || 'U').charAt(0)}`}
-                        alt="User avatar" data-ai-hint="person avatar"
-                      />
-                      <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                     <div className="hidden md:block">
-                        <p className="font-semibold text-sm truncate">{user?.profile?.name || user?.email}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user?.role}</p>
-                    </div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="bottom" align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <p className="font-semibold">{user?.profile?.name || user?.email}</p>
-                  <p className="text-xs text-muted-foreground font-normal">{user?.email}</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push(`/${role}/profile`)}>
-                  <CircleUser className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push(`/${role}/settings`)}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-    </header>
-  );
+    
+    return (
+        <SidebarProvider>
+            <Sidebar>
+                <AppSidebar />
+            </Sidebar>
+            <SidebarInset>
+                <AppHeader />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                    {children}
+                </main>
+            </SidebarInset>
+        </SidebarProvider>
+    );
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -312,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push('/');
       return;
     }
+    
     // Redirect if role in URL doesn't match authenticated user's role
     if (!loading && user && params.role !== user.role) {
       const pagePath = pathname.split('/').slice(2).join('/');
@@ -322,27 +58,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
   }, [user, loading, router, params, pathname]);
-
-  if (loading || !user) {
+  
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Logo className="text-primary w-12 h-12" />
+          <LoadingLogo />
           <p className="text-muted-foreground">Loading your experience...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex h-screen bg-background">
-      <AppSidebar />
-      <div className="flex-1 flex flex-col md:ml-20">
-         <AppHeader/>
-         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+  return <LayoutContent>{children}</LayoutContent>;
 }

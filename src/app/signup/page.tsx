@@ -20,7 +20,7 @@ import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 export default function SignupPage() {
-    const { login } = useAuth();
+    const { signUp } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -39,30 +39,22 @@ export default function SignupPage() {
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // In a real app, this would call a createUserWithEmailAndPassword function
-        // For this portfolio version, we'll simulate it and log the user in.
-        try {
-            const newUser = {
-                email: formData.email,
-                role: 'employee' as const, // New users default to employee
-                isNew: true, // Flag to trigger onboarding
-                profile: {
-                    name: `${formData.firstName} ${formData.lastName}`
-                }
-            };
-            await login(formData.email, formData.password, newUser); // Pass the full user object to simulate creation
-            toast({
-                title: "Account Created!",
-                description: "Welcome to OptiTalent! Please complete your profile.",
-            });
-            router.push(`/${newUser.role}/dashboard`); // Redirect to dashboard, middleware will handle onboarding
-        } catch (error) {
+        
+        const { error } = await signUp(formData);
+
+        if (error) {
             toast({
                 variant: 'destructive',
                 title: 'Sign Up Failed',
-                description: (error as Error).message
+                description: error.message
             });
-             setLoading(false);
+            setLoading(false);
+        } else {
+            toast({
+                title: "Account Created!",
+                description: "Welcome to OptiTalent! Please check your email to verify your account.",
+            });
+            // onAuthStateChange will handle redirecting the user after they are logged in
         }
     };
 
