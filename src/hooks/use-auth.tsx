@@ -15,6 +15,7 @@ interface UserProfile {
   role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
   employee_id: string;
   profile_picture_url?: string;
+  phone_number?: string;
 }
 
 interface User {
@@ -160,6 +161,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Generate a simple employee_id
     const employee_id = `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`;
+    
+    // Get a default department_id (e.g., 'Support')
+    const { data: deptData } = await supabase.from('departments').select('id').eq('name', 'Support').single();
+
 
     const { error: profileError } = await supabase
       .from('employees')
@@ -171,14 +176,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         employee_id,
         status: 'Active',
         role: 'employee',
+        department_id: deptData?.id || null, // Fallback to null if not found
         emergency_contact: JSON.stringify({}),
         skills: JSON.stringify([]),
+        phone_number: '',
+        profile_picture_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=random&color=fff&size=400`
       });
 
     if (profileError) {
         console.error("Error creating profile:", profileError);
         // Attempt to delete the auth user if profile creation fails to prevent orphaned users
-        await supabase.auth.admin.deleteUser(authData.user.id);
+        // This requires service_role key and should be handled with care
+        // await supabase.auth.admin.deleteUser(authData.user.id);
         return { user: null, error: profileError };
     }
 

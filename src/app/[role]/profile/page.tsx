@@ -97,7 +97,7 @@ function EditProfileDialog({ employee, children }: { employee: any, children: Re
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" defaultValue="(123) 456-7890" />
+                            <Input id="phone" defaultValue={employee.phone_number} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -148,14 +148,14 @@ export default function ProfilePage() {
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-start gap-6">
                         <Avatar className="w-24 h-24 border-4 border-background ring-2 ring-primary">
-                            <AvatarImage src={user.profile.profile_picture_url || `https://placehold.co/100x100.png`} data-ai-hint="person portrait" alt={user.profile.full_name} />
+                            <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person portrait" alt={user.profile.full_name} />
                             <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
                                     <h1 className="text-3xl font-bold font-headline">{user.profile.full_name} ({user.profile.employee_id})</h1>
-                                    <p className="text-muted-foreground">{user.profile.department} / {user.profile.job_title}</p>
+                                    <p className="text-muted-foreground">{user.profile.department?.name || 'N/A'} / {user.profile.job_title}</p>
                                 </div>
                                  <EditProfileDialog employee={user.profile}>
                                     <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
@@ -169,7 +169,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Phone className="text-muted-foreground h-4 w-4" />
-                                    <span>(123) 456-7890</span>
+                                    <span>{user.profile.phone_number}</span>
                                 </div>
                             </div>
                         </div>
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                             <CardContent className="space-y-4">
                                <div className="flex items-center gap-4">
                                     <Avatar className="w-16 h-16">
-                                        <AvatarImage src={user.profile.profile_picture_url || `https://placehold.co/64x64.png`} data-ai-hint="person portrait" alt={user.profile.full_name} />
+                                        <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person portrait" alt={user.profile.full_name} />
                                         <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
                                     </Avatar>
                                     <div>
@@ -349,5 +349,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    

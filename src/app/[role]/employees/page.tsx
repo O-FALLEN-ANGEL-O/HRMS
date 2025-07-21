@@ -38,6 +38,7 @@ import { suggestRoleAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/use-auth';
 
 type Employee = {
     id: string;
@@ -137,6 +138,7 @@ export default function EmployeesPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -230,7 +232,7 @@ export default function EmployeesPage() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{employee.department.name}</TableCell>
+                  <TableCell className="hidden md:table-cell">{employee.department?.name || 'N/A'}</TableCell>
                   <TableCell>{employee.role}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
@@ -247,7 +249,7 @@ export default function EmployeesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => router.push('/admin/profile')}>View Profile</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/${user?.role}/profile`)}>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(employee.id)}>Deactivate</DropdownMenuItem>
@@ -264,5 +266,3 @@ export default function EmployeesPage() {
     </div>
   )
 }
-
-    
