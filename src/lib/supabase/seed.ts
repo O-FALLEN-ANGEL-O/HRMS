@@ -100,7 +100,7 @@ async function seedData() {
           role: userData.role
       };
       
-      const { error: empError } = await supabase.from('employees').upsert(employeeData, { onConflict: 'id' });
+      const { error: empError } = await supabase.from('employees').upsert(employeeData, { onConflict: 'employee_id' });
       if(empError) { console.error(`Error seeding employee ${userData.email}`, empError); continue; }
       seededCount++;
   }
