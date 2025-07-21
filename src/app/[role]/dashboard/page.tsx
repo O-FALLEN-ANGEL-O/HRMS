@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-lg border-none">
+      <Card className="bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg border-none">
         <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div>
@@ -106,16 +106,16 @@ export default function DashboardPage() {
 
         <div className="space-y-6">
             {showBirthdayCard && (
-                <Card className="bg-yellow-100 border-yellow-300">
+                <Card className="bg-yellow-100 dark:bg-yellow-900/50 border-yellow-300 dark:border-yellow-700">
                     <CardContent className="p-4 flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <Gift className="h-6 w-6 text-yellow-700"/>
+                            <Gift className="h-6 w-6 text-yellow-700 dark:text-yellow-400"/>
                             <div>
-                                <p className="font-bold text-yellow-800">Happy Birthday!</p>
-                                <p className="text-sm text-yellow-700">15 people wished you</p>
+                                <p className="font-bold text-yellow-800 dark:text-yellow-200">Happy Birthday!</p>
+                                <p className="text-sm text-yellow-700 dark:text-yellow-300">15 people wished you</p>
                             </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="text-yellow-700 hover:bg-yellow-200" onClick={() => setShowBirthdayCard(false)}>X</Button>
+                        <Button variant="ghost" size="icon" className="text-yellow-700 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-800" onClick={() => setShowBirthdayCard(false)}>X</Button>
                     </CardContent>
                 </Card>
             )}
@@ -129,17 +129,19 @@ export default function DashboardPage() {
                         selected={new Date()}
                         className="p-0"
                     />
-                    <Button variant="link" className="w-full justify-end" onClick={() => router.push(isManager ? `/${role}/leaves/calendar` : `/${role}/leaves`)}>
-                        Go to Calendar
-                    </Button>
+                    <div className="mt-4 flex justify-end">
+                      <Button variant="link" size="sm" className="w-full" onClick={() => router.push(isManager ? `/${role}/leaves/calendar` : `/${role}/leaves`)}>
+                          Go to Calendar
+                      </Button>
+                    </div>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-base">Leave Balance</CardTitle>
+                    <CardTitle className="text-base font-medium">Leave Balance</CardTitle>
                     <Button variant="link" size="sm" onClick={() => router.push(`/${role}/leaves`)}>See all</Button>
                 </CardHeader>
-                <CardContent className="flex justify-around items-center">
+                <CardContent className="flex justify-around items-center pt-2">
                     <div className="text-center">
                         <p className="text-3xl font-bold">7</p>
                         <p className="text-xs text-muted-foreground">Casual</p>
@@ -159,3 +161,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
