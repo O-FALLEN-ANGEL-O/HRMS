@@ -128,7 +128,8 @@ async function seedData() {
     { title: 'Senior Frontend Developer', department_id: departments.find(d=>d.name==='Engineering')?.id, company_logo: generateRealisticCompanyLogo() },
     { title: 'Product Manager', department_id: departments.find(d=>d.name==='Product')?.id, company_logo: generateRealisticCompanyLogo() },
   ], { onConflict: 'title' }).select();
-  if(!openingError) console.log(`  - ✅ ${openings?.length || 0} job openings seeded.`);
+  if(openingError) { console.error("Error seeding job openings", openingError) }
+  else { console.log(`  - ✅ ${openings?.length || 0} job openings seeded.`); }
 
   // 4. Applicants
   if (openings && openings.length > 0) {
