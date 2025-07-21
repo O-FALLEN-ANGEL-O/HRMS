@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 export default function SignupPage() {
@@ -31,6 +31,26 @@ export default function SignupPage() {
         password: ''
     });
 
+    const [passwordCriteria, setPasswordCriteria] = useState({
+      length: false,
+      uppercase: false,
+      number: false,
+      specialChar: false,
+    });
+
+    useEffect(() => {
+        const checkPassword = () => {
+            setPasswordCriteria({
+                length: formData.password.length >= 8,
+                uppercase: /[A-Z]/.test(formData.password),
+                number: /[0-9]/.test(formData.password),
+                specialChar: /[^A-Za-z0-9]/.test(formData.password),
+            });
+        };
+        checkPassword();
+    }, [formData.password]);
+
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({...prev, [id]: value}));
@@ -38,6 +58,17 @@ export default function SignupPage() {
     
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
+        if (!allCriteriaMet) {
+            toast({
+                title: "Weak Password",
+                description: "Please ensure your password meets all the requirements.",
+                variant: "destructive",
+            });
+            return;
+        }
+
         setLoading(true);
         
         const { error } = await signUp(formData);
@@ -57,6 +88,13 @@ export default function SignupPage() {
             // onAuthStateChange will handle redirecting the user after they are logged in
         }
     };
+    
+    const CriteriaItem = ({ met, text }: { met: boolean; text: string }) => (
+      <div className={`flex items-center text-sm ${met ? 'text-green-600' : 'text-muted-foreground'}`}>
+        {met ? <CheckCircle className="h-4 w-4 mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+        {text}
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -95,6 +133,14 @@ export default function SignupPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" required value={formData.password} onChange={handleInputChange}/>
             </div>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+              <CriteriaItem met={passwordCriteria.length} text="At least 8 characters" />
+              <CriteriaItem met={passwordCriteria.uppercase} text="One uppercase letter" />
+              <CriteriaItem met={passwordCriteria.number} text="One number" />
+              <CriteriaItem met={passwordCriteria.specialChar} text="One special character" />
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create an account
