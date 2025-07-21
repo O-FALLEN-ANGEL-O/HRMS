@@ -13,8 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { autoGenerateWelcomeEmail, AutoGenerateWelcomeEmailOutput } from '@/ai/flows/auto-generate-welcome-email';
-import { Bot, Clipboard, Send } from 'lucide-react';
+import { autoGenerateWelcomeEmailAction } from './actions';
+import type { AutoGenerateWelcomeEmailOutput } from '@/ai/flows/auto-generate-welcome-email';
+import { Bot, Clipboard, Loader2, Send } from 'lucide-react';
 
 export default function OnboardingPage() {
   const [result, setResult] = React.useState<AutoGenerateWelcomeEmailOutput | null>(null);
@@ -41,7 +42,7 @@ export default function OnboardingPage() {
     };
 
     try {
-      const response = await autoGenerateWelcomeEmail(input);
+      const response = await autoGenerateWelcomeEmailAction(input);
       setResult(response);
       toast({
         title: "Email Generated",
@@ -117,13 +118,14 @@ export default function OnboardingPage() {
               <Input id="teamMembers" name="teamMembers" defaultValue="John Smith, Sarah Lee" required />
             </div>
             <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {loading ? 'Generating...' : 'Generate Email'}
             </Button>
           </form>
 
           <div className="rounded-lg border bg-muted/30 p-4 space-y-4 h-full flex flex-col">
             <h3 className="text-lg font-semibold">Generated Email</h3>
-            {loading && <div className="flex items-center justify-center h-full"><p>Generating email content...</p></div>}
+            {loading && <div className="flex items-center justify-center h-full"><Loader2 className="mr-4 h-6 w-6 animate-spin" />Generating email content...</div>}
             {result ? (
               <div className="space-y-4 flex-grow flex flex-col">
                 <Input readOnly value={result.subject} placeholder="Email Subject" />
@@ -138,7 +140,7 @@ export default function OnboardingPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+              !loading && <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>Fill out the form to generate a welcome email.</p>
               </div>
             )}
