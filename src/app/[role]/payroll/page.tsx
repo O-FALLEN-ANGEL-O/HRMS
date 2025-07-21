@@ -12,8 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { detectPayrollErrors, DetectPayrollErrorsOutput } from '@/ai/flows/detect-payroll-errors';
-import { Bot, AlertTriangle, Download, FileText } from 'lucide-react';
+import { detectPayrollErrorsAction } from './actions';
+import type { DetectPayrollErrorsOutput } from '@/ai/flows/detect-payroll-errors';
+import { Bot, AlertTriangle, Download, FileText, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -52,7 +53,7 @@ export default function PayrollPage() {
     }
 
     try {
-      const response = await detectPayrollErrors({ payrollData });
+      const response = await detectPayrollErrorsAction({ payrollData });
       setResult(response);
       toast({ title: "Analysis Complete", description: `Found ${response.errors.length} potential errors.` });
     } catch (e) {
@@ -68,7 +69,7 @@ export default function PayrollPage() {
       case 'high':
         return <Badge variant="destructive">High</Badge>;
       case 'medium':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Medium</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-500 text-black">Medium</Badge>;
       case 'low':
         return <Badge variant="outline">Low</Badge>;
     }
@@ -81,17 +82,17 @@ export default function PayrollPage() {
     })
   }
   
-  const isAdmin = user?.role === 'admin';
+  const isAdminOrFinance = user?.role === 'admin' || user?.role === 'finance';
 
 
   return (
     <div>
       <div className="pb-4">
         <h1 className="text-3xl font-bold font-headline">Payroll</h1>
-        <p className="text-muted-foreground">{isAdmin ? "Process salaries and manage compensations." : "View and download your payslips."}</p>
+        <p className="text-muted-foreground">{isAdminOrFinance ? "Process salaries and manage compensations." : "View and download your payslips."}</p>
       </div>
       
-      {isAdmin ? (
+      {isAdminOrFinance ? (
         <Card>
             <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
@@ -110,13 +111,14 @@ export default function PayrollPage() {
                 onChange={(e) => setPayrollData(e.target.value)}
                 />
                 <Button onClick={handleDetectErrors} disabled={loading} className="w-full">
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loading ? 'Analyzing...' : 'Detect Errors with AI'}
                 </Button>
             </div>
 
             <div className="rounded-lg border bg-muted/30 p-4 space-y-4 h-full flex flex-col">
                 <h3 className="text-lg font-semibold">Analysis Result</h3>
-                {loading && <div className="flex items-center justify-center h-full"><p>Analyzing payroll data...</p></div>}
+                {loading && <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-4">Analyzing payroll data...</p></div>}
                 {result ? (
                 <div className="space-y-4 flex-grow overflow-y-auto">
                     <Card>
@@ -128,22 +130,26 @@ export default function PayrollPage() {
                     </CardContent>
                     </Card>
                     <div className="space-y-2">
-                    {result.errors.map((error, index) => (
+                    {result.errors.length > 0 ? result.errors.map((error, index) => (
                         <div key={index} className="flex items-start gap-3 rounded-md border p-3">
-                        <AlertTriangle className="h-5 w-5 mt-1 text-destructive" />
+                        <AlertTriangle className="h-5 w-5 mt-1 text-destructive flex-shrink-0" />
                         <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-semibold">{error.field}</p>
                             {getSeverityBadge(error.severity)}
                             </div>
                             <p className="text-sm text-muted-foreground">{error.description}</p>
                         </div>
                         </div>
-                    ))}
+                    )) : (
+                         <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <p>No errors detected in the provided data.</p>
+                        </div>
+                    )}
                     </div>
                 </div>
                 ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
+                !loading && <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>Results will be displayed here.</p>
                 </div>
                 )}
