@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useRouter } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -54,11 +55,34 @@ const employeeAwards = [
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
+  const [posts, setPosts] = React.useState(initialPosts);
+
   const name = user?.profile?.name || user?.email?.split('@')[0] || 'User';
   const role = user?.role || 'employee';
 
   const isManager = role === 'manager' || role === 'hr' || role === 'admin';
+
+  const handleQuickAction = (label: string) => {
+    toast({
+      title: 'Action Triggered',
+      description: `You clicked on "${label}". This would open a new dialog or page.`,
+    });
+  };
+
+  const handleLike = (postId: string) => {
+    setPosts(prevPosts =>
+      prevPosts.map(p => (p.id === postId ? { ...p, likes: p.likes + 1 } : p))
+    );
+  };
+  
+  const handleComment = (postId: string) => {
+    setPosts(prevPosts =>
+      prevPosts.map(p => (p.id === postId ? { ...p, comments: p.comments + 1 } : p))
+    );
+  };
+
 
   return (
     <div className="space-y-6">
@@ -89,7 +113,7 @@ export default function DashboardPage() {
                     {quickActions.map(action => {
                         const Icon = action.icon;
                         return (
-                            <Button key={action.label} variant="outline" className="h-16 flex-col gap-1">
+                            <Button key={action.label} variant="outline" className="h-16 flex-col gap-1" onClick={() => handleQuickAction(action.label)}>
                                 <Icon className="h-6 w-6 text-primary" />
                                 <span>{action.label}</span>
                             </Button>
@@ -132,7 +156,7 @@ export default function DashboardPage() {
                         <CardTitle>Feed</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         {initialPosts.map((post) => (
+                         {posts.map((post) => (
                           <Card key={post.id}>
                             <CardHeader>
                               <div className="flex items-start justify-between">
@@ -162,10 +186,10 @@ export default function DashboardPage() {
                             </CardContent>
                             <CardFooter className="flex justify-between">
                                <div className="flex gap-4 text-muted-foreground">
-                                  <Button variant="ghost" size="sm">
+                                  <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)}>
                                     Like ({post.likes})
                                   </Button>
-                                  <Button variant="ghost" size="sm">
+                                  <Button variant="ghost" size="sm" onClick={() => handleComment(post.id)}>
                                     Comment ({post.comments})
                                   </Button>
                                </div>

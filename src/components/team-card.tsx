@@ -5,7 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 type Member = {
   name: string;
@@ -27,6 +31,21 @@ const getStatusIndicator = (status: string) => {
 };
 
 export function TeamCard({ member }: { member: Member }) {
+    const { toast } = useToast();
+    const { user } = useAuth();
+    const router = useRouter();
+
+    const handleAction = (action: string) => {
+        if(action === 'profile') {
+            router.push(`/${user?.role}/profile`);
+        } else {
+            toast({
+                title: `Action: ${action}`,
+                description: `Sent message to ${member.name}.`
+            })
+        }
+    }
+
     return (
         <Card className="hover:bg-muted/50 transition-colors">
             <CardContent className="p-4">
@@ -42,7 +61,15 @@ export function TeamCard({ member }: { member: Member }) {
                         <p className="font-semibold">{member.name}</p>
                         <p className="text-xs text-muted-foreground">{member.title}</p>
                     </div>
-                    <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4"/></Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4"/></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleAction('profile')}>View Profile</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAction('message')}>Send Message</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
                 <div className="mt-4 space-y-2 text-sm">
                     <div className="flex justify-between">

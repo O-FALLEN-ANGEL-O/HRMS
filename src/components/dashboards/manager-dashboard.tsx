@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, CheckCircle, Clock, TrendingUp, Award } from "lucide-react";
@@ -51,14 +51,15 @@ const teamMembers = [
   },
 ];
 
-const pendingApprovals = [
-    { type: 'Leave Request', name: 'Rohan Verma', details: '3 days PTO for family event.' },
-    { type: 'Expense Report', name: 'Anika Sharma', details: '$250 for software license.' },
-    { type: 'Timesheet', name: 'Priya Mehta', details: '45 hours for week ending July 26.' },
+const initialPendingApprovals = [
+    { id: 1, type: 'Leave Request', name: 'Rohan Verma', details: '3 days PTO for family event.' },
+    { id: 2, type: 'Expense Report', name: 'Anika Sharma', details: '$250 for software license.' },
+    { id: 3, type: 'Timesheet', name: 'Priya Mehta', details: '45 hours for week ending July 26.' },
 ];
 
 export default function ManagerDashboard() {
   const { toast } = useToast();
+  const [pendingApprovals, setPendingApprovals] = useState(initialPendingApprovals);
 
   const handleGiveAward = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -71,6 +72,17 @@ export default function ManagerDashboard() {
         });
         e.currentTarget.reset();
     }
+  }
+
+  const handleApproval = (id: number, approved: boolean) => {
+    const item = pendingApprovals.find(p => p.id === id);
+    if (!item) return;
+
+    setPendingApprovals(prev => prev.filter(p => p.id !== id));
+    toast({
+        title: `Request ${approved ? 'Approved' : 'Denied'}`,
+        description: `${item.type} from ${item.name} has been ${approved ? 'approved' : 'denied'}.`,
+    });
   }
 
   return (
@@ -141,16 +153,19 @@ export default function ManagerDashboard() {
                         <CardDescription>Actions that require your attention.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {pendingApprovals.map((approval, index) => (
-                           <div key={index} className="p-3 bg-muted rounded-lg">
+                        {pendingApprovals.map((approval) => (
+                           <div key={approval.id} className="p-3 bg-muted rounded-lg">
                                 <p className="text-sm font-semibold">{approval.type}</p>
                                 <p className="text-sm text-muted-foreground">{approval.name} - {approval.details}</p>
                                 <div className="flex gap-2 mt-2">
-                                    <Button size="sm" className="flex-1">Approve</Button>
-                                    <Button size="sm" variant="outline" className="flex-1">Deny</Button>
+                                    <Button size="sm" className="flex-1" onClick={() => handleApproval(approval.id, true)}>Approve</Button>
+                                    <Button size="sm" variant="outline" className="flex-1" onClick={() => handleApproval(approval.id, false)}>Deny</Button>
                                 </div>
                            </div>
                         ))}
+                         {pendingApprovals.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-4">No pending approvals.</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>

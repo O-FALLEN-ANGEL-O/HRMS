@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from 'next/link';
 import { Bot, Search, Filter, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
@@ -60,8 +60,9 @@ const getStatusBadge = (status: Applicant['status']) => {
 
 
 export default function RecruitmentPage() {
-  const [applicants] = useState<Applicant[]>(initialApplicants);
+  const [searchTerm, setSearchTerm] = useState('');
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
   const role = params.role || 'admin';
 
@@ -73,6 +74,13 @@ export default function RecruitmentPage() {
       description: "The walk-in registration link has been copied to your clipboard.",
     });
   };
+
+  const filteredApplicants = useMemo(() => {
+    return initialApplicants.filter(applicant =>
+      applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      applicant.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
 
   return (
      <div className="space-y-6">
@@ -90,7 +98,13 @@ export default function RecruitmentPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4">
                     <div className="relative flex-1 md:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input className="w-full pl-10" placeholder="Search by name..." type="text" />
+                        <Input 
+                            className="w-full pl-10" 
+                            placeholder="Search by name or role..." 
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         <Button variant="outline">
@@ -122,14 +136,14 @@ export default function RecruitmentPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {applicants.map((applicant) => (
+                                    {filteredApplicants.map((applicant) => (
                                         <TableRow key={applicant.id}>
                                             <TableCell className="font-medium">{applicant.name}</TableCell>
                                             <TableCell>{applicant.role}</TableCell>
                                             <TableCell>{applicant.appliedDate}</TableCell>
                                             <TableCell>{getStatusBadge(applicant.status)}</TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm">View Profile</Button>
+                                                <Button variant="ghost" size="sm" onClick={() => router.push(`/${role}/profile`)}>View Profile</Button>
                                             </TableCell>
                                         </TableRow>
                                     ))}
