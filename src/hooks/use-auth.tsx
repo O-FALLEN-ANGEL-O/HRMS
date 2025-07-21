@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
@@ -31,6 +31,7 @@ interface AuthContextType {
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  revalidateUser: () => Promise<void>;
   logout: () => Promise<any>;
   signUp: (data: any) => Promise<any>;
 }
@@ -61,6 +62,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
+  const revalidateUser = useCallback(async () => {
+    // Check for our manual user profile cookie
+    const userProfileCookie = document.cookie.split('; ').find(row => row.startsWith('user-profile='));
+    if (userProfileCookie) {
+        try {
+            const userData = JSON.parse(decodeURIComponent(userProfileCookie.split('=')[1]));
+            setUser(userData);
+        } catch (e) {
+            setUser(null);
+        }
+    } else {
+        setUser(null);
+    }
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
     if (!supabase || !supabase.auth) {
@@ -68,74 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
     }
-
-    const checkUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data: profile, error } = await supabase
-            .from('employees')
-            .select(`*, department:departments(name)`)
-            .eq('id', session.user.id)
-            .single();
-
-            if (!error && profile) {
-                const userRole = profile?.role || (session.user.app_metadata.role as UserProfile['role']) || 'employee';
-                setUser({
-                  id: session.user.id,
-                  email: session.user.email!,
-                  role: userRole,
-                  profile: profile as UserProfile,
-                });
-            }
-        } else {
-             // Check for our manual user profile cookie
-            const userProfileCookie = document.cookie.split('; ').find(row => row.startsWith('user-profile='));
-            if (userProfileCookie) {
-                try {
-                    const userData = JSON.parse(decodeURIComponent(userProfileCookie.split('=')[1]));
-                    setUser(userData);
-                } catch (e) {
-                    setUser(null);
-                }
-            } else {
-                setUser(null);
-            }
-        }
-        setLoading(false);
-    };
-
-    checkUser();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session) => {
-        setLoading(true);
-        if (event === 'SIGNED_IN' && session?.user) {
-           const { data: profile } = await supabase.from('employees').select('*, department:departments(name)').eq('id', session.user.id).single();
-            if(profile) {
-              const userRole = profile?.role || 'employee';
-              setUser({
-                    id: session.user.id,
-                    email: session.user.email!,
-                    role: userRole,
-                    profile: profile as UserProfile,
-              });
-              router.push(`/${userRole}/dashboard`);
-            }
-        }
-        if (event === 'SIGNED_OUT') {
-            document.cookie = 'user-profile=; Max-Age=-99999999; path=/;';
-            setUser(null);
-            router.push('/');
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [router]);
+    revalidateUser();
+  }, [revalidateUser]);
   
   const signUp = async (data: any) => {
     if (!supabase) return { error: { message: "Supabase not configured." }};
@@ -197,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
-  const value = { user, loading, searchTerm, setSearchTerm, logout, signUp };
+  const value = { user, loading, searchTerm, setSearchTerm, logout, signUp, revalidateUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
