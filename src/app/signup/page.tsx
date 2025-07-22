@@ -14,13 +14,11 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 export default function SignupPage() {
-    const { signUp } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -58,35 +56,17 @@ export default function SignupPage() {
     
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
-        if (!allCriteriaMet) {
-            toast({
-                title: "Weak Password",
-                description: "Please ensure your password meets all the requirements.",
-                variant: "destructive",
-            });
-            return;
-        }
-
         setLoading(true);
-        
-        const { error } = await signUp(formData);
 
-        if (error) {
+        // This is a mock signup
+        setTimeout(() => {
             toast({
-                variant: 'destructive',
-                title: 'Sign Up Failed',
-                description: error.message
+                title: "Account Created! (Mock)",
+                description: "This is a frontend prototype. No account was actually created.",
             });
+            router.push(`/`);
             setLoading(false);
-        } else {
-            toast({
-                title: "Account Created!",
-                description: "Welcome to OptiTalent! You are now logged in.",
-            });
-            // onAuthStateChange will handle redirecting the user after they are logged in
-        }
+        }, 1000);
     };
     
     const CriteriaItem = ({ met, text }: { met: boolean; text: string }) => (
