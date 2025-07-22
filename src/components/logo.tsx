@@ -4,8 +4,11 @@
 import React from 'react';
 import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
+import { useSidebar } from './ui/sidebar';
 
 export function Logo({ className }: { className?: string }) {
+  const { state } = useSidebar();
+  
   const iconVariants = {
     hidden: {
       pathLength: 0,
@@ -62,7 +65,7 @@ export function Logo({ className }: { className?: string }) {
                 }}
             />
         </motion.svg>
-        <span className="group-data-[collapsible=icon]:hidden">OptiTalent</span>
+        {state === 'expanded' && <span>OptiTalent</span>}
     </div>
   );
 }
