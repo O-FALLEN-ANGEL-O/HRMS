@@ -1,14 +1,15 @@
-
 "use client";
 
 import React from 'react';
 import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
-import { useSidebar } from './ui/sidebar';
 
-const LogoComponent = () => {
-  const { state } = useSidebar();
-  
+interface LogoProps {
+  className?: string;
+  showText?: boolean;
+}
+
+const LogoComponent = ({ className, showText = true }: LogoProps) => {
   const iconVariants = {
     hidden: {
       pathLength: 0,
@@ -18,7 +19,7 @@ const LogoComponent = () => {
     }
   }
   return (
-    <div className={cn("inline-flex items-center gap-2 font-headline text-xl font-bold")}>
+    <div className={cn("inline-flex items-center gap-2 font-headline text-xl font-bold", className)}>
         <motion.svg 
             xmlns="http://www.w3.org/2000/svg" 
             width="28" 
@@ -65,7 +66,7 @@ const LogoComponent = () => {
                 }}
             />
         </motion.svg>
-        {state === 'expanded' && <span>OptiTalent</span>}
+        {showText && <span>OptiTalent</span>}
     </div>
   );
 }

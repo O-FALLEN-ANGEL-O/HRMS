@@ -81,7 +81,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="mx-auto max-w-sm">
         <CardHeader className="text-center">
-            <Logo className="justify-center mb-4"/>
+            <Logo className="justify-center mb-4" showText={true} />
             <CardTitle className="text-2xl font-headline">Create your account</CardTitle>
             <CardDescription>
             Enter your information to get started

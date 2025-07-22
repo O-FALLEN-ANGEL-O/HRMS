@@ -151,7 +151,7 @@ export default function WalkInRegistrationPage() {
         <div className="min-h-screen bg-muted/40 flex flex-col items-center justify-center p-4">
              <div className="max-w-2xl w-full space-y-6">
                 <div className="text-center">
-                    <Logo className="inline-flex mb-2" />
+                    <Logo className="inline-flex mb-2" showText={true} />
                     <h1 className="text-3xl font-bold font-headline tracking-tight">Walk-In Registration Form</h1>
                     <p className="text-muted-foreground">
                         Fill in your details below. You can speed up the process by uploading your resume.

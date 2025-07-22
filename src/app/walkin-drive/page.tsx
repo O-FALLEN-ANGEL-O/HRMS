@@ -22,7 +22,7 @@ export default function WalkInDrivePage() {
         <div className="min-h-screen bg-muted/40 flex flex-col items-center justify-center p-4">
             <div className="max-w-4xl w-full space-y-8">
                 <div className="text-center space-y-4">
-                    <Logo className="inline-flex" />
+                    <Logo className="inline-flex" showText={true} />
                     <h1 className="text-4xl font-bold font-headline tracking-tight">Walk-In Drive Registration</h1>
                     <p className="text-muted-foreground text-lg">
                         Join our team! We're looking for talented individuals to fill a variety of roles.

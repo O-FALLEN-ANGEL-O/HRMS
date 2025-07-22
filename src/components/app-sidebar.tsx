@@ -33,7 +33,7 @@ export default function AppSidebar() {
     <Sidebar>
       <ScrollArea className="h-full">
         <SidebarHeader className={state === 'collapsed' ? 'justify-center' : ''}>
-          <Logo />
+          <Logo showText={state === 'expanded'} />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
