@@ -2,14 +2,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy, MoreHorizontal, Search, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardCard } from '@/components/ui/dashboard-card';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeeDetailsCard } from '@/components/employee-details-card';
@@ -56,16 +55,16 @@ const employeeAwards = [
 ]
 
 export default function DashboardPage() {
-  const { user, searchTerm } = useAuth();
   const router = useRouter();
+  const params = useParams();
   const { toast } = useToast();
   const [showBirthdayCard, setShowBirthdayCard] = React.useState(true);
   const [posts, setPosts] = React.useState(initialPosts);
   const [searchedEmployee, setSearchedEmployee] = React.useState<any | null | undefined>(null);
   const [searching, setSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const name = user?.profile?.full_name || user?.email?.split('@')[0] || 'User';
-  const role = user?.role || 'employee';
+  const role = (params.role as string) || 'employee';
 
   const isManager = role === 'manager' || role === 'hr' || role === 'admin';
 
@@ -145,7 +144,7 @@ export default function DashboardPage() {
                     className="flex flex-col sm:flex-row justify-between items-start gap-4"
                 >
                     <div>
-                        <h1 className="text-4xl font-headline tracking-tight font-bold">Hello, {name}!</h1>
+                        <h1 className="text-4xl font-headline tracking-tight font-bold">Hello, {role}!</h1>
                         <p className="text-indigo-200 mt-1">Hope you are having a great day</p>
                     </div>
                     <div className="flex-shrink-0">

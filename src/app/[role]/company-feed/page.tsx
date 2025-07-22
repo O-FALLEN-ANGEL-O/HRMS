@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useParams } from 'next/navigation';
 
 const initialPosts = [
   {
@@ -55,7 +55,6 @@ function NewPostDialog({ onAddPost }: { onAddPost: (post: Post) => void }) {
     const [isOpen, setIsOpen] = useState(false);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const { user } = useAuth();
     const { toast } = useToast();
 
     const handleSubmit = () => {
@@ -70,9 +69,9 @@ function NewPostDialog({ onAddPost }: { onAddPost: (post: Post) => void }) {
 
         const newPost: Post = {
             id: Date.now().toString(),
-            author: user?.profile?.name || user?.email || 'Admin',
+            author: 'Admin User',
             authorRole: 'Admin',
-            avatar: `https://placehold.co/100x100?text=${(user?.profile?.name || user?.email || 'A').charAt(0)}`,
+            avatar: `https://placehold.co/100x100?text=AU`,
             title,
             content,
             timestamp: 'Just now',
@@ -126,7 +125,8 @@ function NewPostDialog({ onAddPost }: { onAddPost: (post: Post) => void }) {
 
 export default function CompanyFeedPage() {
     const [posts, setPosts] = useState<Post[]>(initialPosts);
-    const { user } = useAuth();
+    const params = useParams();
+    const role = params.role as string;
 
     const handleAddPost = (post: Post) => {
         setPosts(prev => [post, ...prev]);
@@ -150,7 +150,7 @@ export default function CompanyFeedPage() {
             Stay up-to-date with the latest news and announcements.
           </p>
         </div>
-        {(user?.role === 'admin' || user?.role === 'hr') && <NewPostDialog onAddPost={handleAddPost} />}
+        {(role === 'admin' || role === 'hr') && <NewPostDialog onAddPost={handleAddPost} />}
       </div>
 
       <div className="max-w-3xl mx-auto space-y-6">

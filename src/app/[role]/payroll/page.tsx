@@ -16,7 +16,7 @@ import { detectPayrollErrorsAction } from './actions';
 import type { DetectPayrollErrorsOutput } from '@/ai/flows/detect-payroll-errors';
 import { Bot, AlertTriangle, Download, FileText, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/use-auth';
+import { useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const examplePayrollData = {
@@ -39,7 +39,8 @@ export default function PayrollPage() {
   const [loading, setLoading] = useState(false);
   const [payrollData, setPayrollData] = useState(JSON.stringify(examplePayrollData, null, 2));
   const { toast } = useToast();
-  const { user } = useAuth();
+  const params = useParams();
+  const role = params.role as string;
 
   const handleDetectErrors = async () => {
     setLoading(true);
@@ -82,7 +83,7 @@ export default function PayrollPage() {
     })
   }
   
-  const isAdminOrFinance = user?.role === 'admin' || user?.role === 'finance';
+  const isAdminOrFinance = role === 'admin' || role === 'finance';
 
 
   return (

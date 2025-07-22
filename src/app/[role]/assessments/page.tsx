@@ -3,15 +3,16 @@
 
 import { AssessmentCard } from "@/components/assessment-card";
 import { assessments } from "@/lib/mock-data/assessments";
-import { useAuth } from "@/hooks/use-auth";
+import { useParams } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
 
 
 export default function AssessmentsPage() {
-  const { user } = useAuth();
+  const params = useParams();
+  const role = params.role as string;
   
-  if (user?.role === 'admin' || user?.role === 'hr') {
+  if (role === 'admin' || role === 'hr') {
     return (
        <div className="space-y-6">
           <div>

@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Calendar, Wallet, Settings, Bell } from "lucide-react";
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // Mock Data
@@ -39,9 +38,9 @@ const quickLinks = [
 
 
 export default function EmployeeDashboard() {
-    const { user } = useAuth();
     const router = useRouter();
-    const role = user?.role || 'employee';
+    const params = useParams();
+    const role = (params.role as string) || 'employee';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

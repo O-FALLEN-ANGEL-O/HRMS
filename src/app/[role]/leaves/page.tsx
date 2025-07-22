@@ -22,13 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
 import { leaveBalances, leaveRequests as initialLeaveRequests, type LeaveRequest } from '@/lib/mock-data/leaves';
 
 function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) {
     const [open, setOpen] = useState(false);
     const { toast } = useToast();
-    const { user } = useAuth();
   
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -47,7 +45,7 @@ function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => 
   
       const newRequest: LeaveRequest = {
         id: `LR-${String(Math.floor(Math.random() * 900) + 100)}`,
-        employee: user?.profile?.name || 'Current User',
+        employee: 'Current User',
         leaveType,
         dates: `${fromDate} to ${toDate}`,
         days: days,

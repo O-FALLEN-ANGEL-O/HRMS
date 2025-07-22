@@ -36,8 +36,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { suggestRoleAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useRouter, useParams } from 'next/navigation';
 import { useTeam } from '@/hooks/use-team';
 import { TeamCard } from '@/components/team-card';
 import { mockEmployees } from '@/lib/mock-data/employees';
@@ -128,10 +127,11 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const params = useParams();
   const { toast } = useToast();
-  const { user } = useAuth();
   const teamMembers = useTeam();
-  const isManagerView = user?.role === 'manager' || user?.role === 'team-leader';
+  const role = params.role as string;
+  const isManagerView = role === 'manager' || role === 'team-leader';
 
   const handleAddEmployee = (newEmployee: Employee) => {
     setEmployees(prev => [...prev, newEmployee]);
@@ -192,7 +192,7 @@ export default function EmployeesPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => router.push(`/${user?.role}/profile`)}>View Profile</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/${role}/profile`)}>View Profile</DropdownMenuItem>
                       <DropdownMenuItem>Edit</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(employee.id)}>Deactivate</DropdownMenuItem>

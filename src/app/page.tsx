@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMemo } from 'react';
 import { mockUsers } from '@/lib/mock-data/employees';
+import { navConfig } from '@/hooks/use-nav';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -78,22 +79,13 @@ export default function RoleSelectorPage() {
     const router = useRouter();
 
     const allRoles = useMemo(() => {
-        const roles = new Map<string, string>();
-         mockUsers.forEach(user => {
-            if (!roles.has(user.role)) {
-                roles.set(user.role, user.profile.full_name);
+        return Object.keys(navConfig).map(role => {
+            const userForRole = mockUsers.find(u => u.role === role);
+            return {
+                role,
+                name: userForRole ? userForRole.profile.full_name : 'Default ' + role.charAt(0).toUpperCase() + role.slice(1)
             }
         });
-        
-        const definedRoles = ['admin', 'hr', 'manager', 'employee', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'];
-        definedRoles.forEach(role => {
-            if (!roles.has(role)) {
-                const mockUserForRole = mockUsers.find(u => u.role === role);
-                roles.set(role, mockUserForRole ? mockUserForRole.profile.full_name : "Default User");
-            }
-        });
-        
-        return Array.from(roles.entries()).map(([role, name]) => ({role, name}));
     }, []);
 
 

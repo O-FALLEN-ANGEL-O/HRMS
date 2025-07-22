@@ -8,8 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
+import { useRouter, useParams } from "next/navigation";
 
 type Member = {
   name: string;
@@ -32,12 +31,13 @@ const getStatusIndicator = (status: string) => {
 
 export function TeamCard({ member }: { member: Member }) {
     const { toast } = useToast();
-    const { user } = useAuth();
     const router = useRouter();
+    const params = useParams();
+    const role = params.role as string;
 
     const handleAction = (action: string) => {
         if(action === 'profile') {
-            router.push(`/${user?.role}/profile`);
+            router.push(`/${role}/profile`);
         } else if (action === 'message') {
             toast({
                 title: `Message Sent`,

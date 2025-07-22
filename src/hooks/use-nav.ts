@@ -30,7 +30,7 @@ export type NavItem = {
   icon: LucideIcon;
 };
 
-const navConfig: Record<string, NavItem[]> = {
+export const navConfig: Record<string, NavItem[]> = {
   admin: [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },

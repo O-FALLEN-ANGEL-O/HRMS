@@ -16,18 +16,22 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { useParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Shield, User, Monitor, Smartphone } from "lucide-react";
+import { mockEmployees } from "@/lib/mock-data/employees";
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const params = useParams();
+  const role = params.role as string;
+
+  const mockUser = mockEmployees.find(e => e.role === role) || mockEmployees[0];
   
   const [profile, setProfile] = useState({
-    name: user?.profile?.name || "Admin User",
-    email: user?.email || "admin@optitalent.com",
-    jobTitle: "Administrator",
+    name: mockUser.full_name || "Admin User",
+    email: mockUser.email || "admin@optitalent.com",
+    jobTitle: mockUser.job_title || "Administrator",
   });
 
   const [password, setPassword] = useState({

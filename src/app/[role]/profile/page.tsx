@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/use-auth";
+import { mockEmployees } from "@/lib/mock-data/employees";
+
+const MOCK_USER = mockEmployees[4]; // Defaulting to Anika Sharma (employee)
 
 function AwardPointsDialog({ employeeId, employeeName, children }: { employeeId: string, employeeName: string, children: React.ReactNode}) {
     const { toast } = useToast();
@@ -111,7 +113,6 @@ function EditProfileDialog({ employee, children }: { employee: any, children: Re
 
 
 export default function ProfilePage() {
-    const { user } = useAuth();
     const { toast } = useToast();
 
     const bonusHistory = [
@@ -138,7 +139,7 @@ export default function ProfilePage() {
         });
     }
 
-    if (!user || !user.profile) {
+    if (!MOCK_USER) {
         return <div>Loading profile...</div>;
     }
 
@@ -148,16 +149,16 @@ export default function ProfilePage() {
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-start gap-6">
                         <Avatar className="w-24 h-24 border-4 border-background ring-2 ring-primary">
-                            <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person portrait" alt={user.profile.full_name} />
-                            <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
+                            <AvatarImage src={MOCK_USER.profile_picture_url} data-ai-hint="person portrait" alt={MOCK_USER.full_name} />
+                            <AvatarFallback>{MOCK_USER.full_name.substring(0, 2)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
-                                    <h1 className="text-3xl font-bold font-headline">{user.profile.full_name} ({user.profile.employee_id})</h1>
-                                    <p className="text-muted-foreground">{user.profile.department?.name || 'N/A'} / {user.profile.job_title}</p>
+                                    <h1 className="text-3xl font-bold font-headline">{MOCK_USER.full_name} ({MOCK_USER.employee_id})</h1>
+                                    <p className="text-muted-foreground">{MOCK_USER.department?.name || 'N/A'} / {MOCK_USER.job_title}</p>
                                 </div>
-                                 <EditProfileDialog employee={user.profile}>
+                                 <EditProfileDialog employee={MOCK_USER}>
                                     <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
                                 </EditProfileDialog>
                             </div>
@@ -165,11 +166,11 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                     <Mail className="text-muted-foreground h-4 w-4" />
-                                    <span>{user.email}</span>
+                                    <span>{MOCK_USER.email}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Phone className="text-muted-foreground h-4 w-4" />
-                                    <span>{user.profile.phone_number}</span>
+                                    <span>{MOCK_USER.phone_number}</span>
                                 </div>
                             </div>
                         </div>
@@ -268,19 +269,19 @@ export default function ProfilePage() {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>My Points</CardTitle>
-                                <AwardPointsDialog employeeId={user.profile.employee_id} employeeName={user.profile.full_name}>
+                                <AwardPointsDialog employeeId={MOCK_USER.employee_id} employeeName={MOCK_USER.full_name}>
                                     <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Award Points</Button>
                                 </AwardPointsDialog>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                <div className="flex items-center gap-4">
                                     <Avatar className="w-16 h-16">
-                                        <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person portrait" alt={user.profile.full_name} />
-                                        <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
+                                        <AvatarImage src={MOCK_USER.profile_picture_url} data-ai-hint="person portrait" alt={MOCK_USER.full_name} />
+                                        <AvatarFallback>{MOCK_USER.full_name.substring(0, 2)}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold text-lg">{user.profile.full_name}</p>
-                                        <p className="text-sm text-muted-foreground">{user.profile.employee_id}</p>
+                                        <p className="font-semibold text-lg">{MOCK_USER.full_name}</p>
+                                        <p className="text-sm text-muted-foreground">{MOCK_USER.employee_id}</p>
                                     </div>
                                </div>
                                <Separator/>
