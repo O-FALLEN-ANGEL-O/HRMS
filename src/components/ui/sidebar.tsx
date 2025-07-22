@@ -340,7 +340,7 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-const SidebarMenuButton = React.forwardRef<
+const SidebarMenuButtonWithoutMemo = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & {
     asChild?: boolean
@@ -402,7 +402,9 @@ const SidebarMenuButton = React.forwardRef<
     )
   }
 )
-SidebarMenuButton.displayName = "SidebarMenuButton"
+SidebarMenuButtonWithoutMemo.displayName = "SidebarMenuButton"
+
+const SidebarMenuButton = React.memo(SidebarMenuButtonWithoutMemo);
 
 
 export {
