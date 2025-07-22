@@ -2,12 +2,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { mockUsers, type User } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
   login: (employeeId: string) => Promise<{ error: { message: string } | null }>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<{ error: { message: string } | null }>;
@@ -18,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (employeeId: string) => {
     setLoading(true);
-    const userToLogin = mockUsers.find(u => u.profile.employee_id.toLowerCase() === employeeId.toLowerCase());
+    const userToLogin = mockUsers.find(u => u.profile.employee_id === employeeId);
 
     if (userToLogin) {
       setUser(userToLogin);
@@ -55,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const { email, password, firstName, lastName } = data;
     
-    // In a real app, this would hit a database. Here, we just create a mock user.
     const newUser: User = {
         id: `user-${Date.now()}`,
         email,
@@ -63,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile: {
             id: `profile-${Date.now()}`,
             full_name: `${firstName} ${lastName}`,
+            email,
             job_title: 'New Hire',
             employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
             status: 'Active',
@@ -74,9 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
     
-    // For prototype purposes, add to mockUsers array if you need it accessible elsewhere
-    // mockUsers.push(newUser); 
-    
+    mockUsers.push(newUser);
     setUser(newUser);
     sessionStorage.setItem('authUser', JSON.stringify(newUser));
     router.push(`/${newUser.role}/dashboard`);
@@ -90,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
-  const value = { user, loading, login, logout, signUp };
+  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

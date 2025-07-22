@@ -247,8 +247,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "flex h-14 items-center border-b",
-        state === 'collapsed' ? "justify-center" : "px-4",
+        "flex h-14 items-center border-b px-4",
         className
       )}
       {...props}
