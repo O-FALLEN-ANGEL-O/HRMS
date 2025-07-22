@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Briefcase, Building, User, Clock, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { mockEmployees } from '@/lib/mock-data/employees';
 
 interface EmployeeDetailsCardProps {
     employee: any;
@@ -17,16 +17,14 @@ export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
   const [manager, setManager] = useState<any>(null);
 
   useEffect(() => {
-    const fetchManager = async () => {
+    const fetchManager = () => {
         if (!employee.department?.name) return;
-        const { data } = await supabase
-            .from('employees')
-            .select('full_name')
-            .eq('role', 'manager')
-            .eq('department_id', employee.department_id)
-            .limit(1)
-            .single();
-        setManager(data);
+        
+        // Find a manager in the same department from mock data
+        const managerInDept = mockEmployees.find(e => 
+            e.role === 'manager' && e.department.name === employee.department.name
+        );
+        setManager(managerInDept);
     }
     fetchManager();
   }, [employee]);

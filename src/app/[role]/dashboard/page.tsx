@@ -13,8 +13,8 @@ import { useRouter } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeeDetailsCard } from '@/components/employee-details-card';
-import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
+import { mockEmployees } from '@/lib/mock-data/employees';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -77,29 +77,26 @@ export default function DashboardPage() {
         }
 
         setSearching(true);
-        // Search by name (case-insensitive) or by exact employee_id
-        const { data, error } = await supabase
-            .from('employees')
-            .select(`*, department:departments(name)`)
-            .or(`full_name.ilike.%${searchTerm}%,employee_id.eq.${searchTerm.toUpperCase()}`)
-            .limit(1)
-            .single();
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-        if (error) {
-            console.warn("Search error:", error.message);
+        const result = mockEmployees.find(e => 
+            e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.employee_id.toLowerCase() === searchTerm.toLowerCase()
+        );
+
+        if (result) {
+            setSearchedEmployee(result);
+        } else {
             setSearchedEmployee(undefined); // Use undefined to signify not found
             toast({
                 title: "Employee Not Found",
                 description: `No employee found with the name or ID "${searchTerm}".`,
                 variant: "destructive"
             });
-        } else {
-            setSearchedEmployee(data);
         }
         setSearching(false);
     }
     
-    // Debounce search
     const handler = setTimeout(() => {
         searchEmployee();
     }, 500);
@@ -366,5 +363,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

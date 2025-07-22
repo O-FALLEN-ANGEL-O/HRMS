@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldQuestion, UserCheck } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { mockUsers } from '@/lib/mock-data/employees';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -75,25 +76,6 @@ function AnimatedLogo() {
   );
 }
 
-const demoAccounts = [
-    { role: 'Admin', user: 'PEP0001', pass: 'password' },
-    { role: 'HR', user: 'PEP0002', pass: 'password' },
-    { role: 'Manager', user: 'PEP0003', pass: 'password' },
-    { role: 'Recruiter', user: 'PEP0004', pass: 'password' },
-    { role: 'QA Analyst', user: 'PEP0005', pass: 'password' },
-    { role: 'Process Manager', user: 'PEP0006', pass: 'password' },
-    { role: 'Team Leader', user: 'PEP0007', pass: 'password' },
-    { role: 'Marketing', user: 'PEP0008', pass: 'password' },
-    { role: 'Finance', user: 'PEP0009', pass: 'password' },
-    { role: 'IT Manager', user: 'PEP0010', pass: 'password' },
-    { role: 'Operations Manager', user: 'PEP0011', pass: 'password' },
-    { role: 'Employee', user: 'PEP0012', pass: 'password123' },
-    { role: 'Employee 2', user: 'PEP0013', pass: 'password123' },
-    { role: 'Employee 3', user: 'PEP0014', pass: 'password123' },
-    { role: 'Employee 4', user: 'PEP0015', pass: 'password123' },
-    { role: 'Employee 5', user: 'PEP0016', pass: 'password123' },
-];
-
 export default function LoginPage() {
     const router = useRouter();
     const { login, user, loading: authLoading } = useAuth();
@@ -101,16 +83,15 @@ export default function LoginPage() {
     const [loading, setLoading] = useState<string | null>(null);
 
     useEffect(() => {
-        // The onAuthStateChange listener in useAuth will handle redirects
         if (!authLoading && user) {
             router.push(`/${user.role}/dashboard`);
         }
     }, [user, authLoading, router]);
 
-    const handleLogin = async (employeeId: string, password: string) => {
+    const handleLogin = async (employeeId: string) => {
         setLoading(employeeId);
 
-        const { error } = await login(employeeId, password);
+        const { error } = await login(employeeId);
         
         if (error) {
              toast({
@@ -121,11 +102,9 @@ export default function LoginPage() {
             setLoading(null);
         } else {
             toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard...' });
-            // Redirect is now handled by onAuthStateChange in the useAuth hook
         }
     }
 
-  // Show a loading state if auth is still resolving and there's no user yet
   if (authLoading) {
       return (
         <div className="flex h-screen items-center justify-center">
@@ -165,17 +144,17 @@ export default function LoginPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {demoAccounts.map(account => (
-                                <TableRow key={account.user}>
-                                    <TableCell className="font-medium">{account.role}</TableCell>
-                                    <TableCell>{account.user}</TableCell>
+                            {mockUsers.map(account => (
+                                <TableRow key={account.profile.employee_id}>
+                                    <TableCell className="font-medium">{account.profile.role}</TableCell>
+                                    <TableCell>{account.profile.employee_id}</TableCell>
                                     <TableCell className="text-right">
                                         <Button 
                                             size="sm"
-                                            onClick={() => handleLogin(account.user, account.pass)}
+                                            onClick={() => handleLogin(account.profile.employee_id)}
                                             disabled={loading !== null}
                                         >
-                                            {loading === account.user ? (
+                                            {loading === account.profile.employee_id ? (
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             ) : (
                                                 <UserCheck className="mr-2 h-4 w-4" />

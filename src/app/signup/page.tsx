@@ -83,7 +83,7 @@ export default function SignupPage() {
         } else {
             toast({
                 title: "Account Created!",
-                description: "Welcome to OptiTalent! Please check your email to verify your account.",
+                description: "Welcome to OptiTalent! You are now logged in.",
             });
             // onAuthStateChange will handle redirecting the user after they are logged in
         }

@@ -37,26 +37,12 @@ import { Input } from '@/components/ui/input';
 import { suggestRoleAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import { useTeam } from '@/hooks/use-team';
 import { TeamCard } from '@/components/team-card';
+import { mockEmployees } from '@/lib/mock-data/employees';
 
-type Employee = {
-    id: string;
-    employee_id: string;
-    full_name: string;
-    email: string;
-    role: string;
-    department: { name: string };
-    status: string;
-    profile_picture_url: string;
-    // from useTeam mock
-    performance?: number;
-    tasksCompleted?: number;
-    tasksPending?: number;
-    avatar?: string;
-};
+type Employee = (typeof mockEmployees)[0];
 
 function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employee: Employee) => void; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -89,8 +75,6 @@ function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employ
   }
 
   const handleSave = () => {
-    // This is a simplified version. In a real app, you'd have a more robust way to handle this,
-    // likely involving a proper user creation flow and not just adding to a local state.
     toast({ title: "Employee Added", description: `This is a mock action. In a real app, this would create a new user.` });
     setIsOpen(false);
   }
@@ -141,67 +125,21 @@ function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employ
 }
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
   const teamMembers = useTeam();
   const isManagerView = user?.role === 'manager' || user?.role === 'team-leader';
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-        if(isManagerView) return; // Manager view uses the useTeam hook instead
-
-        setLoading(true);
-        const { data, error } = await supabase
-            .from('employees')
-            .select(`
-                id,
-                employee_id,
-                full_name,
-                email,
-                role,
-                status,
-                profile_picture_url,
-                department:departments(name)
-            `);
-        
-        if (error) {
-            toast({ title: "Error fetching employees", description: error.message, variant: 'destructive' });
-            setEmployees([]);
-        } else {
-            setEmployees(data as any);
-        }
-        setLoading(false);
-    }
-    fetchEmployees();
-  }, [toast, isManagerView]);
-
-  useEffect(() => {
-      if (isManagerView) {
-          setEmployees(teamMembers);
-          setLoading(false);
-      }
-  }, [teamMembers, isManagerView]);
-
-
   const handleAddEmployee = (newEmployee: Employee) => {
     setEmployees(prev => [...prev, newEmployee]);
   }
 
-  const handleDeactivate = async (employeeId: string) => {
-    const { error } = await supabase
-        .from('employees')
-        .update({ status: 'Inactive' })
-        .eq('id', employeeId);
-
-    if (error) {
-        toast({ title: 'Error', description: 'Could not deactivate employee.', variant: 'destructive' });
-    } else {
-        setEmployees(prev => prev.map(emp => emp.id === employeeId ? {...emp, status: 'Inactive'} : emp));
-        toast({ title: 'Success', description: 'Employee has been deactivated.' });
-    }
+  const handleDeactivate = (employeeId: string) => {
+    setEmployees(prev => prev.map(emp => emp.id === employeeId ? {...emp, status: 'Inactive'} : emp));
+    toast({ title: 'Success', description: 'Employee has been deactivated.' });
   };
 
   const AdminView = () => (
@@ -237,7 +175,7 @@ export default function EmployeesPage() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{employee.department?.name || 'N/A'}</TableCell>
+                <TableCell className="hidden md:table-cell">{employee.department.name || 'N/A'}</TableCell>
                 <TableCell>{employee.role}</TableCell>
                 <TableCell className="hidden md:table-cell">
                   <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
@@ -274,7 +212,7 @@ export default function EmployeesPage() {
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {loading ? (
             <p>Loading team...</p>
-        ) : employees.map((member) => (
+        ) : teamMembers.map((member: any) => (
             <TeamCard key={member.id} member={member} />
         ))}
     </div>
