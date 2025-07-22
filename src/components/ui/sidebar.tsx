@@ -262,7 +262,7 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "mt-auto flex flex-col gap-2 p-4 border-t",
+        "mt-auto flex flex-col gap-2 border-t",
         state === 'collapsed' ? "p-2" : "p-4",
         className
       )}
