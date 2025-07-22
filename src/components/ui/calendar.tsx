@@ -34,17 +34,17 @@ function Calendar({
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex w-full mt-2",
-        head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
+        head_cell: "text-muted-foreground rounded-md w-full justify-center font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
-        cell: "text-center text-sm p-0 relative first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        cell: "text-center text-sm p-0 relative first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 aspect-square",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          "h-full w-full p-0 font-normal aria-selected:opacity-100"
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "text-primary-foreground bg-primary/50 hover:bg-primary/60 hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "text-accent-foreground bg-accent/50",
+          "text-primary-foreground bg-primary/90 hover:bg-primary/90 hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "text-accent-foreground bg-accent",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:

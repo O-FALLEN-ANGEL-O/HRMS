@@ -9,10 +9,7 @@ import { Menu } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -175,10 +172,10 @@ const Sidebar = React.forwardRef<
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
-            className="w-[--sidebar-width] bg-card p-0"
+            className="w-[var(--sidebar-width-mobile)] bg-card p-0"
             style={
               {
-                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+                "--sidebar-width-mobile": SIDEBAR_WIDTH_MOBILE,
               } as React.CSSProperties
             }
             side="left"
@@ -196,7 +193,7 @@ const Sidebar = React.forwardRef<
         ref={ref}
         className={cn(
           "hidden md:flex flex-col h-screen bg-card border-r transition-all duration-300 ease-in-out",
-          state === 'expanded' ? "w-[--sidebar-width]" : "w-[--sidebar-width-icon]",
+          state === 'expanded' ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-icon)]",
           className
         )}
         data-state={state}
@@ -220,7 +217,7 @@ const SidebarTrigger = React.forwardRef<
       ref={ref}
       variant="ghost"
       size="icon"
-      className={cn("h-8 w-8", className)}
+      className={cn(className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -244,7 +241,7 @@ const SidebarHeader = React.forwardRef<
       ref={ref}
       className={cn(
         "flex h-14 items-center border-b",
-        state === 'collapsed' ? "justify-center px-2" : "px-4",
+        state === 'collapsed' ? "justify-center" : "px-4",
         className
       )}
       {...props}
@@ -262,8 +259,8 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "mt-auto flex flex-col gap-2 border-t",
-        state === 'collapsed' ? "p-2" : "p-4",
+        "mt-auto flex flex-col gap-2 border-t p-4",
+        state === 'collapsed' && "p-2 items-center",
         className
       )}
       {...props}
@@ -281,8 +278,8 @@ const SidebarContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden",
-         state === 'collapsed' ? "p-2" : "p-4",
+        "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden p-4",
+        state === 'collapsed' && "p-2",
         className
       )}
       {...props}
@@ -316,7 +313,7 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-primary transition-[width,height,padding] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-accent-foreground data-[state=open]:hover:bg-accent data-[state=open]:hover:text-accent-foreground [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-primary transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-accent-foreground data-[state=open]:hover:bg-accent data-[state=open]:hover:text-accent-foreground [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -365,8 +362,8 @@ const SidebarMenuButton = React.forwardRef<
 
     const buttonContent = (
       <>
-        {Icon && <Icon className="h-5 w-5 shrink-0" />}
-        <span className={cn("truncate", state === 'collapsed' ? 'hidden' : 'inline')}>{children}</span>
+        {Icon && <Icon />}
+        <span className={cn("truncate", state === 'collapsed' ? 'sr-only' : 'inline-block')}>{children}</span>
       </>
     );
 
@@ -376,7 +373,7 @@ const SidebarMenuButton = React.forwardRef<
         data-active={isActive}
         className={cn(
           sidebarMenuButtonVariants({ variant, size }), 
-          state === 'collapsed' && "justify-center !h-10 !w-10 !p-0",
+          state === 'collapsed' && "justify-center",
           className
         )}
         {...props}
