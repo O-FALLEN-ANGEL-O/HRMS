@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
 import { useSidebar } from './ui/sidebar';
 
-export function Logo({ className }: { className?: string }) {
+const LogoComponent = () => {
   const { state } = useSidebar();
   
   const iconVariants = {
@@ -18,7 +18,7 @@ export function Logo({ className }: { className?: string }) {
     }
   }
   return (
-    <div className={cn("inline-flex items-center gap-2 font-headline text-xl font-bold", className)}>
+    <div className={cn("inline-flex items-center gap-2 font-headline text-xl font-bold")}>
         <motion.svg 
             xmlns="http://www.w3.org/2000/svg" 
             width="28" 
@@ -69,3 +69,5 @@ export function Logo({ className }: { className?: string }) {
     </div>
   );
 }
+
+export const Logo = React.memo(LogoComponent);

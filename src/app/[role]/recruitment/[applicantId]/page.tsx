@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Briefcase, FileText, Send, User, MessageSquare, Star, Percent, Type, Clipboard, ShieldAlert, Award, Calendar } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -47,7 +47,7 @@ const MOCK_APPLICANT = {
 
 type Note = typeof MOCK_APPLICANT.interviewerNotes[0];
 
-function NoteCard({ note }: { note: Note }) {
+const NoteCard = memo(function NoteCard({ note }: { note: Note }) {
     return (
         <div className="flex items-start gap-4">
             <Avatar className="h-9 w-9">
@@ -62,9 +62,9 @@ function NoteCard({ note }: { note: Note }) {
             </div>
         </div>
     )
-}
+});
 
-function ScoreCard({ name, score, passing, type }: { name: string, score: number, passing: number, type: 'percent' | 'wpm' }) {
+const ScoreCard = memo(function ScoreCard({ name, score, passing, type }: { name: string, score: number, passing: number, type: 'percent' | 'wpm' }) {
     const isPass = score >= passing;
     const Icon = type === 'wpm' ? Type : Percent;
     return (
@@ -79,7 +79,7 @@ function ScoreCard({ name, score, passing, type }: { name: string, score: number
             <p className="text-xs text-muted-foreground">Passing Score: {passing}{type === 'wpm' ? " WPM" : "%"}</p>
         </div>
     )
-}
+});
 
 export default function ApplicantProfilePage() {
     const params = useParams();
