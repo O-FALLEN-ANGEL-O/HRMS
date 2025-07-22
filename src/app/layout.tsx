@@ -1,8 +1,10 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'OptiTalent HRMS',
@@ -38,7 +40,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
           <Toaster />
         </ThemeProvider>
       </body>

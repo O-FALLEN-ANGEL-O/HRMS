@@ -11,7 +11,7 @@ export default function AppHeader() {
   
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
-      <SidebarTrigger className="sm:hidden" />
+      <SidebarTrigger className="hidden md:flex" />
       <div className="relative ml-auto flex-1 md:grow-0">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
