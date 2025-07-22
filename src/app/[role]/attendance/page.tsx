@@ -188,7 +188,7 @@ export default function AttendancePage() {
         </CardContent>
     </Card>
 
-    <div className="space-y-6">
+    <div className="space-y-6 lg:col-span-1">
         <Card>
         <CardHeader>
             <CardTitle>Current Status</CardTitle>

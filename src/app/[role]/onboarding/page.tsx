@@ -76,7 +76,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="pb-4">
         <h1 className="text-3xl font-bold font-headline">Onboarding</h1>
         <p className="text-muted-foreground">Streamline the new hire experience.</p>

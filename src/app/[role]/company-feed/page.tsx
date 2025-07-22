@@ -153,9 +153,9 @@ export default function CompanyFeedPage() {
         {(role === 'admin' || role === 'hr') && <NewPostDialog onAddPost={handleAddPost} />}
       </div>
 
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="space-y-6">
         {posts.map((post) => (
-          <Card key={post.id}>
+          <Card key={post.id} className="max-w-3xl mx-auto">
             <CardHeader>
               <div className="flex items-center gap-4">
                 <Avatar>

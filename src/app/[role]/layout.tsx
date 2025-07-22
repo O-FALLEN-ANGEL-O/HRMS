@@ -11,16 +11,16 @@ import { useRouter, usePathname } from 'next/navigation';
 import { LoadingLogo } from '@/components/loading-logo';
 
 function AppContent({ children }: { children: React.ReactNode }) {
-    const { state, toggleSidebar } = useSidebar();
+    const { state, isMobile, openMobile, setOpenMobile } = useSidebar();
     const handleContentClick = () => {
-        if (state === 'expanded') {
-            toggleSidebar();
+        if (isMobile && openMobile) {
+            setOpenMobile(false);
         }
     }
     return (
-         <div className="flex-1 flex flex-col" onClick={handleContentClick}>
+         <div className="flex-1 flex flex-col overflow-hidden">
             <AppHeader />
-            <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+            <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto" onClick={handleContentClick}>
                 {children}
             </main>
         </div>
@@ -50,7 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return (
         <SidebarProvider>
-            <div className="flex h-screen overflow-hidden">
+            <div className="flex h-screen bg-muted/40">
                 <AppSidebar />
                 <AppContent>{children}</AppContent>
             </div>

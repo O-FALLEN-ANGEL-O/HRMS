@@ -208,6 +208,11 @@ export default function DashboardPage() {
 
             {/* Middle Column */}
             <div className="lg:col-span-2 space-y-6">
+                <form onSubmit={handleSearch} className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input name="search" placeholder="Search for an employee by name or ID..." className="pl-10 h-12" />
+                </form>
+
                 {searching ? (
                     <Card>
                         <CardContent className="p-6 text-center flex items-center justify-center h-48">
