@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ type AssessmentCardProps = {
   assessment: Assessment;
 };
 
-export function AssessmentCard({ assessment }: AssessmentCardProps) {
+const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
   const params = useParams();
   const role = params.role as string;
   const totalQuestions = assessment.sections.reduce((acc, section) => acc + section.questions.length, 0);
@@ -50,3 +51,6 @@ export function AssessmentCard({ assessment }: AssessmentCardProps) {
     </Card>
   );
 }
+
+AssessmentCardComponent.displayName = 'AssessmentCard';
+export const AssessmentCard = React.memo(AssessmentCardComponent);

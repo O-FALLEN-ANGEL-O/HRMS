@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, CheckCircle, Clock, Video, Mic, ScreenShare, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Video, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TypingTest } from '@/components/typing-test';

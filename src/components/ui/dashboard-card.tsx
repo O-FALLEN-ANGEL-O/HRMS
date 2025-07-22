@@ -16,7 +16,7 @@ interface DashboardCardProps {
   onActionClick?: () => void;
 }
 
-export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value, description, children, onActionClick }: DashboardCardProps) {
+const DashboardCardComponent = ({ title, icon: Icon, actionIcon: ActionIcon, value, description, children, onActionClick }: DashboardCardProps) => {
   
   const cardContent = value !== undefined ? (
     // Stat card variant
@@ -48,3 +48,7 @@ export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value
 
   return cardContent;
 }
+
+DashboardCardComponent.displayName = 'DashboardCard';
+
+export const DashboardCard = React.memo(DashboardCardComponent);

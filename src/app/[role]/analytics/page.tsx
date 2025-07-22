@@ -3,19 +3,38 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
-import ManagerDashboard from '@/components/dashboards/manager-dashboard';
-import RecruiterDashboard from '@/components/dashboards/recruiter-dashboard';
-import EmployeeDashboard from '@/components/dashboards/employee-dashboard';
-import QaAnalystDashboard from '@/components/dashboards/qa-analyst-dashboard';
-import ProcessManagerDashboard from '@/components/dashboards/process-manager-dashboard';
-import TeamLeaderDashboard from '@/components/dashboards/team-leader-dashboard';
-import MarketingDashboard from '@/components/dashboards/marketing-dashboard';
-import FinanceDashboard from '@/components/dashboards/finance-dashboard';
-import ItManagerDashboard from '@/components/dashboards/it-manager-dashboard';
-import OperationsDashboard from '@/components/dashboards/operations-dashboard';
-import { Logo } from '@/components/logo';
+const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'), { loading: () => <DashboardSkeleton /> });
+const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), { loading: () => <DashboardSkeleton /> });
+const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'), { loading: () => <DashboardSkeleton /> });
+const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'), { loading: () => <DashboardSkeleton /> });
+const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'), { loading: () => <DashboardSkeleton /> });
+const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'), { loading: () => <DashboardSkeleton /> });
+const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'), { loading: () => <DashboardSkeleton /> });
+const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'), { loading: () => <DashboardSkeleton /> });
+const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'), { loading: () => <DashboardSkeleton /> });
+const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'), { loading: () => <DashboardSkeleton /> });
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Skeleton className="h-28" />
+        <Skeleton className="h-28" />
+        <Skeleton className="h-28" />
+        <Skeleton className="h-28" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Skeleton className="lg:col-span-2 h-96" />
+        <Skeleton className="h-96" />
+      </div>
+    </div>
+  )
+}
+
 
 export default function AnalyticsPage() {
   const params = useParams();

@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,7 @@ const getStatusIndicator = (status: string) => {
     }
 };
 
-export function TeamCard({ member }: { member: Member }) {
+const TeamCardComponent = ({ member }: { member: Member }) => {
     const { toast } = useToast();
     const router = useRouter();
     const params = useParams();
@@ -88,3 +89,7 @@ export function TeamCard({ member }: { member: Member }) {
         </Card>
     );
 }
+
+TeamCardComponent.displayName = 'TeamCard';
+
+export const TeamCard = React.memo(TeamCardComponent);
