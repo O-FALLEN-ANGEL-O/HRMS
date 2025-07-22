@@ -139,7 +139,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "flex min-h-screen",
+              "flex h-screen",
               className
             )}
             ref={ref}
@@ -363,7 +363,7 @@ const SidebarMenuButton = React.forwardRef<
     const buttonContent = (
       <>
         {Icon && <Icon />}
-        <span className={cn("truncate", state === 'collapsed' ? 'sr-only' : 'inline-block')}>{children}</span>
+        {state === 'expanded' && <span>{children}</span>}
       </>
     );
 
@@ -411,3 +411,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
