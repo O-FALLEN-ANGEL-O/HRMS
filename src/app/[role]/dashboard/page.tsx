@@ -78,19 +78,20 @@ export default function DashboardPage() {
     dayOff: [subDays(today, 5)]
   };
 
-  useEffect(() => {
-    const searchEmployee = async () => {
-        if (!searchTerm) {
-            setSearchedEmployee(null);
-            return;
-        }
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const search = formData.get('search') as string;
+    if (!search) {
+        setSearchedEmployee(null);
+        return;
+    }
 
-        setSearching(true);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-
+    setSearching(true);
+    setTimeout(() => { // Simulate network delay
         const result = mockEmployees.find(e => 
-            e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            e.employee_id.toLowerCase() === searchTerm.toLowerCase()
+            e.full_name.toLowerCase().includes(search.toLowerCase()) ||
+            e.employee_id.toLowerCase() === search.toLowerCase()
         );
 
         if (result) {
@@ -99,22 +100,13 @@ export default function DashboardPage() {
             setSearchedEmployee(undefined); // Use undefined to signify not found
             toast({
                 title: "Employee Not Found",
-                description: `No employee found with the name or ID "${searchTerm}".`,
+                description: `No employee found with the name or ID "${search}".`,
                 variant: "destructive"
             });
         }
         setSearching(false);
-    }
-    
-    const handler = setTimeout(() => {
-        searchEmployee();
     }, 500);
-
-    return () => {
-        clearTimeout(handler);
-    }
-    
-  }, [searchTerm, toast]);
+  }
 
   const handleQuickAction = (label: string) => {
     toast({
@@ -380,5 +372,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-  
