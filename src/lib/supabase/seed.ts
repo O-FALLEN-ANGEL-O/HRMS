@@ -79,6 +79,7 @@ async function seedData() {
               email: userData.email,
               password: userData.password,
               email_confirm: true,
+              user_metadata: { full_name: userData.full_name },
               app_metadata: { role: userData.role }
           });
           if (error) { console.error(`Error creating auth user ${userData.email}:`, error); continue; }
@@ -121,65 +122,6 @@ async function seedData() {
     }
     console.log(`  - ✅ Managers assigned.`);
   }
-
-
-  // 3. Job Openings
-  const { data: openings, error: openingError } = await supabase.from('job_openings').upsert([
-    { title: 'Senior Frontend Developer', department_id: departments.find(d=>d.name==='Engineering')?.id, company_logo: generateRealisticCompanyLogo() },
-    { title: 'Product Manager', department_id: departments.find(d=>d.name==='Product')?.id, company_logo: generateRealisticCompanyLogo() },
-  ], { onConflict: 'title' }).select();
-  if(openingError) { console.error("Error seeding job openings", openingError) }
-  else { console.log(`  - ✅ ${openings?.length || 0} job openings seeded.`); }
-
-  // 4. Applicants
-  if (openings && openings.length > 0) {
-    const { count } = await supabase.from('applicants').select('*', { count: 'exact', head: true });
-    if(count === 0) {
-        const applicants = openings.flatMap(opening => 
-            Array.from({length: 5}, () => {
-                const name = faker.person.fullName();
-                return {
-                    full_name: name,
-                    email: faker.internet.email(),
-                    phone_number: faker.phone.number(),
-                    status: faker.helpers.arrayElement(['Applied', 'Screening', 'Interview', 'Offer']),
-                    job_opening_id: opening.id,
-                    profile_picture: generateProfilePicture(name),
-                }
-            })
-        );
-        const { error: appError } = await supabase.from('applicants').insert(applicants);
-        if (!appError) console.log(`  - ✅ ${applicants.length} applicants seeded.`);
-    }
-  }
-
-  // 5. Company Posts
-   if (seededEmployees && seededEmployees.length > 0) {
-    const { count } = await supabase.from('company_posts').select('*', { count: 'exact', head: true });
-    if (count === 0) {
-        const { error: postError } = await supabase.from('company_posts').insert(
-        Array.from({length: 5}, () => ({
-            author_id: faker.helpers.arrayElement(seededEmployees).id,
-            title: faker.company.catchPhrase(),
-            content: faker.lorem.paragraphs(3),
-            image_url: `https://placehold.co/800x400.png`,
-        }))
-        );
-        if (!postError) console.log(`  - ✅ 5 Company posts seeded.`);
-    }
-   }
-  
-   // 6. Leave Balances and Requests
-  if (seededEmployees && seededEmployees.length > 0) {
-    for(const employee of seededEmployees) {
-      await supabase.from('leave_balances').upsert([
-          { employee_id: employee.id, leave_type: 'Sick Leave', balance: 10 },
-          { employee_id: employee.id, leave_type: 'Casual Leave', balance: 5 },
-      ], { onConflict: 'employee_id, leave_type' });
-    }
-    console.log(`  - ✅ Leave balances seeded for all employees.`);
-  }
-
 }
 
 async function main() {
@@ -187,7 +129,7 @@ async function main() {
   await seedData();
   console.log('🎉 Database seeding complete!');
   console.log('---');
-  console.log('Sample Logins:');
+  console.log('Sample Logins (Employee ID / Password):');
   const adminUser = usersToCreate.find(u => u.role === 'admin');
   const managerUser = usersToCreate.find(u => u.role === 'manager');
   const employeeUser = usersToCreate.find(u => u.role === 'employee');
@@ -200,5 +142,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
-    

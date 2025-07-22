@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
-    if (!supabase || !supabase.auth) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
         setUser(MOCK_USER);
         setLoading(false);
         return;
@@ -154,7 +154,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (authError) return { user: null, error: authError };
     if (!authData.user) throw new Error("Sign up successful, but no user data returned.");
 
-    // Generate a simple employee_id
     const employee_id = `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`;
     
     const { error: profileError } = await supabase
@@ -168,10 +167,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         status: 'Active',
         role: 'employee',
         department_id: null,
-        emergency_contact: JSON.stringify({}),
-        skills: JSON.stringify([]),
-        phone_number: '',
-        profile_picture_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + ' ' + lastName)}&background=random&color=fff&size=400`
       });
 
     if (profileError) {

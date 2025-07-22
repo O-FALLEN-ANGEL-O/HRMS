@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { createClient } from "@supabase/supabase-js";
@@ -20,11 +19,9 @@ export async function getEmailForEmployeeId(employeeId: string): Promise<{ email
       .single();
 
     if (error || !employee) {
-      console.error("Employee lookup failed:", error);
+      console.error(`Employee lookup failed for ID ${employeeId}:`, error);
       return { email: null };
     }
     
     return { email: employee.email };
 }
-
-    
