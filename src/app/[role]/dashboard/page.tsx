@@ -15,6 +15,7 @@ import { EmployeeDetailsCard } from '@/components/employee-details-card';
 import { motion } from 'framer-motion';
 import { mockEmployees } from '@/lib/mock-data/employees';
 import { addDays, subDays } from 'date-fns';
+import { Input } from '@/components/ui/input';
 
 const quickActions = [
     { label: 'Post', icon: File },
