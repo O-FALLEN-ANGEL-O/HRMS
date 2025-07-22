@@ -43,7 +43,7 @@ export const mockUsers: User[] = [
         role: 'hr',
         profile: {
             id: 'profile-002',
-            full_name: 'HR User',
+            full_name: 'Jackson Lee',
             department: { name: 'Human Resources' },
             department_id: 'd-002',
             job_title: 'HR Manager',
@@ -51,7 +51,7 @@ export const mockUsers: User[] = [
             employee_id: 'PEP0002',
             phone_number: '111-222-3334',
             status: 'Active',
-            profile_picture_url: `https://ui-avatars.com/api/?name=HR+User&background=random`,
+            profile_picture_url: `https://ui-avatars.com/api/?name=Jackson+Lee&background=random`,
         }
     },
     { 
@@ -88,6 +88,125 @@ export const mockUsers: User[] = [
             profile_picture_url: `https://ui-avatars.com/api/?name=Sofia+Davis&background=random`,
         }
     },
+    {
+        id: 'user-005',
+        email: 'qa.analyst@optitalent.com',
+        role: 'qa-analyst',
+        profile: {
+            id: 'profile-005',
+            full_name: 'Ben Carter',
+            department: { name: 'Quality Assurance' },
+            department_id: 'd-003',
+            job_title: 'QA Analyst',
+            role: 'qa-analyst',
+            employee_id: 'PEP0005',
+            phone_number: '111-222-3337',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Ben+Carter&background=random`,
+        }
+    },
+    {
+        id: 'user-006',
+        email: 'process.manager@optitalent.com',
+        role: 'process-manager',
+        profile: {
+            id: 'profile-006',
+            full_name: 'Chloe Garcia',
+            department: { name: 'Process Excellence' },
+            department_id: 'd-004',
+            job_title: 'Process Manager',
+            role: 'process-manager',
+            employee_id: 'PEP0006',
+            phone_number: '111-222-3338',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Chloe+Garcia&background=random`,
+        }
+    },
+    {
+        id: 'user-007',
+        email: 'team.leader@optitalent.com',
+        role: 'team-leader',
+        profile: {
+            id: 'profile-007',
+            full_name: 'David Kim',
+            department: { name: 'Customer Support' },
+            department_id: 'd-005',
+            job_title: 'Team Leader',
+            role: 'team-leader',
+            employee_id: 'PEP0007',
+            phone_number: '111-222-3339',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=David+Kim&background=random`,
+        }
+    },
+    {
+        id: 'user-008',
+        email: 'marketing@optitalent.com',
+        role: 'marketing',
+        profile: {
+            id: 'profile-008',
+            full_name: 'Emily White',
+            department: { name: 'Marketing' },
+            department_id: 'd-006',
+            job_title: 'Marketing Head',
+            role: 'marketing',
+            employee_id: 'PEP0008',
+            phone_number: '111-222-3340',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Emily+White&background=random`,
+        }
+    },
+    {
+        id: 'user-009',
+        email: 'finance@optitalent.com',
+        role: 'finance',
+        profile: {
+            id: 'profile-009',
+            full_name: 'Frank Miller',
+            department: { name: 'Finance' },
+            department_id: 'd-007',
+            job_title: 'Finance Manager',
+            role: 'finance',
+            employee_id: 'PEP0009',
+            phone_number: '111-222-3341',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Frank+Miller&background=random`,
+        }
+    },
+    {
+        id: 'user-010',
+        email: 'it.manager@optitalent.com',
+        role: 'it-manager',
+        profile: {
+            id: 'profile-010',
+            full_name: 'Grace Hall',
+            department: { name: 'IT' },
+            department_id: 'd-008',
+            job_title: 'IT Manager',
+            role: 'it-manager',
+            employee_id: 'PEP0010',
+            phone_number: '111-222-3342',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Grace+Hall&background=random`,
+        }
+    },
+    {
+        id: 'user-011',
+        email: 'operations.manager@optitalent.com',
+        role: 'operations-manager',
+        profile: {
+            id: 'profile-011',
+            full_name: 'Henry Turner',
+            department: { name: 'Operations' },
+            department_id: 'd-009',
+            job_title: 'Operations Manager',
+            role: 'operations-manager',
+            employee_id: 'PEP0011',
+            phone_number: '111-222-3343',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Henry+Turner&background=random`,
+        }
+    },
     { 
         id: 'user-012',
         email: 'employee@optitalent.com',
@@ -122,8 +241,24 @@ export const mockUsers: User[] = [
             profile_picture_url: `https://ui-avatars.com/api/?name=Rohan+Verma&background=random`,
         }
     },
+    { 
+        id: 'user-014',
+        email: 'employee3@optitalent.com',
+        role: 'employee',
+        profile: {
+            id: 'profile-014',
+            full_name: 'Priya Mehta',
+            department: { name: 'Engineering' },
+            department_id: 'd-001',
+            job_title: 'QA Engineer',
+            role: 'employee',
+            employee_id: 'PEP0014',
+            phone_number: '111-222-3346',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Priya+Mehta&background=random`,
+        }
+    },
 ];
 
 // For list views
 export const mockEmployees = mockUsers.map(u => u.profile);
-
