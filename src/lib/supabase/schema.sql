@@ -1,148 +1,126 @@
--- Drop existing tables and types to start fresh
-DROP TABLE IF EXISTS "employees", "departments", "leave_requests", "leave_balances", "job_openings", "applicants", "company_posts" CASCADE;
-DROP TYPE IF EXISTS "user_role", "leave_type", "leave_status", "applicant_status";
+-- Drop existing tables in reverse order of dependency to avoid foreign key conflicts.
+DROP TABLE IF EXISTS "public"."leave_requests";
+DROP TABLE IF EXISTS "public"."leave_balances";
+DROP TABLE IF EXISTS "public"."company_posts";
+DROP TABLE IF EXISTS "public"."applicants";
+DROP TABLE IF EXISTS "public"."job_openings";
+DROP TABLE IF EXISTS "public"."employees";
+DROP TABLE IF EXISTS "public"."departments";
 
--- Create custom types (enums)
-CREATE TYPE "user_role" AS ENUM (
-  'admin',
-  'employee',
-  'hr',
-  'manager',
-  'recruiter',
-  'qa-analyst',
-  'process-manager',
-  'team-leader',
-  'marketing',
-  'finance',
-  'it-manager',
-  'operations-manager'
+-- Create Departments Table
+-- Stores organizational departments.
+CREATE TABLE IF NOT EXISTS "public"."departments" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "name" text NOT NULL,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "departments_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "departments_name_key" UNIQUE ("name")
 );
 
-CREATE TYPE "leave_type" AS ENUM ('Sick Leave', 'Casual Leave', 'Paid Time Off', 'Work From Home');
-
-CREATE TYPE "leave_status" AS ENUM ('Pending', 'Approved', 'Rejected');
-
-CREATE TYPE "applicant_status" AS ENUM ('Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected');
-
--- Create tables
-CREATE TABLE "departments" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "name" text UNIQUE NOT NULL,
-  "created_at" timestamptz DEFAULT now()
+-- Create Employees Table
+-- Stores employee profile data, linked to auth users.
+CREATE TABLE IF NOT EXISTS "public"."employees" (
+    "id" uuid NOT NULL,
+    "employee_id" text NOT NULL,
+    "full_name" text,
+    "email" text NOT NULL,
+    "job_title" text,
+    "department_id" uuid,
+    "manager_id" uuid,
+    "hire_date" timestamp with time zone,
+    "status" text,
+    "profile_picture_url" text,
+    "phone_number" text,
+    "role" text,
+    "emergency_contact" jsonb,
+    "skills" jsonb,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "employees_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "employees_email_key" UNIQUE ("email"),
+    CONSTRAINT "employees_employee_id_key" UNIQUE ("employee_id"),
+    CONSTRAINT "employees_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users" ("id") ON DELETE CASCADE,
+    CONSTRAINT "employees_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "public"."departments" ("id"),
+    CONSTRAINT "employees_manager_id_fkey" FOREIGN KEY ("manager_id") REFERENCES "public"."employees" ("id")
 );
 
-CREATE TABLE "employees" (
-  "id" uuid PRIMARY KEY,
-  "employee_id" text UNIQUE NOT NULL,
-  "full_name" text NOT NULL,
-  "email" text UNIQUE NOT NULL,
-  "phone_number" text,
-  "job_title" text,
-  "department_id" uuid REFERENCES "departments"("id"),
-  "manager_id" uuid REFERENCES "employees"("id"),
-  "hire_date" date,
-  "role" user_role NOT NULL,
-  "status" text DEFAULT 'Active',
-  "profile_picture_url" text,
-  "emergency_contact" jsonb,
-  "skills" jsonb,
-  "created_at" timestamptz DEFAULT now(),
-  "updated_at" timestamptz DEFAULT now(),
-  FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE
-);
-
-CREATE TABLE "job_openings" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "title" text UNIQUE NOT NULL,
-  "description" text,
-  "department_id" uuid REFERENCES "departments"("id"),
-  "status" text DEFAULT 'Open',
-  "company_logo" text,
-  "created_at" timestamptz DEFAULT now()
-);
-
-CREATE TABLE "applicants" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "full_name" text NOT NULL,
-  "email" text NOT NULL,
-  "phone_number" text,
-  "resume_url" text,
-  "profile_picture" text,
-  "job_opening_id" uuid REFERENCES "job_openings"("id"),
-  "status" applicant_status DEFAULT 'Applied',
-  "notes" text,
-  "created_at" timestamptz DEFAULT now()
-);
-
-CREATE TABLE "leave_balances" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "employee_id" uuid NOT NULL REFERENCES "employees"("id"),
-  "leave_type" leave_type NOT NULL,
-  "balance" int NOT NULL,
-  UNIQUE("employee_id", "leave_type")
-);
-
-CREATE TABLE "leave_requests" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "employee_id" uuid NOT NULL REFERENCES "employees"("id"),
-  "leave_type" leave_type NOT NULL,
-  "start_date" date NOT NULL,
-  "end_date" date NOT NULL,
-  "reason" text,
-  "status" leave_status DEFAULT 'Pending',
-  "created_at" timestamptz DEFAULT now()
-);
-
-CREATE TABLE "company_posts" (
-    "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "author_id" uuid NOT NULL REFERENCES "employees"("id"),
+-- Create Job Openings Table
+-- Stores active job listings.
+CREATE TABLE IF NOT EXISTS "public"."job_openings" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "title" text NOT NULL,
+    "department_id" uuid,
+    "company_logo" text,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "job_openings_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "job_openings_title_key" UNIQUE ("title"),
+    CONSTRAINT "job_openings_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "public"."departments" ("id")
+);
+
+-- Create Applicants Table
+-- Stores information about candidates who applied for jobs.
+CREATE TABLE IF NOT EXISTS "public"."applicants" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "full_name" text,
+    "email" text,
+    "phone_number" text,
+    "status" text,
+    "job_opening_id" uuid,
+    "profile_picture" text,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "applicants_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "applicants_job_opening_id_fkey" FOREIGN KEY ("job_opening_id") REFERENCES "public"."job_openings" ("id")
+);
+
+-- Create Company Posts Table
+-- For the internal company feed.
+CREATE TABLE IF NOT EXISTS "public"."company_posts" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "author_id" uuid NOT NULL,
+    "title" text,
     "content" text,
     "image_url" text,
-    "created_at" timestamptz DEFAULT now()
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "company_posts_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "company_posts_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "public"."employees" ("id")
 );
 
--- RLS Policies
-ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read access" ON departments FOR SELECT USING (true);
-
-ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow users to see their own profile" ON employees FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Allow users to update their own profile" ON employees FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Allow HR/Admins to see all profiles" ON employees FOR SELECT USING (
-  (SELECT role FROM employees WHERE id = auth.uid()) IN ('admin', 'hr')
-);
-CREATE POLICY "Allow Managers to see their team" ON employees FOR SELECT USING (
-    department_id = (SELECT department_id FROM employees WHERE id = auth.uid())
-);
-
-ALTER TABLE job_openings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read for job openings" ON job_openings FOR SELECT USING (true);
-CREATE POLICY "Allow admin/hr/recruiter to manage openings" ON job_openings FOR ALL USING (
-    (SELECT role FROM employees WHERE id = auth.uid()) IN ('admin', 'hr', 'recruiter')
+-- Create Leave Balances Table
+-- Tracks available leave days for each employee.
+CREATE TABLE IF NOT EXISTS "public"."leave_balances" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "employee_id" uuid NOT NULL,
+    "leave_type" text NOT NULL,
+    "balance" integer NOT NULL,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "leave_balances_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "leave_balances_employee_id_leave_type_key" UNIQUE ("employee_id", "leave_type"),
+    CONSTRAINT "leave_balances_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees" ("id") ON DELETE CASCADE
 );
 
-ALTER TABLE applicants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow admin/hr/recruiter to manage applicants" ON applicants FOR ALL USING (
-    (SELECT role FROM employees WHERE id = auth.uid()) IN ('admin', 'hr', 'recruiter')
+-- Create Leave Requests Table
+-- Tracks all leave requests made by employees.
+CREATE TABLE IF NOT EXISTS "public"."leave_requests" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "employee_id" uuid NOT NULL,
+    "leave_type" text NOT NULL,
+    "start_date" date NOT NULL,
+    "end_date" date NOT NULL,
+    "days" integer NOT NULL,
+    "reason" text,
+    "status" text NOT NULL DEFAULT 'Pending'::text,
+    "approved_by" uuid,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT "leave_requests_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "leave_requests_approved_by_fkey" FOREIGN KEY ("approved_by") REFERENCES "public"."employees" ("id"),
+    CONSTRAINT "leave_requests_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees" ("id") ON DELETE CASCADE
 );
 
-ALTER TABLE leave_balances ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view their own leave balances" ON leave_balances FOR SELECT USING (auth.uid() = employee_id);
-CREATE POLICY "Managers/HR can view team leave balances" ON leave_balances FOR SELECT USING (
-    (SELECT role FROM employees WHERE id = auth.uid()) IN ('admin', 'hr', 'manager') AND
-    employee_id IN (SELECT id FROM employees WHERE department_id = (SELECT department_id FROM employees WHERE id = auth.uid()))
-);
-
-ALTER TABLE leave_requests ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can manage their own leave requests" ON leave_requests FOR ALL USING (auth.uid() = employee_id);
-CREATE POLICY "Managers/HR can manage team leave requests" ON leave_requests FOR ALL USING (
-    (SELECT role FROM employees WHERE id = auth.uid()) IN ('admin', 'hr', 'manager') AND
-    employee_id IN (SELECT id FROM employees WHERE department_id = (SELECT department_id FROM employees WHERE id = auth.uid()))
-);
-
-ALTER TABLE company_posts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow logged-in users to see posts" ON company_posts FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow admins/hr to create posts" ON company_posts FOR INSERT WITH CHECK (
-    (SELECT role FROM employees WHERE id = auth.uid()) IN ('admin', 'hr')
-);
+-- Add comments to tables and columns for better understanding in Supabase UI
+COMMENT ON TABLE "public"."employees" IS 'Stores public-facing profile information for users.';
+COMMENT ON TABLE "public"."departments" IS 'Stores organizational departments like Engineering, HR, etc.';
+COMMENT ON TABLE "public"."job_openings" IS 'Stores details about currently open job positions.';
+COMMENT ON TABLE "public"."applicants" IS 'Stores information about candidates who have applied for jobs.';
+COMMENT ON TABLE "public"."company_posts" IS 'Stores posts for the internal company social feed.';
+COMMENT ON TABLE "public"."leave_balances" IS 'Tracks the remaining leave balance for each employee by leave type.';
+COMMENT ON TABLE "public"."leave_requests" IS 'Logs all leave requests made by employees.';
