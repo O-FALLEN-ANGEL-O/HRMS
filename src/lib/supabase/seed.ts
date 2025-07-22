@@ -17,22 +17,22 @@ const supabase = createClient(
 );
 
 const usersToCreate = [
-    { email: 'admin@optitalent.com', password: 'password', role: 'admin', departmentName: 'Administration', full_name: 'Admin User', employee_id: 'PEP0001' },
-    { email: 'hr@optitalent.com', password: 'password', role: 'hr', departmentName: 'Human Resources', full_name: 'HR User', employee_id: 'PEP0002' },
-    { email: 'manager@optitalent.com', password: 'password', role: 'manager', departmentName: 'Engineering', full_name: 'Isabella Nguyen', employee_id: 'PEP0003' },
-    { email: 'recruiter@optitalent.com', password: 'password', role: 'recruiter', departmentName: 'Human Resources', full_name: 'Sofia Davis', employee_id: 'PEP0004' },
-    { email: 'qa-analyst@optitalent.com', password: 'password', role: 'qa-analyst', departmentName: 'Quality', full_name: 'QA Analyst User', employee_id: 'PEP0005' },
-    { email: 'process-manager@optitalent.com', password: 'password', role: 'process-manager', departmentName: 'Operations', full_name: 'Process Manager User', employee_id: 'PEP0006' },
-    { email: 'team-leader@optitalent.com', password: 'password', role: 'team-leader', departmentName: 'Support', full_name: 'Liam Smith', employee_id: 'PEP0007' },
-    { email: 'marketing@optitalent.com', password: 'password', role: 'marketing', departmentName: 'Marketing', full_name: 'Marketing Head', employee_id: 'PEP0008' },
-    { email: 'finance@optitalent.com', password: 'password', role: 'finance', departmentName: 'Finance', full_name: 'Emma Jones', employee_id: 'PEP0009' },
-    { email: 'it-manager@optitalent.com', password: 'password', role: 'it-manager', departmentName: 'IT', full_name: 'Mason Rodriguez', employee_id: 'PEP0010' },
-    { email: 'operations-manager@optitalent.com', password: 'password', role: 'operations-manager', departmentName: 'Operations', full_name: 'Operations Manager User', employee_id: 'PEP0011' },
-    { email: 'employee@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Engineering', full_name: 'Anika Sharma', employee_id: 'PEP0012' },
-    { email: 'employee2@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Engineering', full_name: 'Rohan Verma', employee_id: 'PEP0013' },
-    { email: 'employee3@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', full_name: 'Priya Mehta', employee_id: 'PEP0014' },
-    { email: 'employee4@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', full_name: 'Ava Wilson', employee_id: 'PEP0015' },
-    { email: 'employee5@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', full_name: 'Noah Brown', employee_id: 'PEP0016' },
+    { email: 'admin@optitalent.com', password: 'password', role: 'admin', departmentName: 'Administration', name: 'Admin User', emp_id: 'PEP0001' },
+    { email: 'hr@optitalent.com', password: 'password', role: 'hr', departmentName: 'Human Resources', name: 'HR User', emp_id: 'PEP0002' },
+    { email: 'manager@optitalent.com', password: 'password', role: 'manager', departmentName: 'Engineering', name: 'Isabella Nguyen', emp_id: 'PEP0003' },
+    { email: 'recruiter@optitalent.com', password: 'password', role: 'recruiter', departmentName: 'Human Resources', name: 'Sofia Davis', emp_id: 'PEP0004' },
+    { email: 'qa-analyst@optitalent.com', password: 'password', role: 'qa-analyst', departmentName: 'Quality', name: 'QA Analyst User', emp_id: 'PEP0005' },
+    { email: 'process-manager@optitalent.com', password: 'password', role: 'process-manager', departmentName: 'Operations', name: 'Process Manager User', emp_id: 'PEP0006' },
+    { email: 'team-leader@optitalent.com', password: 'password', role: 'team-leader', departmentName: 'Support', name: 'Liam Smith', emp_id: 'PEP0007' },
+    { email: 'marketing@optitalent.com', password: 'password', role: 'marketing', departmentName: 'Marketing', name: 'Marketing Head', emp_id: 'PEP0008' },
+    { email: 'finance@optitalent.com', password: 'password', role: 'finance', departmentName: 'Finance', name: 'Emma Jones', emp_id: 'PEP0009' },
+    { email: 'it-manager@optitalent.com', password: 'password', role: 'it-manager', departmentName: 'IT', name: 'Mason Rodriguez', emp_id: 'PEP0010' },
+    { email: 'operations-manager@optitalent.com', password: 'password', role: 'operations-manager', departmentName: 'Operations', name: 'Operations Manager User', emp_id: 'PEP0011' },
+    { email: 'employee@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Engineering', name: 'Anika Sharma', emp_id: 'PEP0012' },
+    { email: 'employee2@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Engineering', name: 'Rohan Verma', emp_id: 'PEP0013' },
+    { email: 'employee3@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', name: 'Priya Mehta', emp_id: 'PEP0014' },
+    { email: 'employee4@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', name: 'Ava Wilson', emp_id: 'PEP0015' },
+    { email: 'employee5@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', name: 'Noah Brown', emp_id: 'PEP0016' },
 ];
 
 const rolesToSeed = [
@@ -49,11 +49,6 @@ const rolesToSeed = [
     { name: 'it-manager', description: 'Manages IT infrastructure' },
     { name: 'operations-manager', description: 'Manages core business operations' },
 ];
-
-
-function generateProfilePicture(name: string) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=400`;
-}
 
 async function seedData() {
   console.log('🌱 Seeding data...');
@@ -93,7 +88,7 @@ async function seedData() {
               email: userData.email,
               password: userData.password,
               email_confirm: true,
-              user_metadata: { full_name: userData.full_name },
+              user_metadata: { name: userData.name },
           });
           if (error) { console.error(`Error creating auth user ${userData.email}:`, error); continue; }
           authUser = data.user;
@@ -102,16 +97,14 @@ async function seedData() {
       const department = departments.find(d => d.name === userData.departmentName);
       const employeeData = {
           id: authUser.id,
-          employee_id: userData.employee_id,
-          full_name: userData.full_name,
+          emp_id: userData.emp_id,
+          name: userData.name,
           email: userData.email,
-          job_title: faker.person.jobTitle(),
-          department_id: department?.id,
-          hire_date: faker.date.past({ years: 5 }),
+          role: userData.role,
+          department: department?.name,
+          password: authUser.encrypted_password, // This is hashed, not for login
+          joined_on: faker.date.past({ years: 5 }),
           status: 'active',
-          profile_picture_url: generateProfilePicture(userData.full_name),
-          phone_number: faker.phone.number(),
-          role: userData.role
       };
       
       const { error: empError } = await supabase.from('employees').upsert(employeeData, { onConflict: 'id' });
@@ -120,16 +113,17 @@ async function seedData() {
   }
   console.log(`  - ✅ ${seededCount} employees seeded.`);
   
-  const { data: seededEmployees } = await supabase.from('employees').select('id, role, department_id');
+  const { data: seededEmployees } = await supabase.from('employees').select('id, role, department');
   
   // Assign Managers
   if (seededEmployees) {
     const managers = seededEmployees.filter(e => e.role === 'manager');
     for (const emp of seededEmployees) {
         if (emp.role !== 'manager' && emp.role !== 'admin') {
-            const managerInDept = managers.find(m => m.department_id === emp.department_id);
+            const managerInDept = managers.find(m => m.department === emp.department);
             if(managerInDept) {
-                await supabase.from('employees').update({ manager_id: managerInDept.id }).eq('id', emp.id);
+                // This part of the logic may need refinement based on final schema
+                // For now, we'll skip explicit manager assignment in seed
             }
         }
     }
@@ -146,9 +140,9 @@ async function main() {
   const adminUser = usersToCreate.find(u => u.role === 'admin');
   const managerUser = usersToCreate.find(u => u.role === 'manager');
   const employeeUser = usersToCreate.find(u => u.role === 'employee');
-  if(adminUser) console.log(`Admin: ${adminUser.employee_id} / ${adminUser.password}`);
-  if(managerUser) console.log(`Manager: ${managerUser.employee_id} / ${managerUser.password}`);
-  if(employeeUser) console.log(`Employee: ${employeeUser.employee_id} / ${employeeUser.password}`);
+  if(adminUser) console.log(`Admin: ${adminUser.emp_id} / ${adminUser.password}`);
+  if(managerUser) console.log(`Manager: ${managerUser.emp_id} / ${managerUser.password}`);
+  if(employeeUser) console.log(`Employee: ${employeeUser.emp_id} / ${employeeUser.password}`);
 }
 
 main().catch((e) => {
