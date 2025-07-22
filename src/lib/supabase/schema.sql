@@ -1,175 +1,110 @@
+-- Drop all tables with cascade to handle dependencies
+DROP TABLE IF EXISTS "public"."assessment_answers" CASCADE;
+DROP TABLE IF EXISTS "public"."assessment_questions" CASCADE;
+DROP TABLE IF EXISTS "public"."assessment_results" CASCADE;
+DROP TABLE IF EXISTS "public"."assessments" CASCADE;
+DROP TABLE IF EXISTS "public"."assessment_sections" CASCADE;
+DROP TABLE IF EXISTS "public"."company_posts" CASCADE;
+DROP TABLE IF EXISTS "public"."documents" CASCADE;
+DROP TABLE IF EXISTS "public"."leave_balances" CASCADE;
+DROP TABLE IF EXISTS "public"."leave_requests" CASCADE;
+DROP TABLE IF EXISTS "public"."notifications" CASCADE;
+DROP TABLE IF EXISTS "public"."employees" CASCADE;
+DROP TABLE IF EXISTS "public"."departments" CASCADE;
+DROP TABLE IF EXISTS "public"."roles" CASCADE;
 
--- Drop existing tables with CASCADE to handle dependencies
-DROP TABLE IF EXISTS public.company_posts CASCADE;
-DROP TABLE IF EXISTS public.leave_balances CASCADE;
-DROP TABLE IF EXISTS public.leave_requests CASCADE;
-DROP TABLE IF EXISTS public.applicants CASCADE;
-DROP TABLE IF EXISTS public.job_openings CASCADE;
-DROP TABLE IF EXISTS public.employees CASCADE;
-DROP TABLE IF EXISTS public.departments CASCADE;
-DROP TABLE IF EXISTS public.assessment_answers CASCADE;
-DROP TABLE IF EXISTS public.assessment_questions CASCADE;
-DROP TABLE IF EXISTS public.assessment_sections CASCADE;
-DROP TABLE IF EXISTS public.assessments CASCADE;
-DROP TABLE IF EXISTS public.helpdesk_tickets CASCADE;
-DROP TABLE IF EXISTS public.helpdesk_messages CASCADE;
-DROP TABLE IF EXISTS public.attendance_log CASCADE;
-
--- Recreate tables
-
--- Departments Table
-CREATE TABLE IF NOT EXISTS public.departments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) UNIQUE NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Create Roles Table
+CREATE TABLE IF NOT EXISTS "public"."roles" (
+    "name" TEXT PRIMARY KEY,
+    "description" TEXT,
+    "permissions" JSONB
 );
+COMMENT ON TABLE "public"."roles" IS 'Defines user roles and their associated permissions.';
 
--- Employees Table
-CREATE TABLE IF NOT EXISTS public.employees (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  employee_id VARCHAR(50) UNIQUE NOT NULL,
-  full_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  phone_number VARCHAR(50),
-  job_title VARCHAR(255),
-  department_id UUID REFERENCES public.departments(id),
-  manager_id UUID REFERENCES public.employees(id),
-  hire_date DATE,
-  status VARCHAR(50) DEFAULT 'Active',
-  role VARCHAR(50) NOT NULL,
-  profile_picture_url TEXT,
-  skills JSONB,
-  emergency_contact JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Create Departments Table
+CREATE TABLE IF NOT EXISTS "public"."departments" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "name" TEXT UNIQUE NOT NULL,
+    "head_id" UUID, -- Can be null if no head is assigned
+    "description" TEXT
 );
+COMMENT ON TABLE "public"."departments" IS 'Stores company departments.';
 
--- Job Openings Table
-CREATE TABLE IF NOT EXISTS public.job_openings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title VARCHAR(255) UNIQUE NOT NULL,
-  description TEXT,
-  department_id UUID REFERENCES public.departments(id),
-  status VARCHAR(50) DEFAULT 'Open',
-  company_logo TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Create Employees Table
+CREATE TABLE IF NOT EXISTS "public"."employees" (
+    "id" UUID PRIMARY KEY REFERENCES "auth"."users" ON DELETE CASCADE,
+    "employee_id" TEXT UNIQUE NOT NULL,
+    "full_name" TEXT,
+    "email" TEXT UNIQUE NOT NULL,
+    "role" TEXT REFERENCES "public"."roles"("name"),
+    "department_id" UUID REFERENCES "public"."departments"("id"),
+    "manager_id" UUID REFERENCES "public"."employees"("id"),
+    "status" TEXT DEFAULT 'active',
+    "hire_date" DATE,
+    "profile_picture_url" TEXT,
+    "phone_number" TEXT,
+    "profile_complete" BOOLEAN DEFAULT FALSE,
+    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE "public"."employees" IS 'Stores employee profile information.';
+-- Add foreign key constraint for department head after employees table is created
+ALTER TABLE "public"."departments" ADD FOREIGN KEY ("head_id") REFERENCES "public"."employees"("id") ON DELETE SET NULL;
 
--- Applicants Table
-CREATE TABLE IF NOT EXISTS public.applicants (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  full_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  phone_number VARCHAR(50),
-  resume_url TEXT,
-  profile_picture TEXT,
-  status VARCHAR(50) DEFAULT 'Applied',
-  job_opening_id UUID REFERENCES public.job_openings(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
 
--- Company Posts Table (for feed)
-CREATE TABLE IF NOT EXISTS public.company_posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id UUID REFERENCES public.employees(id),
-  title VARCHAR(255) NOT NULL,
-  content TEXT NOT NULL,
-  image_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Create Assessments Table
+CREATE TABLE IF NOT EXISTS "public"."assessments" (
+    "id" SERIAL PRIMARY KEY,
+    "role" TEXT,
+    "title" TEXT,
+    "questions" JSONB,
+    "created_by" TEXT REFERENCES "public"."employees"("employee_id"),
+    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE "public"."assessments" IS 'Stores assessment and quiz templates.';
 
--- Leave Balances Table
-CREATE TABLE IF NOT EXISTS public.leave_balances (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES public.employees(id),
-  leave_type VARCHAR(50) NOT NULL,
-  balance INT NOT NULL,
-  UNIQUE(employee_id, leave_type)
-);
 
--- Leave Requests Table
-CREATE TABLE IF NOT EXISTS public.leave_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES public.employees(id),
-  leave_type VARCHAR(50) NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  days INT NOT NULL,
-  reason TEXT,
-  status VARCHAR(50) DEFAULT 'Pending',
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Create Assessment Results Table
+CREATE TABLE IF NOT EXISTS "public"."assessment_results" (
+    "id" SERIAL PRIMARY KEY,
+    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
+    "assessment_id" INT REFERENCES "public"."assessments"("id"),
+    "score" INT,
+    "answers" JSONB,
+    "submitted_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE "public"."assessment_results" IS 'Stores results of completed assessments.';
 
--- Assessments Table
-CREATE TABLE IF NOT EXISTS public.assessments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    process_type VARCHAR(100),
-    duration_minutes INT,
-    passing_score INT
+-- Create Documents Table
+CREATE TABLE IF NOT EXISTS "public"."documents" (
+    "id" SERIAL PRIMARY KEY,
+    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
+    "type" TEXT,
+    "url" TEXT,
+    "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE "public"."documents" IS 'Stores employee-related documents.';
 
--- Assessment Sections Table
-CREATE TABLE IF NOT EXISTS public.assessment_sections (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assessment_id UUID REFERENCES public.assessments(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    section_type VARCHAR(50),
-    time_limit_minutes INT
+-- Create Leaves Table
+CREATE TABLE IF NOT EXISTS "public"."leaves" (
+    "id" SERIAL PRIMARY KEY,
+    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
+    "type" TEXT,
+    "start_date" DATE,
+    "end_date" DATE,
+    "reason" TEXT,
+    "status" TEXT DEFAULT 'pending',
+    "approved_by" TEXT,
+    "applied_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+COMMENT ON TABLE "public"."leaves" IS 'Tracks employee leave requests.';
 
--- Assessment Questions Table
-CREATE TABLE IF NOT EXISTS public.assessment_questions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    section_id UUID REFERENCES public.assessment_sections(id) ON DELETE CASCADE,
-    question_text TEXT NOT NULL,
-    question_type VARCHAR(50), -- 'mcq', 'typing', etc.
-    options JSONB, -- For MCQ options
-    correct_answer TEXT,
-    typing_prompt TEXT
+-- Create Notifications Table
+CREATE TABLE IF NOT EXISTS "public"."notifications" (
+    "id" SERIAL PRIMARY KEY,
+    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
+    "title" TEXT,
+    "message" TEXT,
+    "seen" BOOLEAN DEFAULT FALSE,
+    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Assessment Answers/Results Table
-CREATE TABLE IF NOT EXISTS public.assessment_answers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assessment_id UUID REFERENCES public.assessments(id) ON DELETE CASCADE,
-    employee_id UUID REFERENCES public.employees(id) ON DELETE CASCADE,
-    question_id UUID REFERENCES public.assessment_questions(id) ON DELETE CASCADE,
-    answer TEXT,
-    is_correct BOOLEAN,
-    score INT,
-    submitted_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Helpdesk Tickets Table
-CREATE TABLE IF NOT EXISTS public.helpdesk_tickets (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID REFERENCES public.employees(id),
-    subject VARCHAR(255) NOT NULL,
-    description TEXT,
-    category VARCHAR(100),
-    priority VARCHAR(50),
-    status VARCHAR(50) DEFAULT 'Open',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    closed_at TIMESTAMPTZ
-);
-
--- Helpdesk Messages Table
-CREATE TABLE IF NOT EXISTS public.helpdesk_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    ticket_id UUID REFERENCES public.helpdesk_tickets(id) ON DELETE CASCADE,
-    sender_id UUID REFERENCES public.employees(id), -- can be null for system messages
-    message TEXT NOT NULL,
-    sent_at TIMESTAMPTZ DEFAULT NOW(),
-    is_from_support BOOLEAN DEFAULT FALSE
-);
-
--- Attendance Log Table
-CREATE TABLE IF NOT EXISTS public.attendance_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID REFERENCES public.employees(id) ON DELETE CASCADE,
-    check_in_time TIMESTAMPTZ,
-    check_out_time TIMESTAMPTZ,
-    status VARCHAR(50), -- e.g., 'Checked In', 'Checked Out'
-    verified_by VARCHAR(50) -- e.g., 'Face ID', 'Manual'
-);
+COMMENT ON TABLE "public"."notifications" IS 'Stores notifications for users.';

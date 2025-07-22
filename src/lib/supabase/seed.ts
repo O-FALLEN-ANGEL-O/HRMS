@@ -35,18 +35,35 @@ const usersToCreate = [
     { email: 'employee5@optitalent.com', password: 'password123', role: 'employee', departmentName: 'Support', full_name: 'Noah Brown', employee_id: 'PEP0016' },
 ];
 
+const rolesToSeed = [
+    { name: 'admin', description: 'Full system access' },
+    { name: 'hr', description: 'Access to HR modules' },
+    { name: 'manager', description: 'Manages a team' },
+    { name: 'recruiter', description: 'Manages recruitment pipeline' },
+    { name: 'employee', description: 'Standard employee access' },
+    { name: 'qa-analyst', description: 'Conducts quality assurance audits' },
+    { name: 'process-manager', description: 'Oversees business processes' },
+    { name: 'team-leader', description: 'Leads a specific team' },
+    { name: 'marketing', description: 'Manages marketing campaigns' },
+    { name: 'finance', description: 'Manages payroll and finance' },
+    { name: 'it-manager', description: 'Manages IT infrastructure' },
+    { name: 'operations-manager', description: 'Manages core business operations' },
+];
+
+
 function generateProfilePicture(name: string) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=400`;
-}
-
-function generateRealisticCompanyLogo() {
-  return `https://logo.clearbit.com/${faker.internet.domainName()}`;
 }
 
 async function seedData() {
   console.log('🌱 Seeding data...');
 
-  // 1. Departments (Upsert)
+  // 1. Seed Roles
+  const { error: roleError } = await supabase.from('roles').upsert(rolesToSeed, { onConflict: 'name' });
+  if(roleError) { console.error("Error seeding roles", roleError); return; }
+  console.log(`  - ✅ ${rolesToSeed.length} roles seeded.`);
+
+  // 2. Seed Departments
   const departmentsToUpsert = [
       { name: 'Engineering' }, { name: 'Human Resources' }, { name: 'Sales' },
       { name: 'Marketing' }, { name: 'Support' }, { name: 'Product' },
@@ -57,7 +74,7 @@ async function seedData() {
   if(deptError) { console.error("Error seeding departments", deptError); return; }
   console.log(`  - ✅ ${departments.length} departments seeded.`);
 
-  // 2. Auth Users & Employees (Upsert)
+  // 3. Auth Users & Employees (Upsert)
   let seededCount = 0;
   const { data: { users: existingUsers } } = await supabase.auth.admin.listUsers();
 
@@ -65,22 +82,18 @@ async function seedData() {
       let authUser = existingUsers.find(u => u.email === userData.email);
 
       if (authUser) {
-          // If user exists, forcefully update their password and metadata
           const { data, error } = await supabase.auth.admin.updateUserById(authUser.id, {
               password: userData.password,
               email_confirm: true,
-              app_metadata: { role: userData.role }
           });
           if (error) { console.error(`Error updating auth user ${userData.email}:`, error); continue; }
           authUser = data.user;
       } else {
-          // If user does not exist, create them
           const { data, error } = await supabase.auth.admin.createUser({
               email: userData.email,
               password: userData.password,
               email_confirm: true,
               user_metadata: { full_name: userData.full_name },
-              app_metadata: { role: userData.role }
           });
           if (error) { console.error(`Error creating auth user ${userData.email}:`, error); continue; }
           authUser = data.user;
@@ -95,7 +108,7 @@ async function seedData() {
           job_title: faker.person.jobTitle(),
           department_id: department?.id,
           hire_date: faker.date.past({ years: 5 }),
-          status: 'Active',
+          status: 'active',
           profile_picture_url: generateProfilePicture(userData.full_name),
           phone_number: faker.phone.number(),
           role: userData.role
