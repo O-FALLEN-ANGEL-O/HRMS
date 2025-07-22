@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind utilities;
 
@@ -89,6 +90,35 @@
   
   h1 {
     @apply text-2xl md:text-3xl;
+  }
+
+  .rdp-day_present {
+    @apply bg-green-500 text-white hover:bg-green-600 focus:bg-green-600 rounded-full;
+  }
+  .dark .rdp-day_present {
+    @apply bg-green-500 text-white hover:bg-green-400;
+  }
+  .rdp-day_absent {
+    @apply bg-red-500 text-white hover:bg-red-600 focus:bg-red-600 rounded-full;
+  }
+  .dark .rdp-day_absent {
+    @apply bg-red-500 text-white hover:bg-red-400;
+  }
+  .rdp-day_half-day {
+     background: linear-gradient(to bottom right, theme('colors.green.500') 0%, theme('colors.green.500') 50%, theme('colors.red.500') 50%, theme('colors.red.500') 100%);
+     @apply text-white hover:opacity-90 rounded-full;
+  }
+  .rdp-day_dayOff {
+     @apply bg-yellow-400 text-black hover:bg-yellow-500 focus:bg-yellow-500 rounded-full;
+  }
+  .dark .rdp-day_dayOff {
+     @apply bg-yellow-500 text-black hover:bg-yellow-400;
+  }
+   .rdp-day_holiday {
+     @apply bg-indigo-400 text-white hover:bg-indigo-500 focus:bg-indigo-500 rounded-full;
+  }
+  .dark .rdp-day_holiday {
+     @apply bg-indigo-500 text-white hover:bg-indigo-400;
   }
 }
 

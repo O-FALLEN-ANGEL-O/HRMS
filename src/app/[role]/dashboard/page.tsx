@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { EmployeeDetailsCard } from '@/components/employee-details-card';
 import { motion } from 'framer-motion';
 import { mockEmployees } from '@/lib/mock-data/employees';
+import { addDays, subDays } from 'date-fns';
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -67,6 +68,15 @@ export default function DashboardPage() {
   const role = (params.role as string) || 'employee';
 
   const isManager = role === 'manager' || role === 'hr' || role === 'admin';
+
+  const today = new Date();
+  const attendanceModifiers = {
+    present: [subDays(today, 2), subDays(today, 3), subDays(today, 6)],
+    absent: [subDays(today, 4)],
+    'half-day': [subDays(today, 1)],
+    holiday: [subDays(today, 10)],
+    dayOff: [subDays(today, 5)]
+  };
 
   useEffect(() => {
     const searchEmployee = async () => {
@@ -302,6 +312,7 @@ export default function DashboardPage() {
                         <Calendar
                             mode="single"
                             selected={new Date()}
+                            modifiers={attendanceModifiers}
                             className="p-0"
                         />
                     </CardContent>
