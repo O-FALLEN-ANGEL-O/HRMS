@@ -2,27 +2,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from './use-auth';
 import { mockEmployees } from '@/lib/mock-data/employees';
 
 /**
- * A custom hook to get the team members for the currently logged-in manager or team leader.
- * @returns An array of employee objects who report to the current user.
+ * A custom hook to get the team members for a given department.
+ * In a real app, this would take a department ID and fetch from an API.
+ * For the prototype, it filters the mock data.
+ * @returns An array of employee objects who are in the 'Engineering' department.
  */
 export function useTeam() {
-  const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchTeam = () => {
-        if (!user || (user.role !== 'manager' && user.role !== 'team-leader')) {
-            setTeamMembers([]);
-            return;
-        }
-        
-        // Filter mock employees who are in the same department as the manager, but are not the manager themselves.
+        // Mocking a manager's team view - showing Engineering dept.
         const members = mockEmployees.filter(employee => 
-            employee.department_id === user.profile.department_id && employee.id !== user.id
+            employee.department.name === 'Engineering' && employee.role !== 'manager'
         );
 
         const membersWithMockData = members.map(member => ({
@@ -32,11 +27,12 @@ export function useTeam() {
             tasksCompleted: Math.floor(Math.random() * 10) + 5,
             tasksPending: Math.floor(Math.random() * 5),
             avatar: member.profile_picture_url,
+            name: member.full_name,
         }));
         setTeamMembers(membersWithMockData);
     }
     fetchTeam();
-  }, [user]);
+  }, []);
 
   return teamMembers;
 }

@@ -23,7 +23,6 @@ import {
   BookOpen
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useAuth } from './use-auth';
 
 export type NavItem = {
   label: string;
@@ -31,7 +30,7 @@ export type NavItem = {
   icon: LucideIcon;
 };
 
-const navConfig = {
+const navConfig: Record<string, NavItem[]> = {
   admin: [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
@@ -44,6 +43,7 @@ const navConfig = {
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
+    { label: 'Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   hr: [
@@ -58,6 +58,7 @@ const navConfig = {
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
+    { label: 'Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   manager: [
@@ -149,10 +150,7 @@ const navConfig = {
   ],
 };
 
-export const useNav = (): NavItem[] => {
-  const { user } = useAuth();
-  const role = user?.role || 'guest';
-
+export const useNav = (role: string): NavItem[] => {
   return useMemo(() => {
     return navConfig[role] || [];
   }, [role]);

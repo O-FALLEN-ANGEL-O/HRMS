@@ -2,18 +2,16 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from '@/hooks/use-auth';
 import { motion } from "framer-motion";
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, ShieldQuestion, UserCheck } from 'lucide-react';
+import { ArrowRight, ShieldQuestion } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { mockUsers } from '@/lib/mock-data/employees';
+import { useMemo } from 'react';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -76,42 +74,19 @@ function AnimatedLogo() {
   );
 }
 
-export default function LoginPage() {
+export default function RoleSelectorPage() {
     const router = useRouter();
-    const { login, user, loading: authLoading } = useAuth();
-    const { toast } = useToast();
-    const [loading, setLoading] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!authLoading && user) {
-            router.push(`/${user.role}/dashboard`);
-        }
-    }, [user, authLoading, router]);
+    const uniqueRoles = useMemo(() => {
+        const roles = new Map<string, string>();
+        mockUsers.forEach(user => {
+            if (!roles.has(user.role)) {
+                roles.set(user.role, user.profile.full_name);
+            }
+        });
+        return Array.from(roles.entries()).map(([role, name]) => ({role, name}));
+    }, []);
 
-    const handleLogin = async (employeeId: string) => {
-        setLoading(employeeId);
-
-        const { error } = await login(employeeId);
-        
-        if (error) {
-             toast({
-                variant: 'destructive',
-                title: 'Login Failed',
-                description: error.message || "An unknown error occurred."
-            });
-            setLoading(null);
-        } else {
-            toast({ title: 'Login Successful!', description: 'Redirecting to your dashboard...' });
-        }
-    }
-
-  if (authLoading) {
-      return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      );
-  }
 
   return (
     <div className="min-h-screen w-full lg:grid lg:grid-cols-2">
@@ -130,8 +105,8 @@ export default function LoginPage() {
         <div className="w-full max-w-2xl space-y-6">
            <Card className="w-full shadow-2xl border-none">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-3xl"><ShieldQuestion className="text-primary"/> Quick Login</CardTitle>
-                <CardDescription>Click any user to instantly log in and explore their role-based dashboard.</CardDescription>
+                <CardTitle className="flex items-center gap-2 font-headline text-3xl"><ShieldQuestion className="text-primary"/> Select a Role</CardTitle>
+                <CardDescription>Click any role to directly access its role-based dashboard and features.</CardDescription>
             </CardHeader>
             <CardContent>
                  <ScrollArea className="h-96">
@@ -139,27 +114,22 @@ export default function LoginPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Role</TableHead>
-                                <TableHead>Employee ID</TableHead>
+                                <TableHead>Example User</TableHead>
                                 <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {mockUsers.map(account => (
-                                <TableRow key={account.profile.employee_id}>
-                                    <TableCell className="font-medium">{account.profile.role}</TableCell>
-                                    <TableCell>{account.profile.employee_id}</TableCell>
+                            {uniqueRoles.map(account => (
+                                <TableRow key={account.role}>
+                                    <TableCell className="font-medium capitalize">{account.role.replace('-', ' ')}</TableCell>
+                                    <TableCell className="text-muted-foreground">{account.name}</TableCell>
                                     <TableCell className="text-right">
                                         <Button 
                                             size="sm"
-                                            onClick={() => handleLogin(account.profile.employee_id)}
-                                            disabled={loading !== null}
+                                            onClick={() => router.push(`/${account.role}/dashboard`)}
                                         >
-                                            {loading === account.profile.employee_id ? (
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            ) : (
-                                                <UserCheck className="mr-2 h-4 w-4" />
-                                            )}
-                                            Login
+                                            View Dashboard
+                                            <ArrowRight className="ml-2 h-4 w-4" />
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -169,11 +139,8 @@ export default function LoginPage() {
                 </ScrollArea>
             </CardContent>
            </Card>
-            <div className="text-center text-sm">
-                Need to create a new account?{" "}
-                <Link href="/signup" className="underline">
-                    Sign up
-                </Link>
+            <div className="text-center text-sm text-muted-foreground">
+                This is a frontend prototype. All data is mocked.
             </div>
         </div>
       </div>
