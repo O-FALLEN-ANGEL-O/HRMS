@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { mockUsers, type User } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
@@ -19,23 +19,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     // Check for a user in session storage on initial load
     try {
       const storedUser = sessionStorage.getItem('authUser');
       if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        // Validate if the stored user's role matches the current URL
-        const roleFromPath = pathname.split('/')[1];
-        if (parsedUser.role === roleFromPath) {
-          setUser(parsedUser);
-        } else {
-           // If role doesn't match, clear session and force login
-           sessionStorage.removeItem('authUser');
-           router.push('/');
-        }
+        setUser(JSON.parse(storedUser));
       }
     } catch (error) {
       console.error("Could not parse auth user from session storage", error)
@@ -43,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [pathname, router]);
+  }, []);
 
   const login = async (employeeId: string) => {
     setLoading(true);
