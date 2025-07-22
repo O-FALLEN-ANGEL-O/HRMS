@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,11 +12,17 @@ import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useRouter, useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { EmployeeDetailsCard } from '@/components/employee-details-card';
 import { motion } from 'framer-motion';
 import { mockEmployees } from '@/lib/mock-data/employees';
 import { addDays, subDays } from 'date-fns';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const EmployeeDetailsCard = dynamic(() => import('@/components/employee-details-card').then(mod => mod.EmployeeDetailsCard), {
+  loading: () => <Skeleton className="h-48" />,
+  ssr: false,
+});
+
 
 const quickActions = [
     { label: 'Post', icon: File },

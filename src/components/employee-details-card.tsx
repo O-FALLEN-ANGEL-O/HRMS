@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ interface EmployeeDetailsCardProps {
     employee: any;
 }
 
-export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
+const EmployeeDetailsCardComponent = ({ employee }: EmployeeDetailsCardProps) => {
   
   const [manager, setManager] = useState<any>(null);
 
@@ -73,3 +73,6 @@ export function EmployeeDetailsCard({ employee }: EmployeeDetailsCardProps) {
     </Card>
   );
 }
+
+EmployeeDetailsCardComponent.displayName = 'EmployeeDetailsCard';
+export const EmployeeDetailsCard = memo(EmployeeDetailsCardComponent);

@@ -8,14 +8,14 @@ import { motion } from "framer-motion";
 import { ArrowRight, ShieldQuestion } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo } from 'react';
 import { mockUsers } from '@/lib/mock-data/employees';
 import { navConfig } from '@/hooks/use-nav';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingLogo } from '@/components/loading-logo';
 
-function AnimatedLogo() {
+const AnimatedLogo = memo(function AnimatedLogo() {
   const iconVariants = {
     hidden: {
       pathLength: 0,
@@ -74,7 +74,7 @@ function AnimatedLogo() {
         <span>OptiTalent</span>
     </div>
   );
-}
+});
 
 export default function RoleSelectorPage() {
     const { login, loading: authLoading } = useAuth();
