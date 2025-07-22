@@ -287,7 +287,10 @@ function AssessmentsTab({ applicant, setApplicant }: { applicant: WalkinApplican
                     if (!assessmentDetails) return null;
                     
                     const lastAttempt = appAssessment.attempts[appAssessment.attempts.length - 1];
-                    const canRequestRetry = appAssessment.status === 'Completed' && lastAttempt.score !== null && lastAttempt.score < assessmentDetails.passing_score;
+                    const hasAttemptsLeft = appAssessment.attempts.length < assessmentDetails.max_attempts;
+                    const canStartTest = appAssessment.status === 'Not Started' || appAssessment.status === 'Retry Approved' || hasAttemptsLeft;
+                    
+                    const canRequestRetry = !hasAttemptsLeft && appAssessment.status === 'Completed' && lastAttempt.score !== null && lastAttempt.score < assessmentDetails.passing_score;
 
                     return (
                         <Card key={appAssessment.assessmentId} className="p-4">
@@ -297,12 +300,13 @@ function AssessmentsTab({ applicant, setApplicant }: { applicant: WalkinApplican
                                         <h4 className="font-semibold">{assessmentDetails.title}</h4>
                                         {getStatusBadge(appAssessment.status)}
                                     </div>
-                                    <p className="text-sm text-muted-foreground">{assessmentDetails.process_type} &middot; {assessmentDetails.duration} mins</p>
+                                    <p className="text-sm text-muted-foreground">{assessmentDetails.process_type} &middot; {assessmentDetails.duration} min &middot; {assessmentDetails.max_attempts} attempt(s)</p>
                                 </div>
                                 <div className="flex-shrink-0">
-                                {appAssessment.status === 'Not Started' || appAssessment.status === 'Retry Approved' ? (
+                                {canStartTest ? (
                                     <Button onClick={() => handleStartAssessment(appAssessment.assessmentId)}>
-                                        <Puzzle className="mr-2 h-4 w-4" /> Start Test
+                                        <Puzzle className="mr-2 h-4 w-4" /> 
+                                        {appAssessment.attempts.length > 0 ? 'Try Again' : 'Start Test'} ({assessmentDetails.max_attempts - appAssessment.attempts.length} left)
                                     </Button>
                                 ) : canRequestRetry ? (
                                     <RetryRequestDialog onSubmit={(reason) => handleRetryRequest(appAssessment.assessmentId, reason)}>
@@ -321,6 +325,7 @@ function AssessmentsTab({ applicant, setApplicant }: { applicant: WalkinApplican
                                            <p className="text-sm font-bold">{attempt.score ?? 'N/A'}<span className="font-normal text-muted-foreground">/{assessmentDetails.passing_score} (Passing)</span></p>
                                         </div>
                                     ))}
+                                    {appAssessment.attempts.length === 0 && <p className="text-sm text-muted-foreground p-2">No attempts yet.</p>}
                                 </div>
                             </div>
                            )}

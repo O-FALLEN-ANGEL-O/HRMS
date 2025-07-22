@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -6,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from './ui/button';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { Send } from 'lucide-react';
 
 interface TypingTestProps {
   prompt: string;
@@ -46,7 +48,7 @@ export function TypingTest({ prompt, timeLimit, onTestComplete }: TypingTestProp
     if(timerRef.current) clearInterval(timerRef.current);
     if(chartTimerRef.current) clearInterval(chartTimerRef.current);
     
-    const wordsTyped = typedText.trim().split(/\s+/).length;
+    const wordsTyped = typedText.trim().split(/\s+/).filter(Boolean).length;
     const timeElapsedMinutes = (timeLimit - timeLeft) / 60;
     const finalWpm = timeElapsedMinutes > 0 ? Math.round(wordsTyped / timeElapsedMinutes) : 0;
     const finalAccuracy = typedText.length > 0 ? Math.max(0, Math.round(((typedText.length - errors) / typedText.length) * 100)) : 100;
@@ -62,7 +64,7 @@ export function TypingTest({ prompt, timeLimit, onTestComplete }: TypingTestProp
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (isTestRunning && timeLeft <= 0) {
       endTest();
     }
     return () => {
@@ -166,6 +168,12 @@ export function TypingTest({ prompt, timeLimit, onTestComplete }: TypingTestProp
             <p className="text-3xl font-bold font-headline">{accuracy}%</p>
           </CardContent>
         </Card>
+      </div>
+      
+       <div className="flex justify-end">
+          <Button onClick={endTest} disabled={!isTestRunning}>
+              <Send className="mr-2 h-4 w-4" /> Submit & End Test
+          </Button>
       </div>
 
       <div className="h-[100px] mt-4">

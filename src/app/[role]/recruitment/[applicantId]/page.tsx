@@ -17,6 +17,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { walkinApplicants } from "@/lib/mock-data/walkin";
 import { assessments, type Assessment } from "@/lib/mock-data/assessments";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 
 // Mock Data - In a real app, this would be fetched based on applicantId
@@ -67,6 +69,8 @@ const AssessmentsTab = ({ applicantId }: { applicantId: string }) => {
     const { toast } = useToast();
     // This state would normally be fetched and updated via API calls
     const [applicant, setApplicant] = useState(() => walkinApplicants.find(a => a.id === applicantId));
+    const [selectedScores, setSelectedScores] = useState<Record<string, number>>({});
+
 
     if (!applicant) {
         // If the applicant is not from a walk-in, we simulate a different structure
@@ -130,6 +134,11 @@ const AssessmentsTab = ({ applicantId }: { applicantId: string }) => {
     const availableAssessments = assessments.filter(
         (a) => !applicant.assessments.some(aa => aa.assessmentId === a.id)
     );
+    
+    const handleScoreSelect = (assessmentId: string, attemptNumber: number) => {
+        setSelectedScores(prev => ({...prev, [assessmentId]: attemptNumber}));
+        toast({ title: `Score for attempt #${attemptNumber} has been marked as final.`});
+    };
 
     return (
         <Card>
@@ -181,14 +190,19 @@ const AssessmentsTab = ({ applicantId }: { applicantId: string }) => {
                             
                             <div className="mt-2 text-sm text-muted-foreground">Score History:</div>
                             {appAssessment.attempts.length > 0 ? (
+                                <RadioGroup value={selectedScores[appAssessment.assessmentId]?.toString()} onValueChange={(val) => handleScoreSelect(appAssessment.assessmentId, parseInt(val))}>
                                 <ul className="mt-1 space-y-1">
                                 {appAssessment.attempts.map((attempt, i) => (
-                                    <li key={i} className="flex justify-between items-center text-sm p-2 bg-muted rounded">
-                                        <span>Attempt {attempt.attemptNumber}</span>
+                                    <li key={i} className="flex justify-between items-center text-sm p-2 bg-muted rounded has-[:checked]:bg-primary/20">
+                                        <div className="flex items-center gap-3">
+                                            <RadioGroupItem value={attempt.attemptNumber.toString()} id={`score-${attempt.attemptNumber}`} />
+                                            <Label htmlFor={`score-${attempt.attemptNumber}`} className="cursor-pointer">Attempt {attempt.attemptNumber}</Label>
+                                        </div>
                                         <span className="font-semibold">{attempt.score ?? 'N/A'}{assessmentDetails.passing_score_type === 'percent' ? '%' : ' WPM'}</span>
                                     </li>
                                 ))}
                                 </ul>
+                                </RadioGroup>
                             ) : (
                                 <p className="text-sm text-muted-foreground text-center p-2">No attempts yet.</p>
                             )}

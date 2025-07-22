@@ -1,4 +1,5 @@
 
+
 export type Question = {
     id: string;
     section_id: string;
@@ -29,6 +30,7 @@ export type Question = {
     duration: number; // total duration in minutes
     passing_score: number;
     passing_score_type: 'percent' | 'wpm';
+    max_attempts: number;
     created_by: string;
   };
   
@@ -42,6 +44,7 @@ export type Question = {
       duration: 30,
       passing_score: 75,
       passing_score_type: 'percent',
+      max_attempts: 1,
       created_by: 'admin-user-1',
       sections: [
         {
@@ -113,6 +116,7 @@ export type Question = {
         process_type: 'Technical Support',
         duration: 45,
         passing_score: 80,
+        max_attempts: 1,
         passing_score_type: 'percent',
         created_by: 'admin-user-1',
         sections: [
@@ -148,6 +152,7 @@ export type Question = {
         process_type: 'Voice Process – English',
         duration: 15,
         passing_score: 70,
+        max_attempts: 1,
         passing_score_type: 'percent',
         created_by: 'admin-user-1',
         sections: [] // To be built out with voice/audio questions
@@ -159,6 +164,7 @@ export type Question = {
         process_type: 'Chat Support',
         duration: 5,
         passing_score: 50,
+        max_attempts: 1,
         passing_score_type: 'wpm',
         created_by: 'admin-user-1',
         sections: [
@@ -175,6 +181,35 @@ export type Question = {
                         type: 'typing',
                         question_text: 'Please type the following paragraph.',
                         typing_prompt: 'The quick brown fox jumps over the lazy dog. This sentence contains all the letters of the alphabet, making it a perfect pangram for testing typing speed and accuracy. Fast, accurate typing is a critical skill for any professional in a digital-first world. Practice regularly to improve your words per minute and reduce errors. Focus on maintaining a steady rhythm and correct finger placement on the keyboard. Good luck!'
+                    }
+                ]
+            }
+        ]
+      },
+      {
+        id: 'asmt-005',
+        title: 'Typing Test (1 Minute)',
+        role: 'employee',
+        process_type: 'Chat Support',
+        duration: 1,
+        passing_score: 40,
+        max_attempts: 3,
+        passing_score_type: 'wpm',
+        created_by: 'admin-user-1',
+        sections: [
+            {
+                id: 'sec-05',
+                assessment_id: 'asmt-005',
+                section_type: 'typing',
+                title: 'Typing Speed and Accuracy',
+                time_limit: 1,
+                questions: [
+                    {
+                        id: 'q-006',
+                        section_id: 'sec-05',
+                        type: 'typing',
+                        question_text: 'Please type the following text.',
+                        typing_prompt: 'Effective customer service is the cornerstone of a successful business. It requires patience, empathy, and clear communication. Resolving issues promptly and accurately builds trust and loyalty, turning a negative experience into a positive one. Every interaction is an opportunity to strengthen the customer relationship and uphold the company\'s reputation. Efficiency and a friendly demeanor go hand in hand.'
                     }
                 ]
             }
