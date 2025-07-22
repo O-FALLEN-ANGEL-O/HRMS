@@ -162,11 +162,12 @@ const Sidebar = React.forwardRef<
     {
       className,
       children,
+      onClick,
       ...props
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, toggleSidebar } = useSidebar()
 
     if (isMobile) {
       return (
@@ -192,11 +193,17 @@ const Sidebar = React.forwardRef<
       <aside
         ref={ref}
         className={cn(
-          "hidden md:flex flex-col h-screen bg-card border-r transition-all duration-300 ease-in-out",
+          "hidden md:flex flex-col h-screen bg-card border-r transition-all duration-300 ease-in-out cursor-pointer",
           state === 'expanded' ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-icon)]",
           className
         )}
         data-state={state}
+        onClick={(e) => {
+            if (state === 'collapsed') {
+                toggleSidebar();
+            }
+            onClick?.(e);
+        }}
         {...props}
       >
         {children}
@@ -254,7 +261,7 @@ const SidebarFooter = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
-   const { state } = useSidebar();
+   const { state, toggleSidebar } = useSidebar();
   return (
     <div
       ref={ref}
