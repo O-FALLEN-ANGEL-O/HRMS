@@ -13,6 +13,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMemo } from 'react';
 import { mockUsers } from '@/lib/mock-data/employees';
 import { navConfig } from '@/hooks/use-nav';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -77,16 +79,40 @@ function AnimatedLogo() {
 
 export default function RoleSelectorPage() {
     const router = useRouter();
+    const { login, loading } = useAuth();
+    const { toast } = useToast();
 
     const allRoles = useMemo(() => {
-        return Object.keys(navConfig).map(role => {
-            const userForRole = mockUsers.find(u => u.role === role);
-            return {
-                role,
-                name: userForRole ? userForRole.profile.full_name : 'Default ' + role.charAt(0).toUpperCase() + role.slice(1)
-            }
-        });
+        return Object.keys(navConfig)
+            .filter(role => role !== 'guest') // Exclude guest role
+            .map(role => {
+                const userForRole = mockUsers.find(u => u.role === role);
+                return {
+                    role,
+                    name: userForRole ? userForRole.profile.full_name : 'Default ' + role.charAt(0).toUpperCase() + role.slice(1),
+                    employeeId: userForRole ? userForRole.profile.employee_id : ''
+                }
+            });
     }, []);
+
+    const handleLogin = async (employeeId: string) => {
+        if (!employeeId) {
+            toast({
+                title: "Login Error",
+                description: "This role does not have a valid Employee ID to log in with.",
+                variant: "destructive",
+            });
+            return;
+        }
+        const { error } = await login(employeeId);
+        if (error) {
+            toast({
+                title: "Login Failed",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
 
 
   return (
@@ -127,7 +153,8 @@ export default function RoleSelectorPage() {
                                     <TableCell className="text-right">
                                         <Button 
                                             size="sm"
-                                            onClick={() => router.push(`/${account.role}/dashboard`)}
+                                            disabled={loading}
+                                            onClick={() => handleLogin(account.employeeId)}
                                         >
                                             View Dashboard
                                             <ArrowRight className="ml-2 h-4 w-4" />
