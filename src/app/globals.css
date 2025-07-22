@@ -3,7 +3,7 @@
 
 @layer base {
   :root {
-    --background: 220 20% 98%; /* Very light gray */
+    --background: 240 5% 96%; /* Very light gray - F5F5F5 */
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -12,7 +12,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 262 84% 56%; /* Indigo-600 like */
+    --primary: 255 56% 76%; /* Light purple - A893E0 */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -21,7 +21,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     
-    --accent: 210 40% 96.1%;
+    --accent: 240 67% 94%; /* Lavender - E6E6FA */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -29,11 +29,11 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 84% 56%;
+    --ring: 255 56% 76%;
 
     --radius: 0.75rem; /* Increased for a softer feel */
 
-    --chart-1: 262 84% 56%;
+    --chart-1: 255 56% 76%;
     --chart-2: 340 84% 66%;
     --chart-3: 20 84% 66%;
     --chart-4: 190 84% 66%;
@@ -50,7 +50,7 @@
     --popover: 220 12% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 262 84% 66%;
+    --primary: 255 56% 76%; /* Light purple - A893E0 */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -59,7 +59,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 240 67% 94%; /* Lavender - E6E6FA */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 72% 51%;
@@ -67,9 +67,9 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 262 84% 66%;
+    --ring: 255 56% 76%;
 
-    --chart-1: 262 84% 66%;
+    --chart-1: 255 56% 76%;
     --chart-2: 340 84% 76%;
     --chart-3: 20 84% 76%;
     --chart-4: 190 84% 76%;
