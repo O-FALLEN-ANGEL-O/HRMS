@@ -7,7 +7,7 @@ import AppSidebar from '@/components/app-sidebar';
 import AppHeader from '@/components/app-header';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { LoadingLogo } from '@/components/loading-logo';
 
 function AppContent({ children }: { children: React.ReactNode }) {
@@ -30,12 +30,15 @@ function AppContent({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     React.useEffect(() => {
-        if (!loading && !user) {
+        // Do not redirect if we are already on a public page like login or signup.
+        const isPublicPage = pathname === '/' || pathname === '/signup';
+        if (!loading && !user && !isPublicPage) {
             router.push('/');
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, pathname]);
 
     if (loading || !user) {
         return (
