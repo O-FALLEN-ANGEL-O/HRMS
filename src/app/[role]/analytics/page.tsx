@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useParams } from 'next/navigation';
 
 import ManagerDashboard from '@/components/dashboards/manager-dashboard';
 import RecruiterDashboard from '@/components/dashboards/recruiter-dashboard';
@@ -17,20 +18,8 @@ import OperationsDashboard from '@/components/dashboards/operations-dashboard';
 import { Logo } from '@/components/logo';
 
 export default function AnalyticsPage() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Logo className="text-primary w-12 h-12" />
-          <p className="text-muted-foreground">Loading Dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const role = user?.role || 'employee';
+  const params = useParams();
+  const role = params.role as string || 'employee';
 
   const renderDashboard = () => {
     switch (role) {

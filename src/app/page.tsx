@@ -10,8 +10,8 @@ import Link from 'next/link';
 import { ArrowRight, ShieldQuestion } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { mockUsers } from '@/lib/mock-data/employees';
 import { useMemo } from 'react';
+import { mockUsers } from '@/lib/mock-data/employees';
 
 function AnimatedLogo() {
   const iconVariants = {
@@ -77,13 +77,22 @@ function AnimatedLogo() {
 export default function RoleSelectorPage() {
     const router = useRouter();
 
-    const uniqueRoles = useMemo(() => {
+    const allRoles = useMemo(() => {
         const roles = new Map<string, string>();
-        mockUsers.forEach(user => {
+         mockUsers.forEach(user => {
             if (!roles.has(user.role)) {
                 roles.set(user.role, user.profile.full_name);
             }
         });
+        
+        const definedRoles = ['admin', 'hr', 'manager', 'employee', 'recruiter', 'qa-analyst', 'process-manager', 'team-leader', 'marketing', 'finance', 'it-manager', 'operations-manager'];
+        definedRoles.forEach(role => {
+            if (!roles.has(role)) {
+                const mockUserForRole = mockUsers.find(u => u.role === role);
+                roles.set(role, mockUserForRole ? mockUserForRole.profile.full_name : "Default User");
+            }
+        });
+        
         return Array.from(roles.entries()).map(([role, name]) => ({role, name}));
     }, []);
 
@@ -119,9 +128,9 @@ export default function RoleSelectorPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {uniqueRoles.map(account => (
+                            {allRoles.map(account => (
                                 <TableRow key={account.role}>
-                                    <TableCell className="font-medium capitalize">{account.role.replace('-', ' ')}</TableCell>
+                                    <TableCell className="font-medium capitalize">{account.role.replace(/-/g, ' ')}</TableCell>
                                     <TableCell className="text-muted-foreground">{account.name}</TableCell>
                                     <TableCell className="text-right">
                                         <Button 
