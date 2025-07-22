@@ -49,7 +49,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarProvider>
             <div className="flex h-screen bg-muted/40">
                 <AppSidebar />
-                <div className="flex-1 flex flex-col min-w-0">
+                <div className="flex-1 flex flex-col">
                     <AppHeader />
                     <main className="flex-1 overflow-y-auto">
                         <div className="p-4 sm:p-6 lg:p-8">
