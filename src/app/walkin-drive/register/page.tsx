@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
@@ -16,6 +16,7 @@ import type { ScoreAndParseResumeOutput } from '@/ai/flows/score-and-parse-resum
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { walkinApplicants, WalkinApplicant } from '@/lib/mock-data/walkin';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type ParsedData = ScoreAndParseResumeOutput['parsedData'];
 type RegistrationState = 'form' | 'success';
@@ -124,11 +125,8 @@ export default function WalkInRegistrationPage() {
         }
     };
     
-    const handleParseResume = async () => {
-        if (!resumeDataUri) {
-            toast({ title: "No Resume", description: "Please upload or capture a resume image.", variant: "destructive" });
-            return;
-        }
+    const handleParseResume = useCallback(async () => {
+        if (!resumeDataUri) return;
         setLoading(true);
         setParsedData(null);
         try {
@@ -144,7 +142,14 @@ export default function WalkInRegistrationPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [resumeDataUri, toast]);
+
+    useEffect(() => {
+        if (resumeDataUri) {
+            handleParseResume();
+        }
+    }, [resumeDataUri, handleParseResume]);
+
 
     const handleRegister = (e: React.FormEvent) => {
         e.preventDefault();
@@ -222,11 +227,11 @@ export default function WalkInRegistrationPage() {
                 <CardContent className="space-y-4">
                      <div className="space-y-2">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" disabled={loading}>
                                 <Upload className="mr-2 h-4 w-4" /> Upload Resume
                             </Button>
                             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
-                            <Button variant="outline" className="w-full" onClick={() => setIsCameraOpen(prev => !prev)}>
+                            <Button variant="outline" className="w-full" onClick={() => setIsCameraOpen(prev => !prev)} disabled={loading}>
                             <Camera className="mr-2 h-4 w-4" /> {isCameraOpen ? 'Close Camera' : 'Capture with Camera'}
                             </Button>
                         </div>
@@ -246,12 +251,6 @@ export default function WalkInRegistrationPage() {
                         </div>
                     )}
                 </CardContent>
-                <CardFooter>
-                     <Button onClick={handleParseResume} disabled={loading || !resumeDataUri} className="w-full">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {loading ? "Parsing..." : "Parse Resume & Pre-fill Form"}
-                    </Button>
-                </CardFooter>
              </Card>
              
              <Card>
@@ -260,39 +259,52 @@ export default function WalkInRegistrationPage() {
                     <CardDescription>Please verify your details and select the role you are applying for.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form id="registration-form" onSubmit={handleRegister} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="fullName">Full Name</Label>
-                            <Input id="fullName" placeholder="John Doe" required value={fullName} onChange={e => setFullName(e.target.value)}/>
+                    {loading ? (
+                        <div className="space-y-4">
+                           <div className="flex items-center justify-center text-muted-foreground text-sm gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin"/> Parsing resume and pre-filling form...
+                           </div>
+                           <Skeleton className="h-10 w-full" />
+                           <Skeleton className="h-10 w-full" />
+                           <Skeleton className="h-10 w-full" />
+                           <Skeleton className="h-10 w-full" />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)}/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" type="tel" placeholder="+91 12345 67890" required value={phone} onChange={e => setPhone(e.target.value)}/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="role">Desired Role</Label>
-                            <Select name="role" required>
-                                <SelectTrigger id="role">
-                                    <SelectValue placeholder="Select a role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {openRoles.map(role => (
-                                        <SelectItem key={role.title} value={role.title}>{role.title}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </form>
+                    ) : (
+                        <form id="registration-form" onSubmit={handleRegister} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="fullName">Full Name</Label>
+                                <Input id="fullName" placeholder="John Doe" required value={fullName} onChange={e => setFullName(e.target.value)}/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email Address</Label>
+                                <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)}/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="phone">Phone Number</Label>
+                                <Input id="phone" type="tel" placeholder="+91 12345 67890" required value={phone} onChange={e => setPhone(e.target.value)}/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="role">Desired Role</Label>
+                                <Select name="role" required>
+                                    <SelectTrigger id="role">
+                                        <SelectValue placeholder="Select a role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {openRoles.map(role => (
+                                            <SelectItem key={role.title} value={role.title}>{role.title}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </form>
+                    )}
                 </CardContent>
                 <CardFooter className="flex justify-between">
                      <Button variant="outline" asChild>
                        <Link href="/walkin-drive"><ArrowLeft className="mr-2 h-4 w-4"/> Back</Link>
                     </Button>
-                    <Button type="submit" form="registration-form">
+                    <Button type="submit" form="registration-form" disabled={loading}>
+                       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                        Submit Registration
                     </Button>
                 </CardFooter>
