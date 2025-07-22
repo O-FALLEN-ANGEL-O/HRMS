@@ -243,8 +243,8 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "flex h-14 items-center border-b px-4",
-        state === 'collapsed' ? "px-2.5" : "px-4",
+        "flex h-14 items-center border-b",
+        state === 'collapsed' ? "justify-center px-2" : "px-4",
         className
       )}
       {...props}
@@ -262,8 +262,8 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "mt-auto flex flex-col gap-2 p-2 border-t",
-        state === 'collapsed' ? "p-2.5" : "p-2",
+        "mt-auto flex flex-col gap-2 p-4 border-t",
+        state === 'collapsed' ? "p-2" : "p-4",
         className
       )}
       {...props}
@@ -281,8 +281,8 @@ const SidebarContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden p-2",
-         state === 'collapsed' ? "p-2.5" : "p-2",
+        "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden",
+         state === 'collapsed' ? "p-2" : "p-4",
         className
       )}
       {...props}
@@ -376,7 +376,7 @@ const SidebarMenuButton = React.forwardRef<
         data-active={isActive}
         className={cn(
           sidebarMenuButtonVariants({ variant, size }), 
-          state === 'collapsed' && "justify-center !size-9 !p-0",
+          state === 'collapsed' && "justify-center !h-10 !w-10 !p-0",
           className
         )}
         {...props}

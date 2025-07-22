@@ -154,7 +154,7 @@ export default function DashboardPage() {
                     className="flex flex-col sm:flex-row justify-between items-start gap-4"
                 >
                     <div>
-                        <h1 className="text-4xl font-headline tracking-tight font-bold">Hello, {role}!</h1>
+                        <h1 className="text-4xl font-headline tracking-tight font-bold capitalize">Hello, {role.replace(/-/g, ' ')}!</h1>
                         <p className="text-indigo-200 mt-1">Hope you are having a great day</p>
                     </div>
                     <div className="flex-shrink-0">
@@ -313,6 +313,13 @@ export default function DashboardPage() {
                             mode="single"
                             selected={new Date()}
                             modifiers={attendanceModifiers}
+                            modifiersClassNames={{
+                                present: 'rdp-day_present',
+                                absent: 'rdp-day_absent',
+                                'half-day': 'rdp-day_half-day',
+                                holiday: 'rdp-day_holiday',
+                                dayOff: 'rdp-day_dayOff'
+                            }}
                             className="p-0"
                         />
                     </CardContent>

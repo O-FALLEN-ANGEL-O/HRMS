@@ -18,11 +18,11 @@ function AnimatedLogo() {
   const iconVariants = {
     hidden: {
       pathLength: 0,
-      fill: "rgba(168, 147, 224, 0)"
+      fill: "rgba(124, 58, 237, 0)"
     },
     visible: {
       pathLength: 1,
-      fill: "rgba(168, 147, 224, 1)"
+      fill: "rgba(124, 58, 237, 1)"
     }
   }
   return (
@@ -91,7 +91,7 @@ export default function RoleSelectorPage() {
 
   return (
     <div className="min-h-screen w-full lg:grid lg:grid-cols-2">
-      <div className="relative hidden flex-col items-center justify-center bg-gradient-to-br from-[#A893E0] to-[#8A6FDF] p-10 text-white lg:flex">
+      <div className="relative hidden flex-col items-center justify-center bg-gradient-to-br from-primary to-purple-800 p-10 text-white lg:flex">
          <div className="absolute inset-0 bg-black/20" />
          <div className="z-10 w-full max-w-md space-y-6">
             <AnimatedLogo />
@@ -104,7 +104,7 @@ export default function RoleSelectorPage() {
       </div>
       <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-background min-h-screen">
         <div className="w-full max-w-2xl space-y-6">
-           <Card className="w-full shadow-2xl border-none">
+           <Card className="w-full shadow-lg border-none">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-headline text-3xl"><ShieldQuestion className="text-primary"/> Select a Role</CardTitle>
                 <CardDescription>Click any role to directly access its role-based dashboard and features.</CardDescription>

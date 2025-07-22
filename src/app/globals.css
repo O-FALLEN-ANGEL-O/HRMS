@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 255 56% 76%; /* Light purple - A893E0 */
+    --primary: 262.1 83.3% 57.8%; /* A richer purple */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -22,7 +22,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     
-    --accent: 240 67% 94%; /* Lavender - E6E6FA */
+    --accent: 210 40% 96.1%; /* More subtle accent */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,28 +30,28 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 255 56% 76%;
+    --ring: 262.1 83.3% 57.8%;
 
-    --radius: 0.75rem; /* Increased for a softer feel */
+    --radius: 0.5rem; /* Standardized radius */
 
-    --chart-1: 255 56% 76%;
-    --chart-2: 340 84% 66%;
-    --chart-3: 20 84% 66%;
-    --chart-4: 190 84% 66%;
+    --chart-1: 262 80% 56%;
+    --chart-2: 190 84% 66%;
+    --chart-3: 340 84% 66%;
+    --chart-4: 20 84% 66%;
     --chart-5: 220 84% 66%;
   }
 
   .dark {
-    --background: 220 12% 8%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 220 12% 10%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 12% 8%;
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 255 56% 76%; /* Light purple - A893E0 */
+    --primary: 263.4 95.2% 66.3%; /* Brighter purple for dark mode */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -60,20 +60,20 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 240 67% 94%; /* Lavender - E6E6FA */
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 255 56% 76%;
-
-    --chart-1: 255 56% 76%;
-    --chart-2: 340 84% 76%;
-    --chart-3: 20 84% 76%;
-    --chart-4: 190 84% 76%;
+    --ring: 263.4 95.2% 66.3%;
+    
+    --chart-1: 263.4 95.2% 66.3%;
+    --chart-2: 190 84% 76%;
+    --chart-3: 340 84% 76%;
+    --chart-4: 20 84% 76%;
     --chart-5: 220 84% 76%;
   }
 }

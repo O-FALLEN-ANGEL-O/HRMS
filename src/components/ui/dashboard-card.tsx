@@ -34,7 +34,7 @@ export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value
     // Widget card variant
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
+        <CardTitle className="text-base font-medium flex items-center gap-2">
             {Icon && <Icon className="h-5 w-5 text-primary" />}
             <span>{title}</span>
         </CardTitle>
@@ -46,12 +46,5 @@ export function DashboardCard({ title, icon: Icon, actionIcon: ActionIcon, value
     </Card>
   );
 
-  return (
-    <motion.div
-        whileHover={{ scale: 1.03, y: -5 }}
-        transition={{ type: "spring", stiffness: 300, damping: 15 }}
-    >
-        {cardContent}
-    </motion.div>
-  );
+  return cardContent;
 }
