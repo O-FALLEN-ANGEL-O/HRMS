@@ -1,126 +1,243 @@
--- Drop existing tables in reverse order of dependency to avoid foreign key conflicts.
-DROP TABLE IF EXISTS "public"."leave_requests";
-DROP TABLE IF EXISTS "public"."leave_balances";
-DROP TABLE IF EXISTS "public"."company_posts";
-DROP TABLE IF EXISTS "public"."applicants";
-DROP TABLE IF EXISTS "public"."job_openings";
-DROP TABLE IF EXISTS "public"."employees";
-DROP TABLE IF EXISTS "public"."departments";
+-- Drop existing tables in reverse order of dependency to avoid foreign key constraints
+drop table if exists "public"."ticket_messages";
+drop table if exists "public"."tickets";
+drop table if exists "public"."assessment_results";
+drop table if exists "public"."assessment_questions";
+drop table if exists "public"."assessment_sections";
+drop table if exists "public"."assessments";
+drop table if exists "public"."leave_requests";
+drop table if exists "public"."leave_balances";
+drop table if exists "public"."company_posts";
+drop table if exists "public"."applicants";
+drop table if exists "public"."job_openings";
+drop table if exists "public"."employees";
+drop table if exists "public"."departments";
 
--- Create Departments Table
--- Stores organizational departments.
-CREATE TABLE IF NOT EXISTS "public"."departments" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-    "name" text NOT NULL,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "departments_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "departments_name_key" UNIQUE ("name")
+-- Create Departments table
+create table if not exists "public"."departments" (
+    "id" uuid not null default gen_random_uuid(),
+    "name" varchar(255) not null,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "departments_pkey" primary key ("id"),
+    constraint "departments_name_key" unique ("name")
 );
 
--- Create Employees Table
--- Stores employee profile data, linked to auth users.
-CREATE TABLE IF NOT EXISTS "public"."employees" (
-    "id" uuid NOT NULL,
-    "employee_id" text NOT NULL,
-    "full_name" text,
-    "email" text NOT NULL,
-    "job_title" text,
-    "department_id" uuid,
-    "manager_id" uuid,
-    "hire_date" timestamp with time zone,
-    "status" text,
-    "profile_picture_url" text,
-    "phone_number" text,
-    "role" text,
-    "emergency_contact" jsonb,
+-- Create Employees table
+create table if not exists "public"."employees" (
+    "id" uuid not null,
+    "employee_id" varchar(255) not null,
+    "full_name" varchar(255) not null,
+    "email" varchar(255) not null,
+    "phone_number" varchar(50) null,
+    "job_title" varchar(255) null,
+    "department_id" uuid null,
+    "manager_id" uuid null,
+    "hire_date" date null,
+    "status" varchar(50) not null default 'Active'::character varying,
+    "role" varchar(50) not null,
+    "profile_picture_url" text null,
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone not null default now(),
     "skills" jsonb,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "employees_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "employees_email_key" UNIQUE ("email"),
-    CONSTRAINT "employees_employee_id_key" UNIQUE ("employee_id"),
-    CONSTRAINT "employees_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users" ("id") ON DELETE CASCADE,
-    CONSTRAINT "employees_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "public"."departments" ("id"),
-    CONSTRAINT "employees_manager_id_fkey" FOREIGN KEY ("manager_id") REFERENCES "public"."employees" ("id")
+    "emergency_contact" jsonb,
+    constraint "employees_pkey" primary key ("id"),
+    constraint "employees_id_fkey" foreign key ("id") references "auth"."users" ("id") on delete cascade,
+    constraint "employees_department_id_fkey" foreign key ("department_id") references "public"."departments" ("id") on delete set null,
+    constraint "employees_manager_id_fkey" foreign key ("manager_id") references "public"."employees" ("id") on delete set null,
+    constraint "employees_email_key" unique ("email"),
+    constraint "employees_employee_id_key" unique ("employee_id")
 );
 
--- Create Job Openings Table
--- Stores active job listings.
-CREATE TABLE IF NOT EXISTS "public"."job_openings" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-    "title" text NOT NULL,
-    "department_id" uuid,
+-- Create Job Openings table
+create table if not exists "public"."job_openings" (
+    "id" uuid not null default gen_random_uuid(),
+    "title" varchar(255) not null,
+    "department_id" uuid null,
+    "status" varchar(50) not null default 'Open'::character varying,
+    "description" text null,
+    "created_at" timestamp with time zone not null default now(),
     "company_logo" text,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "job_openings_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "job_openings_title_key" UNIQUE ("title"),
-    CONSTRAINT "job_openings_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "public"."departments" ("id")
+    constraint "job_openings_pkey" primary key ("id"),
+    constraint "job_openings_department_id_fkey" foreign key ("department_id") references "public"."departments" ("id") on delete set null,
+    constraint "job_openings_title_key" unique ("title")
 );
 
--- Create Applicants Table
--- Stores information about candidates who applied for jobs.
-CREATE TABLE IF NOT EXISTS "public"."applicants" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-    "full_name" text,
-    "email" text,
-    "phone_number" text,
-    "status" text,
-    "job_opening_id" uuid,
+-- Create Applicants table
+create table if not exists "public"."applicants" (
+    "id" uuid not null default gen_random_uuid(),
+    "full_name" varchar(255) not null,
+    "email" varchar(255) not null,
+    "phone_number" varchar(50) null,
+    "status" varchar(50) not null default 'Applied'::character varying,
+    "resume_url" text null,
     "profile_picture" text,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "applicants_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "applicants_job_opening_id_fkey" FOREIGN KEY ("job_opening_id") REFERENCES "public"."job_openings" ("id")
+    "job_opening_id" uuid null,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "applicants_pkey" primary key ("id"),
+    constraint "applicants_job_opening_id_fkey" foreign key ("job_opening_id") references "public"."job_openings" ("id") on delete set null
 );
 
--- Create Company Posts Table
--- For the internal company feed.
-CREATE TABLE IF NOT EXISTS "public"."company_posts" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-    "author_id" uuid NOT NULL,
-    "title" text,
-    "content" text,
-    "image_url" text,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "company_posts_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "company_posts_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "public"."employees" ("id")
+-- Create Company Posts table
+create table if not exists "public"."company_posts" (
+    "id" uuid not null default gen_random_uuid(),
+    "author_id" uuid not null,
+    "title" varchar(255) not null,
+    "content" text not null,
+    "image_url" text null,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "company_posts_pkey" primary key ("id"),
+    constraint "company_posts_author_id_fkey" foreign key ("author_id") references "public"."employees" ("id") on delete cascade
 );
 
--- Create Leave Balances Table
--- Tracks available leave days for each employee.
-CREATE TABLE IF NOT EXISTS "public"."leave_balances" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-    "employee_id" uuid NOT NULL,
-    "leave_type" text NOT NULL,
-    "balance" integer NOT NULL,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "leave_balances_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "leave_balances_employee_id_leave_type_key" UNIQUE ("employee_id", "leave_type"),
-    CONSTRAINT "leave_balances_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees" ("id") ON DELETE CASCADE
+-- Create Leave Balances table
+create table if not exists "public"."leave_balances" (
+    "id" uuid not null default gen_random_uuid(),
+    "employee_id" uuid not null,
+    "leave_type" varchar(50) not null,
+    "balance" numeric(5,2) not null default 0,
+    constraint "leave_balances_pkey" primary key ("id"),
+    constraint "leave_balances_employee_id_fkey" foreign key ("employee_id") references "public"."employees" ("id") on delete cascade,
+    constraint "leave_balances_employee_id_leave_type_key" unique ("employee_id", "leave_type")
 );
 
--- Create Leave Requests Table
--- Tracks all leave requests made by employees.
-CREATE TABLE IF NOT EXISTS "public"."leave_requests" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
-    "employee_id" uuid NOT NULL,
-    "leave_type" text NOT NULL,
-    "start_date" date NOT NULL,
-    "end_date" date NOT NULL,
-    "days" integer NOT NULL,
-    "reason" text,
-    "status" text NOT NULL DEFAULT 'Pending'::text,
-    "approved_by" uuid,
-    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT "leave_requests_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "leave_requests_approved_by_fkey" FOREIGN KEY ("approved_by") REFERENCES "public"."employees" ("id"),
-    CONSTRAINT "leave_requests_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees" ("id") ON DELETE CASCADE
+-- Create Leave Requests table
+create table if not exists "public"."leave_requests" (
+    "id" uuid not null default gen_random_uuid(),
+    "employee_id" uuid not null,
+    "leave_type" varchar(50) not null,
+    "start_date" date not null,
+    "end_date" date not null,
+    "reason" text null,
+    "status" varchar(50) not null default 'Pending'::character varying,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "leave_requests_pkey" primary key ("id"),
+    constraint "leave_requests_employee_id_fkey" foreign key ("employee_id") references "public"."employees" ("id") on delete cascade
 );
 
--- Add comments to tables and columns for better understanding in Supabase UI
-COMMENT ON TABLE "public"."employees" IS 'Stores public-facing profile information for users.';
-COMMENT ON TABLE "public"."departments" IS 'Stores organizational departments like Engineering, HR, etc.';
-COMMENT ON TABLE "public"."job_openings" IS 'Stores details about currently open job positions.';
-COMMENT ON TABLE "public"."applicants" IS 'Stores information about candidates who have applied for jobs.';
-COMMENT ON TABLE "public"."company_posts" IS 'Stores posts for the internal company social feed.';
-COMMENT ON TABLE "public"."leave_balances" IS 'Tracks the remaining leave balance for each employee by leave type.';
-COMMENT ON TABLE "public"."leave_requests" IS 'Logs all leave requests made by employees.';
+-- Create Assessments table
+create table if not exists "public"."assessments" (
+    "id" uuid not null default gen_random_uuid(),
+    "title" text not null,
+    "process_type" text not null,
+    "duration" integer not null,
+    "passing_score" integer not null,
+    "created_by" uuid,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "assessments_pkey" primary key ("id"),
+    constraint "assessments_created_by_fkey" foreign key (created_by) references "public"."employees"(id)
+);
+
+-- Create Assessment Sections table
+create table if not exists "public"."assessment_sections" (
+    "id" uuid not null default gen_random_uuid(),
+    "assessment_id" uuid not null,
+    "title" text not null,
+    "section_type" text not null,
+    "time_limit" integer not null,
+    constraint "assessment_sections_pkey" primary key ("id"),
+    constraint "assessment_sections_assessment_id_fkey" foreign key (assessment_id) references "public"."assessments"(id) on delete cascade
+);
+
+-- Create Assessment Questions table
+create table if not exists "public"."assessment_questions" (
+    "id" uuid not null default gen_random_uuid(),
+    "section_id" uuid not null,
+    "type" text not null,
+    "question_text" text not null,
+    "options" jsonb,
+    "correct_answer" text,
+    "typing_prompt" text,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "assessment_questions_pkey" primary key ("id"),
+    constraint "assessment_questions_section_id_fkey" foreign key (section_id) references "public"."assessment_sections"(id) on delete cascade
+);
+
+-- Create Assessment Results table
+create table if not exists "public"."assessment_results" (
+    "id" uuid not null default gen_random_uuid(),
+    "assessment_id" uuid not null,
+    "employee_id" uuid not null,
+    "score" integer not null,
+    "completed_at" timestamp with time zone not null default now(),
+    "answers" jsonb,
+    constraint "assessment_results_pkey" primary key ("id"),
+    constraint "assessment_results_assessment_id_fkey" foreign key (assessment_id) references "public"."assessments"(id) on delete cascade,
+    constraint "assessment_results_employee_id_fkey" foreign key (employee_id) references "public"."employees"(id) on delete cascade
+);
+
+-- Create Tickets table (for helpdesk)
+create table if not exists "public"."tickets" (
+    "id" uuid not null default gen_random_uuid(),
+    "employee_id" uuid not null,
+    "subject" text not null,
+    "description" text,
+    "category" text,
+    "priority" text,
+    "status" text default 'Open',
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone not null default now(),
+    constraint "tickets_pkey" primary key ("id"),
+    constraint "tickets_employee_id_fkey" foreign key (employee_id) references "public"."employees"(id) on delete cascade
+);
+
+-- Create Ticket Messages table
+create table if not exists "public"."ticket_messages" (
+    "id" uuid not null default gen_random_uuid(),
+    "ticket_id" uuid not null,
+    "sender_id" uuid,
+    "message" text not null,
+    "created_at" timestamp with time zone not null default now(),
+    constraint "ticket_messages_pkey" primary key ("id"),
+    constraint "ticket_messages_ticket_id_fkey" foreign key (ticket_id) references "public"."tickets"(id) on delete cascade,
+    constraint "ticket_messages_sender_id_fkey" foreign key (sender_id) references "public"."employees"(id) on delete set null
+);
+
+-- Create Attendance Log table
+create table if not exists "public"."attendance_log" (
+    "id" uuid not null default gen_random_uuid(),
+    "employee_id" uuid not null,
+    "check_in_time" timestamp with time zone,
+    "check_out_time" timestamp with time zone,
+    "date" date not null default CURRENT_DATE,
+    "status" text, -- e.g., Present, Absent, WFH
+    "notes" text,
+    constraint "attendance_log_pkey" primary key ("id"),
+    constraint "attendance_log_employee_id_fkey" foreign key (employee_id) references "public"."employees"(id) on delete cascade
+);
+
+-- RLS Policies (Enable for all new tables)
+alter table "public"."departments" enable row level security;
+alter table "public"."employees" enable row level security;
+alter table "public"."job_openings" enable row level security;
+alter table "public"."applicants" enable row level security;
+alter table "public"."company_posts" enable row level security;
+alter table "public"."leave_balances" enable row level security;
+alter table "public"."leave_requests" enable row level security;
+alter table "public"."assessments" enable row level security;
+alter table "public"."assessment_sections" enable row level security;
+alter table "public"."assessment_questions" enable row level security;
+alter table "public"."assessment_results" enable row level security;
+alter table "public"."tickets" enable row level security;
+alter table "public"."ticket_messages" enable row level security;
+alter table "public"."attendance_log" enable row level security;
+
+-- Policies for public read access
+create policy "Public departments are viewable by everyone." on public.departments for select using (true);
+create policy "Public job openings are viewable by everyone." on public.job_openings for select using (true);
+create policy "Company posts are viewable by authenticated users." on public.company_posts for select to authenticated using (true);
+
+-- Policies for employees to manage their own data
+create policy "Individuals can view their own employee data." on public.employees for select using (auth.uid() = id);
+create policy "Individuals can update their own employee data." on public.employees for update using (auth.uid() = id);
+create policy "Individuals can view their own leave balances." on public.leave_balances for select using (auth.uid() = employee_id);
+create policy "Individuals can manage their own leave requests." on public.leave_requests for all using (auth.uid() = employee_id);
+create policy "Individuals can view their own attendance." on public.attendance_log for select using (auth.uid() = employee_id);
+create policy "Individuals can manage their own tickets." on public.tickets for all using (auth.uid() = employee_id);
+create policy "Individuals can manage their own ticket messages." on public.ticket_messages for all using (auth.uid() = sender_id);
+
+-- Policies for managers to view their team's data
+create policy "Managers can view their team members." on public.employees for select using (
+  (get_my_claim('role'::text) = '"admin"'::jsonb) OR
+  (get_my_claim('role'::text) = '"hr"'::jsonb) OR
+  (manager_id = auth.uid())
+);
