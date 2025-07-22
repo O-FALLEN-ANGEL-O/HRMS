@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -128,10 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (employeeId: string, password: string) => {
     if (!supabase) return { error: { message: "Supabase not configured." }};
 
-    const { email, error: emailError } = await getEmailForEmployeeId(employeeId);
+    const { email } = await getEmailForEmployeeId(employeeId);
 
-    if(emailError || !email) {
-      return { error: { message: emailError || "Invalid Employee ID" }};
+    if(!email) {
+      return { error: { message: "Invalid Employee ID" }};
     }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -158,10 +157,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Generate a simple employee_id
     const employee_id = `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`;
     
-    // Get a default department_id (e.g., 'Support')
-    const { data: deptData } = await supabase.from('departments').select('id').eq('name', 'Support').single();
-
-
     const { error: profileError } = await supabase
       .from('employees')
       .insert({
@@ -172,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         employee_id,
         status: 'Active',
         role: 'employee',
-        department_id: deptData?.id || null, // Fallback to null if not found
+        department_id: null,
         emergency_contact: JSON.stringify({}),
         skills: JSON.stringify([]),
         phone_number: '',
