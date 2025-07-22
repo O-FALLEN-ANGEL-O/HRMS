@@ -3,18 +3,23 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { walkinApplicants, WalkinApplicant, Education, Experience } from '@/lib/mock-data/walkin';
+import { walkinApplicants, WalkinApplicant, Education, Experience, ApplicantAssessment } from '@/lib/mock-data/walkin';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Edit, LogOut, FileText, Briefcase, GraduationCap, User, Upload, Trash2, PlusCircle, Puzzle } from 'lucide-react';
+import { Edit, LogOut, FileText, Briefcase, GraduationCap, User, Upload, Trash2, PlusCircle, Puzzle, CheckCircle, RefreshCw, Send, AlertTriangle, FileQuestion } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
+import { assessments, Assessment } from '@/lib/mock-data/assessments';
+import { Dialog, DialogHeader, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 function ProfileTab({ applicant, setApplicant }: { applicant: WalkinApplicant; setApplicant: (app: WalkinApplicant) => void }) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,6 +192,155 @@ function EducationTab({ applicant, setApplicant }: { applicant: WalkinApplicant,
     )
 }
 
+function RetryRequestDialog({ children, onSubmit }: { children: React.ReactNode, onSubmit: (reason: string) => void }) {
+    const [reason, setReason] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleSubmit = () => {
+        onSubmit(reason);
+        setIsOpen(false);
+    }
+    
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Request Assessment Retry</DialogTitle>
+                    <DialogDescription>Please provide a reason for your retry request. This will be sent to HR for approval.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="reason">Reason for Retry</Label>
+                    <Textarea id="reason" value={reason} onChange={e => setReason(e.target.value)} placeholder="E.g., I faced a technical issue..." />
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSubmit} disabled={!reason.trim()}>Submit Request</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
+function AssessmentsTab({ applicant, setApplicant }: { applicant: WalkinApplicant, setApplicant: (app: WalkinApplicant) => void }) {
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleStartAssessment = (assessmentId: string) => {
+        // Find the actual assessment details from the main assessments list
+        const assessmentDetails = assessments.find(a => a.id === assessmentId);
+        if (assessmentDetails) {
+            // Navigate to the generic assessment taking page
+             router.push(`/employee/assessments/${assessmentId}`);
+        } else {
+            toast({ title: 'Assessment not found', variant: 'destructive' });
+        }
+    };
+    
+    const handleRetryRequest = (assessmentId: string, reason: string) => {
+        const updatedAssessments = applicant.assessments.map(appAssessment => {
+            if (appAssessment.assessmentId === assessmentId) {
+                return {
+                    ...appAssessment,
+                    status: 'Retry Requested' as const,
+                    retryRequest: {
+                        reason: reason,
+                        status: 'Pending' as const,
+                        requestedAt: new Date().toISOString()
+                    }
+                };
+            }
+            return appAssessment;
+        });
+
+        setApplicant({ ...applicant, assessments: updatedAssessments });
+        toast({ title: "Retry Request Submitted", description: "Your request has been sent to HR for review." });
+    };
+
+    const getStatusBadge = (status: ApplicantAssessment['status']) => {
+        switch(status) {
+            case 'Completed': return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
+            case 'Not Started': return <Badge variant="secondary">Not Started</Badge>;
+            case 'Retry Requested': return <Badge className="bg-yellow-100 text-yellow-800">Retry Requested</Badge>;
+            case 'Retry Approved': return <Badge className="bg-blue-100 text-blue-800">Retry Approved</Badge>;
+            default: return <Badge variant="outline">{status}</Badge>;
+        }
+    }
+    
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>My Assessments</CardTitle>
+                <CardDescription>Complete your assigned assessments to proceed.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {applicant.assessments.length === 0 && (
+                    <div className="text-center py-10 text-muted-foreground">
+                        <FileQuestion className="mx-auto h-12 w-12" />
+                        <h3 className="mt-4 text-lg font-semibold">No Assessments Assigned</h3>
+                        <p className="mt-2 text-sm">HR has not assigned any assessments to you yet. Please check back later.</p>
+                    </div>
+                )}
+                {applicant.assessments.map(appAssessment => {
+                    const assessmentDetails = assessments.find(a => a.id === appAssessment.assessmentId);
+                    if (!assessmentDetails) return null;
+                    
+                    const lastAttempt = appAssessment.attempts[appAssessment.attempts.length - 1];
+                    const canRequestRetry = appAssessment.status === 'Completed' && lastAttempt.score !== null && lastAttempt.score < assessmentDetails.passing_score;
+
+                    return (
+                        <Card key={appAssessment.assessmentId} className="p-4">
+                           <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="font-semibold">{assessmentDetails.title}</h4>
+                                        {getStatusBadge(appAssessment.status)}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{assessmentDetails.process_type} &middot; {assessmentDetails.duration} mins</p>
+                                </div>
+                                <div className="flex-shrink-0">
+                                {appAssessment.status === 'Not Started' || appAssessment.status === 'Retry Approved' ? (
+                                    <Button onClick={() => handleStartAssessment(appAssessment.assessmentId)}>
+                                        <Puzzle className="mr-2 h-4 w-4" /> Start Test
+                                    </Button>
+                                ) : canRequestRetry ? (
+                                    <RetryRequestDialog onSubmit={(reason) => handleRetryRequest(appAssessment.assessmentId, reason)}>
+                                        <Button variant="outline"><RefreshCw className="mr-2 h-4 w-4"/> Request Retry</Button>
+                                    </RetryRequestDialog>
+                                ) : null}
+                                </div>
+                           </div>
+                           {appAssessment.status !== 'Not Started' && (
+                            <div className="mt-4">
+                                <h5 className="text-sm font-semibold mb-2">Score History</h5>
+                                <div className="space-y-2">
+                                    {appAssessment.attempts.map(attempt => (
+                                        <div key={attempt.attemptNumber} className="flex justify-between items-center p-2 bg-muted rounded-md">
+                                           <p className="text-sm">Attempt {attempt.attemptNumber}</p>
+                                           <p className="text-sm font-bold">{attempt.score ?? 'N/A'}<span className="font-normal text-muted-foreground">/{assessmentDetails.passing_score} (Passing)</span></p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                           )}
+                           {appAssessment.status === 'Retry Requested' && appAssessment.retryRequest && (
+                                <Alert className="mt-4 border-yellow-500/50 text-yellow-900 dark:text-yellow-200 [&>svg]:text-yellow-500">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle>Retry Request Pending</AlertTitle>
+                                    <AlertDescription>
+                                        HR is reviewing your request. You will be notified once a decision is made.
+                                    </AlertDescription>
+                                </Alert>
+                           )}
+                        </Card>
+                    )
+                })}
+            </CardContent>
+        </Card>
+    )
+}
+
 
 export default function ApplicantDashboardPage() {
     const params = useParams();
@@ -204,6 +358,7 @@ export default function ApplicantDashboardPage() {
             return;
         }
 
+        // This is a mock data update, in a real app you'd re-fetch
         const foundApplicant = walkinApplicants.find(app => app.id === applicantId);
         if (foundApplicant) {
             setApplicant(foundApplicant);
@@ -222,6 +377,17 @@ export default function ApplicantDashboardPage() {
     if (!applicant) {
         return <div className="flex h-screen items-center justify-center">Loading applicant profile...</div>;
     }
+    
+    const handleSetApplicant = (updatedApplicant: WalkinApplicant) => {
+        // In a real app, this would be a PATCH request to an API
+        // For the mock, we update the local state and the "database"
+        setApplicant(updatedApplicant);
+        const index = walkinApplicants.findIndex(a => a.id === updatedApplicant.id);
+        if (index !== -1) {
+            walkinApplicants[index] = updatedApplicant;
+        }
+    }
+
 
     return (
         <div className="min-h-screen bg-muted/40 p-4 sm:p-6 lg:p-8">
@@ -242,37 +408,35 @@ export default function ApplicantDashboardPage() {
                                 <h3 className="font-semibold text-blue-800 dark:text-blue-200">Your Application Status</h3>
                                 <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{applicant.status}</p>
                             </div>
-                            <Button asChild>
-                                <Link href="/employee/assessments">
-                                    <Puzzle className="mr-2 h-4 w-4" /> Take Your Assessment
-                                </Link>
-                            </Button>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Tabs defaultValue="profile">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                <Tabs defaultValue="assessments">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
                         <TabsTrigger value="profile"><User className="mr-2 h-4 w-4" /> Profile</TabsTrigger>
                         <TabsTrigger value="documents"><FileText className="mr-2 h-4 w-4" /> Documents</TabsTrigger>
                         <TabsTrigger value="experience"><Briefcase className="mr-2 h-4 w-4" /> Experience</TabsTrigger>
                         <TabsTrigger value="education"><GraduationCap className="mr-2 h-4 w-4" /> Education</TabsTrigger>
+                        <TabsTrigger value="assessments"><Puzzle className="mr-2 h-4 w-4" /> Assessments</TabsTrigger>
                     </TabsList>
                     <TabsContent value="profile">
-                        <ProfileTab applicant={applicant} setApplicant={setApplicant} />
+                        <ProfileTab applicant={applicant} setApplicant={handleSetApplicant} />
                     </TabsContent>
                     <TabsContent value="documents">
-                        <DocumentsTab applicant={applicant} setApplicant={setApplicant} />
+                        <DocumentsTab applicant={applicant} setApplicant={handleSetApplicant} />
                     </TabsContent>
                     <TabsContent value="experience">
-                        <ExperienceTab applicant={applicant} setApplicant={setApplicant} />
+                        <ExperienceTab applicant={applicant} setApplicant={handleSetApplicant} />
                     </TabsContent>
                     <TabsContent value="education">
-                        <EducationTab applicant={applicant} setApplicant={setApplicant} />
+                        <EducationTab applicant={applicant} setApplicant={handleSetApplicant} />
+                    </TabsContent>
+                    <TabsContent value="assessments">
+                        <AssessmentsTab applicant={applicant} setApplicant={handleSetApplicant} />
                     </TabsContent>
                 </Tabs>
             </div>
         </div>
     );
 }
-

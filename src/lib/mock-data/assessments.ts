@@ -27,7 +27,8 @@ export type Question = {
     process_type: 'Chat Support' | 'Voice Process – English' | 'Voice Process – Kannada' | 'Technical Support' | 'IT / Developer Role';
     sections: AssessmentSection[];
     duration: number; // total duration in minutes
-    passing_score: number; // percentage
+    passing_score: number;
+    passing_score_type: 'percent' | 'wpm';
     created_by: string;
   };
   
@@ -40,6 +41,7 @@ export type Question = {
       process_type: 'Chat Support',
       duration: 30,
       passing_score: 75,
+      passing_score_type: 'percent',
       created_by: 'admin-user-1',
       sections: [
         {
@@ -111,6 +113,7 @@ export type Question = {
         process_type: 'Technical Support',
         duration: 45,
         passing_score: 80,
+        passing_score_type: 'percent',
         created_by: 'admin-user-1',
         sections: [
           {
@@ -145,6 +148,7 @@ export type Question = {
         process_type: 'Voice Process – English',
         duration: 15,
         passing_score: 70,
+        passing_score_type: 'percent',
         created_by: 'admin-user-1',
         sections: [] // To be built out with voice/audio questions
       },
@@ -154,7 +158,8 @@ export type Question = {
         role: 'employee',
         process_type: 'Chat Support',
         duration: 5,
-        passing_score: 50, // WPM
+        passing_score: 50,
+        passing_score_type: 'wpm',
         created_by: 'admin-user-1',
         sections: [
             {

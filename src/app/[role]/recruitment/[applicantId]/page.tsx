@@ -8,16 +8,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Briefcase, FileText, Send, User, MessageSquare, Star, Percent, Type, Clipboard, ShieldAlert, Award, Calendar } from "lucide-react";
+import { Briefcase, FileText, Send, User, MessageSquare, Star, Percent, Type, Clipboard, ShieldAlert, Award, Calendar, Puzzle, Check, X, PlusCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { useState, memo } from "react";
+import { useState, memo, useMemo, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { walkinApplicants } from "@/lib/mock-data/walkin";
+import { assessments, type Assessment } from "@/lib/mock-data/assessments";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 
 // Mock Data - In a real app, this would be fetched based on applicantId
-const MOCK_APPLICANT = {
+const MOCK_APPLICANT_BASE = {
     id: 'app-001',
     name: 'Aarav Sharma',
     avatar: 'https://placehold.co/100x100?text=AS',
@@ -34,18 +37,13 @@ const MOCK_APPLICANT = {
             { institution: 'National Institute of Technology', degree: 'B.Tech in Computer Science', year: '2018' }
         ]
     },
-    assessmentScores: [
-        { name: 'Aptitude Test', score: 88, passing: 70, type: 'percent' },
-        { name: 'Technical MCQ', score: 92, passing: 80, type: 'percent' },
-        { name: 'Typing Test', score: 65, passing: 50, type: 'wpm' },
-    ],
     interviewerNotes: [
         { id: 1, interviewer: 'Isabella Nguyen', role: 'Engineering Manager', note: 'Strong technical foundation in React and TypeScript. Good communication skills. Asked thoughtful questions about our architecture. Seems like a great culture fit.', timestamp: '2 days ago' },
         { id: 2, interviewer: 'Recruiter User', role: 'Talent Acquisition', note: 'Initial screening call went well. Candidate is enthusiastic and meets all the basic requirements. Moving to technical round.', timestamp: '5 days ago' }
     ]
 }
 
-type Note = typeof MOCK_APPLICANT.interviewerNotes[0];
+type Note = typeof MOCK_APPLICANT_BASE.interviewerNotes[0];
 
 const NoteCard = memo(function NoteCard({ note }: { note: Note }) {
     return (
@@ -64,29 +62,154 @@ const NoteCard = memo(function NoteCard({ note }: { note: Note }) {
     )
 });
 
-const ScoreCard = memo(function ScoreCard({ name, score, passing, type }: { name: string, score: number, passing: number, type: 'percent' | 'wpm' }) {
-    const isPass = score >= passing;
-    const Icon = type === 'wpm' ? Type : Percent;
+
+const AssessmentsTab = ({ applicantId }: { applicantId: string }) => {
+    const { toast } = useToast();
+    // This state would normally be fetched and updated via API calls
+    const [applicant, setApplicant] = useState(() => walkinApplicants.find(a => a.id === applicantId));
+
+    if (!applicant) {
+        // If the applicant is not from a walk-in, we simulate a different structure
+         return <Card><CardContent><p className="p-4 text-muted-foreground">No assessment data for this applicant type.</p></CardContent></Card>
+    }
+
+    const handleAssignTest = (assessmentId: string) => {
+        if (!assessmentId) return;
+
+        const alreadyAssigned = applicant.assessments.some(a => a.assessmentId === assessmentId);
+        if (alreadyAssigned) {
+            toast({ title: 'Already Assigned', description: 'This assessment is already assigned to the applicant.', variant: 'destructive' });
+            return;
+        }
+
+        const newAssessment = {
+            assessmentId,
+            status: 'Not Started' as const,
+            attempts: [],
+        };
+        
+        const updatedApplicant = { ...applicant, assessments: [...applicant.assessments, newAssessment] };
+        // In a real app, this would be an API call
+        // For mock: find and update in walkinApplicants array
+        const index = walkinApplicants.findIndex(a => a.id === applicantId);
+        if (index > -1) {
+            walkinApplicants[index] = updatedApplicant;
+        }
+        setApplicant(updatedApplicant);
+        toast({ title: 'Assessment Assigned', description: 'The new assessment has been assigned to the applicant.' });
+    };
+
+    const handleApproval = (assessmentId: string, approve: boolean) => {
+        const updatedAssessments = applicant.assessments.map(appAssessment => {
+            if (appAssessment.assessmentId === assessmentId && appAssessment.retryRequest?.status === 'Pending') {
+                return {
+                    ...appAssessment,
+                    status: approve ? 'Retry Approved' as const : 'Completed' as const,
+                    retryRequest: {
+                        ...appAssessment.retryRequest,
+                        status: approve ? 'Approved' as const : 'Denied' as const,
+                    }
+                };
+            }
+            return appAssessment;
+        });
+
+        const updatedApplicant = { ...applicant, assessments: updatedAssessments };
+        setApplicant(updatedApplicant);
+        const index = walkinApplicants.findIndex(a => a.id === applicantId);
+        if (index > -1) {
+            walkinApplicants[index] = updatedApplicant;
+        }
+
+        toast({
+            title: `Request ${approve ? 'Approved' : 'Denied'}`,
+            description: `The retry request has been ${approve ? 'approved' : 'denied'}.`,
+        });
+    }
+
+    const availableAssessments = assessments.filter(
+        (a) => !applicant.assessments.some(aa => aa.assessmentId === a.id)
+    );
+
     return (
-         <div className="p-4 bg-muted/50 rounded-lg">
-            <div className="flex justify-between items-center">
-                <p className="font-semibold text-sm">{name}</p>
-                <Badge variant={isPass ? "default" : "destructive"} className={isPass ? "bg-green-100 text-green-800" : ""}>
-                    {isPass ? "Pass" : "Fail"}
-                </Badge>
-            </div>
-            <p className="text-2xl font-bold font-headline mt-2">{score} <span className="text-lg text-muted-foreground font-sans">{type === 'wpm' ? "WPM" : "%"}</span></p>
-            <p className="text-xs text-muted-foreground">Passing Score: {passing}{type === 'wpm' ? " WPM" : "%"}</p>
-        </div>
-    )
-});
+        <Card>
+            <CardHeader>
+                <CardTitle>Assessments & Retries</CardTitle>
+                <CardDescription>Assign tests, review scores, and manage retry requests for this applicant.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Assign New Assessment</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Select onValueChange={handleAssignTest}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a test to assign..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableAssessments.map(a => (
+                                    <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
+                {applicant.assessments.map(appAssessment => {
+                    const assessmentDetails = assessments.find(a => a.id === appAssessment.assessmentId);
+                    if (!assessmentDetails) return null;
+
+                    const retryRequest = appAssessment.retryRequest;
+
+                    return (
+                        <Card key={appAssessment.assessmentId} className="p-4">
+                            <h4 className="font-semibold">{assessmentDetails.title}</h4>
+                            
+                            {retryRequest && retryRequest.status === 'Pending' && (
+                                <Alert className="my-4 border-amber-500/50">
+                                    <AlertTitle className="text-amber-600 dark:text-amber-400">Pending Retry Request</AlertTitle>
+                                    <AlertDescription>
+                                        <p className="text-sm italic">"{retryRequest.reason}"</p>
+                                        <div className="flex gap-2 justify-end mt-2">
+                                            <Button size="sm" onClick={() => handleApproval(appAssessment.assessmentId, true)}><Check className="mr-2 h-4 w-4"/>Approve</Button>
+                                            <Button size="sm" variant="destructive" onClick={() => handleApproval(appAssessment.assessmentId, false)}><X className="mr-2 h-4 w-4"/>Deny</Button>
+                                        </div>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            
+                            <div className="mt-2 text-sm text-muted-foreground">Score History:</div>
+                            {appAssessment.attempts.length > 0 ? (
+                                <ul className="mt-1 space-y-1">
+                                {appAssessment.attempts.map((attempt, i) => (
+                                    <li key={i} className="flex justify-between items-center text-sm p-2 bg-muted rounded">
+                                        <span>Attempt {attempt.attemptNumber}</span>
+                                        <span className="font-semibold">{attempt.score ?? 'N/A'}{assessmentDetails.passing_score_type === 'percent' ? '%' : ' WPM'}</span>
+                                    </li>
+                                ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center p-2">No attempts yet.</p>
+                            )}
+                        </Card>
+                    )
+                })}
+            </CardContent>
+        </Card>
+    );
+};
+
 
 export default function ApplicantProfilePage() {
     const params = useParams();
     const applicantId = params.applicantId as string;
-    const [notes, setNotes] = useState(MOCK_APPLICANT.interviewerNotes);
+    const [notes, setNotes] = useState(MOCK_APPLICANT_BASE.interviewerNotes);
     const [newNote, setNewNote] = useState('');
     const { toast } = useToast();
+
+    // Determine if the applicantId is for a regular applicant or a walk-in
+    const isWalkinApplicant = useMemo(() => walkinApplicants.some(a => a.id === applicantId), [applicantId]);
 
     const handleAddNote = (e: React.FormEvent) => {
         e.preventDefault();
@@ -117,23 +240,23 @@ export default function ApplicantProfilePage() {
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-start gap-6">
                         <Avatar className="w-24 h-24 border-4 border-background ring-2 ring-primary">
-                            <AvatarImage src={MOCK_APPLICANT.avatar} data-ai-hint="person portrait" alt={MOCK_APPLICANT.name} />
-                            <AvatarFallback>{MOCK_APPLICANT.name.substring(0, 2)}</AvatarFallback>
+                            <AvatarImage src={MOCK_APPLICANT_BASE.avatar} data-ai-hint="person portrait" alt={MOCK_APPLICANT_BASE.name} />
+                            <AvatarFallback>{MOCK_APPLICANT_BASE.name.substring(0, 2)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold font-headline">{MOCK_APPLICANT.name}</h1>
+                            <h1 className="text-3xl font-bold font-headline">{MOCK_APPLICANT_BASE.name}</h1>
                             <div className="text-muted-foreground mt-1 space-y-2">
                                 <div className="flex items-center gap-2">
                                     <Briefcase className="h-4 w-4"/>
-                                    <span>Applied for: <strong>{MOCK_APPLICANT.roleApplied}</strong></span>
+                                    <span>Applied for: <strong>{MOCK_APPLICANT_BASE.roleApplied}</strong></span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4"/>
-                                    <span>Applied on: {MOCK_APPLICANT.applicationDate} (ID: {MOCK_APPLICANT.id})</span>
+                                    <span>Applied on: {MOCK_APPLICANT_BASE.applicationDate} (ID: {MOCK_APPLICANT_BASE.id})</span>
                                 </div>
                                  <div className="flex items-center gap-2">
                                     <User className="h-4 w-4"/>
-                                    <span>Referred by: {MOCK_APPLICANT.referral}</span>
+                                    <span>Referred by: {MOCK_APPLICANT_BASE.referral}</span>
                                 </div>
                             </div>
                         </div>
@@ -146,68 +269,57 @@ export default function ApplicantProfilePage() {
             </Card>
 
             <Tabs defaultValue="profile">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="profile">Profile & Assessments</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
+                    <TabsTrigger value="profile">Profile & Resume</TabsTrigger>
                     <TabsTrigger value="notes">Interviewer Notes</TabsTrigger>
+                    <TabsTrigger value="assessments">Assessments & Retries</TabsTrigger>
                 </TabsList>
                 <TabsContent value="profile">
-                    <div className="grid lg:grid-cols-3 gap-6 items-start">
-                        <Card className="lg:col-span-2">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2"><FileText /> AI-Parsed Resume Data</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div>
-                                    <h4 className="font-semibold mb-2">Key Skills</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {MOCK_APPLICANT.resumeData.skills.map(skill => (
-                                            <Badge key={skill} variant="secondary">{skill}</Badge>
-                                        ))}
-                                    </div>
+                    <Card className="lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><FileText /> AI-Parsed Resume Data</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <h4 className="font-semibold mb-2">Key Skills</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {MOCK_APPLICANT_BASE.resumeData.skills.map(skill => (
+                                        <Badge key={skill} variant="secondary">{skill}</Badge>
+                                    ))}
                                 </div>
-                                <Separator />
-                                <div>
-                                    <h4 className="font-semibold mb-2">Work Experience</h4>
-                                    <ul className="space-y-3">
-                                        {MOCK_APPLICANT.resumeData.workExperience.map((exp, i) => (
-                                            <li key={i} className="flex gap-3">
-                                                <Briefcase className="h-4 w-4 mt-1 text-muted-foreground" />
-                                                <div>
-                                                    <p className="font-medium">{exp.title}</p>
-                                                    <p className="text-sm text-muted-foreground">{exp.company} &middot; {exp.dates}</p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <Separator />
-                                <div>
-                                    <h4 className="font-semibold mb-2">Education</h4>
-                                     <ul className="space-y-3">
-                                        {MOCK_APPLICANT.resumeData.education.map((edu, i) => (
-                                            <li key={i} className="flex gap-3">
-                                                <Award className="h-4 w-4 mt-1 text-muted-foreground" />
-                                                <div>
-                                                    <p className="font-medium">{edu.degree}</p>
-                                                    <p className="text-sm text-muted-foreground">{edu.institution} &middot; {edu.year}</p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2"><Star /> Assessment Scores</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                               {MOCK_APPLICANT.assessmentScores.map(score => (
-                                <ScoreCard key={score.name} {...score} />
-                               ))}
-                            </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+                            <Separator />
+                            <div>
+                                <h4 className="font-semibold mb-2">Work Experience</h4>
+                                <ul className="space-y-3">
+                                    {MOCK_APPLICANT_BASE.resumeData.workExperience.map((exp, i) => (
+                                        <li key={i} className="flex gap-3">
+                                            <Briefcase className="h-4 w-4 mt-1 text-muted-foreground" />
+                                            <div>
+                                                <p className="font-medium">{exp.title}</p>
+                                                <p className="text-sm text-muted-foreground">{exp.company} &middot; {exp.dates}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <Separator />
+                            <div>
+                                <h4 className="font-semibold mb-2">Education</h4>
+                                 <ul className="space-y-3">
+                                    {MOCK_APPLICANT_BASE.resumeData.education.map((edu, i) => (
+                                        <li key={i} className="flex gap-3">
+                                            <Award className="h-4 w-4 mt-1 text-muted-foreground" />
+                                            <div>
+                                                <p className="font-medium">{edu.degree}</p>
+                                                <p className="text-sm text-muted-foreground">{edu.institution} &middot; {edu.year}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
                 <TabsContent value="notes">
                      <Card>
@@ -232,6 +344,17 @@ export default function ApplicantProfilePage() {
                             </ScrollArea>
                         </CardContent>
                     </Card>
+                </TabsContent>
+                <TabsContent value="assessments">
+                    { isWalkinApplicant ? (
+                         <AssessmentsTab applicantId={applicantId} />
+                    ) : (
+                         <Card>
+                            <CardContent>
+                                <p className="p-4 text-muted-foreground">Standard assessment module for non-walk-in applicants. Feature to be built.</p>
+                            </CardContent>
+                         </Card>
+                    )}
                 </TabsContent>
             </Tabs>
         </div>
