@@ -12,13 +12,11 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useNav } from '@/hooks/use-nav';
 import { Logo } from './logo';
 import { ScrollArea } from './ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import { Button } from './ui/button';
 import { LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useSidebar } from './ui/sidebar';
@@ -34,7 +32,7 @@ export default function AppSidebar() {
   return (
     <Sidebar>
       <ScrollArea className="h-full">
-        <SidebarHeader>
+        <SidebarHeader className={state === 'collapsed' ? 'justify-center' : ''}>
           <Logo />
         </SidebarHeader>
         <SidebarContent>
