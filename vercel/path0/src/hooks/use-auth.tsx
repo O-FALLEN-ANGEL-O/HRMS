@@ -1,55 +1,21 @@
 
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
-import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-
-// Keep the existing profile type
-interface UserProfile {
-  id: string;
-  full_name: string;
-  department: string;
-  job_title: string;
-  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
-  employee_id: string;
-  profile_picture_url?: string;
-}
-
-interface User {
-  id: string;
-  email: string;
-  role: UserProfile['role'];
-  profile: UserProfile | null;
-}
+import { mockUsers, type User } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (identifier: string, password: string, isEmployeeId?: boolean) => Promise<any>;
-  logout: () => Promise<any>;
-  signUp: (data: any) => Promise<any>;
+  login: (employeeId: string) => Promise<{ error: { message: string } | null }>;
+  logout: () => Promise<void>;
+  signUp: (data: any) => Promise<{ error: { message: string } | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// A mock user for deployment build purposes
-const MOCK_USER: User = {
-    id: 'mock-user-id',
-    email: 'admin@optitalent.com',
-    role: 'admin',
-    profile: {
-        id: 'mock-user-id',
-        full_name: 'Admin User',
-        department: 'Administration',
-        job_title: 'Administrator',
-        role: 'admin',
-        employee_id: 'PEP0001',
-    }
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -58,131 +24,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // If Supabase is not configured (e.g., in Vercel build), use a mock user and skip auth logic.
-    if (!supabase) {
-        setUser(MOCK_USER);
-        setLoading(false);
-        return;
+    // Check for a user in session storage on initial load
+    try {
+      const storedUser = sessionStorage.getItem('authUser');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Could not parse auth user from session storage", error)
+      sessionStorage.removeItem('authUser');
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    const fetchUser = async (sessionUser: SupabaseUser | null) => {
-        if (sessionUser) {
-            const { data: profile, error } = await supabase
-                .from('employees')
-                .select('*')
-                .eq('id', sessionUser.id)
-                .single();
+  const login = async (employeeId: string) => {
+    setLoading(true);
+    const userToLogin = mockUsers.find(u => u.profile.employee_id === employeeId);
 
-            if (error) {
-                console.error("Error fetching profile:", error);
-                setUser(null);
-            } else {
-                 const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
-                 setUser({
-                    id: sessionUser.id,
-                    email: sessionUser.email!,
-                    role: userRole,
-                    profile: profile
-                });
-            }
-        } else {
-            setUser(null);
-        }
-        setLoading(false);
-    };
-    
-    // Fetch user on initial load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-        fetchUser(session?.user ?? null);
-    });
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session) => {
-        const sessionUser = session?.user ?? null;
-        await fetchUser(sessionUser);
-        
-        if (event === 'SIGNED_IN' && sessionUser) {
-            const { data: profile } = await supabase.from('employees').select('role').eq('id', sessionUser.id).single();
-            const userRole = profile?.role || (sessionUser.app_metadata.role as UserProfile['role']) || 'employee';
-            router.push(`/${userRole}/dashboard`);
-        }
-        if (event === 'SIGNED_OUT') {
-            router.push('/');
-        }
-      }
-    );
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [router]);
-
-  const login = async (identifier: string, password: string, isEmployeeId: boolean = false) => {
-    if (!supabase) return { error: { message: "Supabase not configured." }};
-    let email = identifier;
-    if (isEmployeeId) {
-      if (!identifier) {
-        return { data: null, error: { message: "Employee ID is required." } };
-      }
-      const { data: employee, error } = await supabase
-        .from('employees')
-        .select('email')
-        .eq('employee_id', identifier.toUpperCase())
-        .single();
-      
-      if (error || !employee) {
-        return { data: null, error: { message: "Employee ID not found." } };
-      }
-      email = employee.email;
+    if (userToLogin) {
+      setUser(userToLogin);
+      sessionStorage.setItem('authUser', JSON.stringify(userToLogin));
+      router.push(`/${userToLogin.role}/dashboard`);
+      setLoading(false);
+      return { error: null };
+    } else {
+      setLoading(false);
+      return { error: { message: "Invalid Employee ID." } };
     }
-    return supabase.auth.signInWithPassword({ email, password });
   };
   
   const signUp = async (data: any) => {
-    if (!supabase) return { error: { message: "Supabase not configured." }};
+    setLoading(true);
     const { email, password, firstName, lastName } = data;
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          role: 'employee',
-          full_name: `${firstName} ${lastName}`
+    
+    const newUser: User = {
+        id: `user-${Date.now()}`,
+        email,
+        role: 'employee',
+        profile: {
+            id: `profile-${Date.now()}`,
+            full_name: `${firstName} ${lastName}`,
+            email,
+            job_title: 'New Hire',
+            employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
+            status: 'Active',
+            role: 'employee',
+            department_id: "d-001",
+            department: { name: "Engineering" },
+            profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
+            phone_number: '123-456-7890'
         }
-      }
-    });
-
-    if (authError) return { user: null, error: authError };
-    if (!authData.user) throw new Error("Sign up successful, but no user data returned.");
-
-    // Generate a simple employee_id
-    const employee_id = `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`;
-
-    const { error: profileError } = await supabase
-      .from('employees')
-      .insert({
-        id: authData.user.id,
-        full_name: `${firstName} ${lastName}`,
-        email: email,
-        job_title: 'New Hire',
-        department_id: null,
-        employee_id,
-        status: 'Active'
-      });
-
-    if (profileError) {
-        console.error("Error creating profile:", profileError);
-        return { user: authData.user, error: profileError };
-    }
-
-    return { user: authData.user, error: null };
+    };
+    
+    mockUsers.push(newUser);
+    setUser(newUser);
+    sessionStorage.setItem('authUser', JSON.stringify(newUser));
+    router.push(`/${newUser.role}/dashboard`);
+    setLoading(false);
+    return { error: null };
   }
 
   const logout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
     setUser(null);
+    sessionStorage.removeItem('authUser');
     router.push('/');
   };
 
