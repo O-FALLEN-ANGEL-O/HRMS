@@ -5,12 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { MapPin, Calendar, Clock, Briefcase } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import React from "react";
+import Link from "next/link";
+
 
 const openRoles = [
     { title: "Chat Support Agent", description: "Provide top-notch support to customers via live chat." },
@@ -19,69 +15,6 @@ const openRoles = [
     { title: "Technical Support Engineer", description: "Troubleshoot and resolve technical issues for our products." },
 ];
 
-function RegistrationForm() {
-    const { toast } = useToast();
-    const [open, setOpen] = React.useState(false);
-
-    const handleRegister = (e: React.FormEvent) => {
-        e.preventDefault();
-        toast({
-            title: "Registration Successful!",
-            description: "We've received your registration for the walk-in drive. See you there!",
-        });
-        setOpen(false);
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                 <Button size="lg" className="px-12 py-6 text-lg">
-                    Register Now
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Register for Walk-in Drive</DialogTitle>
-                    <DialogDescription>
-                        Please fill out your details below. We look forward to meeting you!
-                    </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleRegister}>
-                    <div className="space-y-4 py-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="fullName">Full Name</Label>
-                            <Input id="fullName" placeholder="John Doe" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" type="tel" placeholder="+91 12345 67890" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="role">Desired Role</Label>
-                             <Select name="role" required>
-                                <SelectTrigger id="role">
-                                    <SelectValue placeholder="Select a role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {openRoles.map(role => (
-                                         <SelectItem key={role.title} value={role.title}>{role.title}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit">Submit Registration</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
 export default function WalkInDrivePage() {
 
@@ -128,7 +61,7 @@ export default function WalkInDrivePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Open Roles</CardTitle>
-                        <CardDescription>We are hiring for the following positions. Select your desired role during registration.</CardDescription>
+                        <CardDescription>We are hiring for the following positions. Register now to apply.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {openRoles.map((role, index) => (
@@ -144,7 +77,11 @@ export default function WalkInDrivePage() {
                 </Card>
 
                 <div className="text-center">
-                    <RegistrationForm />
+                   <Button asChild size="lg" className="px-12 py-6 text-lg">
+                        <Link href="/walkin-drive/register">
+                            Register Now
+                        </Link>
+                    </Button>
                 </div>
                  <footer className="text-center text-sm text-muted-foreground pt-8">
                     &copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved.
