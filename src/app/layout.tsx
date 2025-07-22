@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Metadata } from 'next';
@@ -26,43 +25,46 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 });
 
-// We create a new component for the main app layout to keep the root layout clean.
+// Main App Layout to wrap pages (excluding public routes)
 function AppLayout({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
-    const pathname = usePathname();
+  const { user, loading } = useAuth();
+  const pathname = usePathname();
 
-    const isPublicPage = pathname === '/' || pathname === '/signup' || pathname.startsWith('/walkin-drive');
+  const isPublicPage =
+    pathname === '/' ||
+    pathname === '/signup' ||
+    pathname.startsWith('/walkin-drive');
 
-    if (loading) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-               <LoadingLogo />
-            </div>
-        )
-    }
-
-    if (isPublicPage || !user) {
-        return <>{children}</>;
-    }
-
+  if (loading) {
     return (
-        <SidebarProvider>
-            <div className="flex h-screen bg-muted/40">
-                <AppSidebar />
-                <div className="flex-1 flex flex-col overflow-hidden">
-                    <AppHeader />
-                    <main className="flex-1 overflow-y-auto">
-                        <div className="p-4 sm:p-6 lg:p-8">
-                            {children}
-                        </div>
-                    </main>
-                </div>
-            </div>
-        </SidebarProvider>
+      <div className="flex h-screen items-center justify-center">
+        <LoadingLogo />
+      </div>
     );
+  }
+
+  if (isPublicPage || !user) {
+    return <>{children}</>;
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="flex h-screen bg-muted/40 w-full max-w-screen overflow-hidden">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden w-full">
+          <AppHeader />
+          <main className="flex-1 overflow-y-auto w-full">
+            <div className="p-4 sm:p-6 lg:p-8">
+              {children}
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
 }
 
-
+// Root Layout Component
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -70,12 +72,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-       <head>
+      <head>
         <title>OptiTalent HRMS</title>
         <meta name="description" content="A Next-Generation HRMS for modern businesses." />
         <link rel="icon" href="/animated-favicon.svg" type="image/svg+xml" />
       </head>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-body antialiased`} suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${spaceGrotesk.variable} font-body antialiased overflow-x-hidden`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
