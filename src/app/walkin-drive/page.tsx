@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { MapPin, Calendar, Clock, Briefcase } from "lucide-react";
+import { MapPin, Calendar, Clock, Briefcase, LogIn } from "lucide-react";
 import Link from "next/link";
 
 
@@ -76,10 +76,15 @@ export default function WalkInDrivePage() {
                     </CardContent>
                 </Card>
 
-                <div className="text-center">
-                   <Button asChild size="lg" className="px-12 py-6 text-lg">
+                <div className="text-center space-x-4">
+                    <Button asChild size="lg" className="px-12 py-6 text-lg">
                         <Link href="/walkin-drive/register">
                             Register Now
+                        </Link>
+                    </Button>
+                     <Button asChild size="lg" variant="outline" className="px-12 py-6 text-lg">
+                        <Link href="/walkin-drive/login">
+                           <LogIn className="mr-2 h-5 w-5"/> Already Applied? Login
                         </Link>
                     </Button>
                 </div>
