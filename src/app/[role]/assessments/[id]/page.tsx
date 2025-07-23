@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, CheckCircle, Clock, Video, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Video, ShieldAlert, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { TypingTest } from '@/components/typing-test';
@@ -114,6 +114,18 @@ export default function TakeAssessmentPage() {
          description: `Your typing speed is ${typingResult.wpm} WPM with ${typingResult.accuracy}% accuracy.`,
        });
        return;
+    }
+    
+    if (currentQuestion.type === 'simulation') {
+        // Mock scoring for simulation
+        const mockScore = Math.floor(Math.random() * (95 - 75 + 1)) + 75;
+        setScore(mockScore);
+        setAssessmentState('finished');
+        toast({
+            title: "Simulation Complete!",
+            description: `You scored ${mockScore}%. A detailed report is being generated.`,
+        });
+        return;
     }
 
     // Calculate score for MCQs
@@ -278,9 +290,24 @@ export default function TakeAssessmentPage() {
                     }}
                   />
             )}
+            {currentQuestion?.type === 'simulation' && currentQuestion.simulation_details && (
+                 <div className="space-y-4">
+                    <Alert>
+                        <FileText className="h-4 w-4" />
+                        <AlertT>Scenario</AlertT>
+                        <AlertDesc>{currentQuestion.simulation_details.scenario}</AlertDesc>
+                    </Alert>
+                    <p className="text-sm text-muted-foreground">
+                        Your first message has been sent. The simulation will now begin.
+                    </p>
+                    <div className="text-center">
+                        <Button onClick={handleSubmit}>Begin Simulation</Button>
+                    </div>
+                </div>
+            )}
           </div>
         </CardContent>
-        {currentQuestion?.type !== 'typing' && (
+        {(currentQuestion?.type === 'mcq') && (
         <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
                 Previous

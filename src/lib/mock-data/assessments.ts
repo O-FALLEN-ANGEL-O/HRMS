@@ -1,20 +1,27 @@
 
+export type SimulationDetails = {
+  scenario: string;
+  issue: string;
+  chat_log: { from: 'customer' | 'agent', text: string }[];
+};
+
 export type Question = {
     id: string;
     section_id: string;
-    type: 'mcq' | 'typing' | 'audio' | 'voice_input' | 'video_input';
+    type: 'mcq' | 'typing' | 'audio' | 'voice_input' | 'video_input' | 'simulation';
     question_text: string;
     options?: string[];
     correct_answer?: string;
     audio_prompt?: string;
     language?: 'english' | 'kannada' | 'hindi';
     typing_prompt?: string;
+    simulation_details?: SimulationDetails;
   };
   
   export type AssessmentSection = {
     id: string;
     assessment_id: string;
-    section_type: 'mcq' | 'typing' | 'audio' | 'voice_input' | 'video_input';
+    section_type: 'mcq' | 'typing' | 'audio' | 'voice_input' | 'video_input' | 'simulation';
     title: string;
     time_limit: number; // in minutes
     questions: Question[];
@@ -209,6 +216,42 @@ export type Question = {
                         type: 'typing',
                         question_text: 'Please type the following text.',
                         typing_prompt: 'Effective customer service is the cornerstone of a successful business. It requires patience, empathy, and clear communication. Resolving issues promptly and accurately builds trust and loyalty, turning a negative experience into a positive one. Every interaction is an opportunity to strengthen the customer relationship and uphold the company\'s reputation. Efficiency and a friendly demeanor go hand in hand.'
+                    }
+                ]
+            }
+        ]
+      },
+       {
+        id: 'asmt-006',
+        title: 'Web Hosting Support Simulation',
+        role: 'trainee',
+        process_type: 'Technical Support',
+        duration: 20,
+        passing_score: 80,
+        max_attempts: 1,
+        passing_score_type: 'percent',
+        created_by: 'admin-user-1',
+        sections: [
+            {
+                id: 'sec-06',
+                assessment_id: 'asmt-006',
+                section_type: 'simulation',
+                title: 'Live Chat Simulation',
+                time_limit: 20,
+                questions: [
+                    {
+                        id: 'q-007',
+                        section_id: 'sec-06',
+                        type: 'simulation',
+                        question_text: 'Engage with the customer to resolve their issue.',
+                        simulation_details: {
+                            scenario: "A customer is experiencing an issue where their website is suddenly down. They are a small business owner and are losing sales. Your task is to diagnose and resolve the issue through chat.",
+                            issue: "DNS Misconfiguration",
+                            chat_log: [
+                                { from: 'customer', text: "HELP! My website is down! I'm getting a 'This site can’t be reached' error. I haven't changed anything. This is costing me money every minute. Please fix this ASAP!" },
+                                { from: 'agent', text: "I understand how critical this is for your business, and I'm here to help you get this resolved right away. Could you please provide me with your domain name?" }
+                            ]
+                        }
                     }
                 ]
             }
