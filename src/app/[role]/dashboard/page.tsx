@@ -37,6 +37,11 @@ const celebrations = [
     { type: 'Work Anniversary', name: 'Rohan Verma (3 years)' },
 ];
 
+const upcomingPrograms = [
+    { name: 'Quarterly Town Hall', date: 'In 2 days' },
+    { name: 'Tech Talk: AI in HR', date: 'Next Wednesday' },
+]
+
 const teamLeaves = [
     { name: 'Priya Mehta', avatar: 'https://placehold.co/100x100?text=PM' },
     { name: 'John Doe', avatar: 'https://placehold.co/100x100?text=JD' },
@@ -171,6 +176,37 @@ export default function DashboardPage() {
                     </TooltipProvider>
                 </CardContent>
             </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Celebrations</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    {celebrations.map((cel) => (
+                      <div key={cel.name} className="flex items-center gap-3 text-sm">
+                          <Cake className="h-4 w-4 text-pink-500" />
+                          <div>
+                              <p className="font-semibold">{cel.name}</p>
+                              <p className="text-muted-foreground">{cel.type}</p>
+                          </div>
+                      </div>
+                    ))}
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Upcoming Programs</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    {upcomingPrograms.map((program) => (
+                      <div key={program.name} className="flex items-center justify-between text-sm">
+                          <p className="font-semibold">{program.name}</p>
+                          <p className="text-muted-foreground">{program.date}</p>
+                      </div>
+                    ))}
+                </CardContent>
+            </Card>
         </div>
 
         {/* Middle Column */}
@@ -284,23 +320,9 @@ export default function DashboardPage() {
                     </div>
                 </CardContent>
             </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Celebrations</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                    {celebrations.map((cel) => (
-                      <div key={cel.name} className="flex items-center gap-3 text-sm">
-                          <Cake className="h-4 w-4 text-pink-500" />
-                          <div>
-                              <p className="font-semibold">{cel.name}</p>
-                              <p className="text-muted-foreground">{cel.type}</p>
-                          </div>
-                      </div>
-                    ))}
-                </CardContent>
-            </Card>
         </div>
     </div>
   );
 }
+
+    
