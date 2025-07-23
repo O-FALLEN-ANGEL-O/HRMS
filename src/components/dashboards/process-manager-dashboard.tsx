@@ -103,7 +103,7 @@ export default function ProcessManagerDashboard() {
                         <div className="flex justify-center items-center h-[250px]">
                             <Skeleton className="h-[200px] w-[200px] rounded-full" />
                         </div>
-                    ) : (
+                    ) : ticketData ? (
                         <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
                             <PieChart>
                                 <ChartTooltip content={<ChartTooltipContent nameKey="count" hideLabel />} />
@@ -115,6 +115,10 @@ export default function ProcessManagerDashboard() {
                                 <ChartLegend content={<ChartLegendContent nameKey="category" />} />
                             </PieChart>
                         </ChartContainer>
+                    ) : (
+                         <div className="flex justify-center items-center h-[250px]">
+                            <p className="text-muted-foreground">Could not load chart data.</p>
+                        </div>
                     )}
                 </CardContent>
             </Card>
