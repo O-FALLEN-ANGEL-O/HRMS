@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   Puzzle,
   BookOpen,
-  Bot
+  Bot,
+  TrendingUp
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -109,6 +110,7 @@ export const navConfig: Record<string, NavItem[]> = {
   'process-manager': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
+    { label: 'Performance', href: '/performance', icon: TrendingUp },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
     { label: 'My Profile', href: '/profile', icon: FileText },
