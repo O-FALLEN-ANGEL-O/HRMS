@@ -10,32 +10,59 @@ import { getDashboardDataAction } from './actions';
 import type { DashboardData } from "@/ai/flows/get-dashboard-data.types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Users, Briefcase, TrendingUp, TrendingDown } from 'lucide-react';
+import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'), { loading: () => <DashboardSkeleton /> });
-const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), { loading: () => <DashboardSkeleton /> });
-const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'), { loading: () => <DashboardSkeleton /> });
-const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'), { loading: () => <DashboardSkeleton /> });
-const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'), { loading: () => <DashboardSkeleton /> });
-const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'), { loading: () => <DashboardSkeleton /> });
-const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'), { loading: () => <DashboardSkeleton /> });
-const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'), { loading: () => <DashboardSkeleton /> });
-const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'), { loading: () => <DashboardSkeleton /> });
-const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'), { loading: () => <DashboardSkeleton /> });
+const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'), { loading: () => <LoadingState /> });
+const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), { loading: () => <LoadingState /> });
+const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'), { loading: () => <LoadingState /> });
+const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'), { loading: () => <LoadingState /> });
+const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'), { loading: () => <LoadingState /> });
+const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'), { loading: () => <LoadingState /> });
+const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'), { loading: () => <LoadingState /> });
+const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'), { loading: () => <LoadingState /> });
+const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'), { loading: () => <LoadingState /> });
+const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'), { loading: () => <LoadingState /> });
 
-function DashboardSkeleton() {
+const loadingMessages = [
+    "Connecting to data warehouse...",
+    "Compiling HR records...",
+    "Running statistical models...",
+    "Analyzing leave patterns...",
+    "Projecting recruitment funnel...",
+    "Generating visualizations...",
+];
+
+function LoadingState() {
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setMessageIndex(prevIndex => (prevIndex + 1) % loadingMessages.length);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Skeleton className="lg:col-span-2 h-96" />
-        <Skeleton className="h-96" />
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+        <div className="relative mb-6">
+            <Bot className="h-16 w-16 text-primary animate-pulse" />
+            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin absolute -top-2 -right-2" />
+        </div>
+        <h2 className="text-xl font-semibold mb-2">Generating Your Analytics Dashboard</h2>
+        <AnimatePresence mode="wait">
+            <motion.p
+              key={messageIndex}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3 }}
+              className="text-muted-foreground"
+            >
+              {loadingMessages[messageIndex]}
+            </motion.p>
+        </AnimatePresence>
     </div>
   )
 }
@@ -60,7 +87,7 @@ function EnhancedAnalyticsDashboard() {
     }, []);
 
     if (loading || !data) {
-        return <DashboardSkeleton />;
+        return <LoadingState />;
     }
     
     const { stats, headcountByDept, recruitmentFunnel } = data;
