@@ -101,6 +101,13 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
+  trainee: [
+    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'My Assessments', href: '/assessments', icon: ClipboardCheck },
+    { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
+    { label: 'My Profile', href: '/profile', icon: FileText },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
   'qa-analyst': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Quality', href: '/qa-analyst/quality', icon: ShieldCheck },

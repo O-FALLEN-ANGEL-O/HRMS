@@ -93,6 +93,7 @@ const RoleSpecificKpis = ({ role }: { role: string }) => {
         case 'qa-analyst':
             return <QaAnalystKpis />;
         case 'employee':
+        case 'trainee':
         default:
             return <EmployeeKpis />;
     }

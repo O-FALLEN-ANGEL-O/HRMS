@@ -5,7 +5,7 @@ export type UserProfile = {
   department: { name: string };
   department_id: string;
   job_title: string;
-  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager' | 'account-manager' | 'trainer';
+  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager' | 'account-manager' | 'trainer' | 'trainee';
   employee_id: string;
   profile_picture_url?: string;
   phone_number?: string;
@@ -295,14 +295,14 @@ export const mockUsers: User[] = [
     { 
         id: 'user-017',
         email: 'liam.j@optitalent.com',
-        role: 'employee',
+        role: 'trainee',
         profile: {
             id: 'profile-017',
             full_name: 'Liam Johnson',
             department: { name: 'Engineering' },
             department_id: 'd-001',
             job_title: 'Software Engineer Trainee',
-            role: 'employee',
+            role: 'trainee',
             employee_id: 'PEP0017',
             phone_number: '111-222-3349',
             status: 'Active',
