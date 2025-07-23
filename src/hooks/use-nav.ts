@@ -82,6 +82,7 @@ export const navConfig: Record<string, NavItem[]> = {
   employee: [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'My Profile', href: '/profile', icon: FileText },
+    { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Leaves', href: '/leaves', icon: Calendar },
     { label: 'Attendance', href: '/attendance', icon: ClipboardCheck },
     { label: 'Payroll', href: '/payroll', icon: DollarSign },

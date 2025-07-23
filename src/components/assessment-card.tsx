@@ -15,7 +15,7 @@ const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
   const totalQuestions = assessment.sections.reduce((acc, section) => acc + section.questions.length, 0);
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col hover:border-primary transition-colors cursor-pointer w-full">
       <CardHeader>
         <CardTitle>{assessment.title}</CardTitle>
         <CardDescription>
@@ -33,7 +33,7 @@ const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
           <Percent className="mr-2 h-4 w-4" />
-          <span>{assessment.passing_score}% passing score</span>
+          <span>{assessment.passing_score}{assessment.passing_score_type === 'wpm' ? ' WPM' : '%'} passing score</span>
         </div>
       </CardContent>
     </Card>
