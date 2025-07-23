@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Metadata } from 'next';
@@ -7,11 +8,22 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import AppSidebar from '@/components/app-sidebar';
-import AppHeader from '@/components/app-header';
 import { usePathname } from 'next/navigation';
 import { LoadingLogo } from '@/components/loading-logo';
 import * as React from 'react';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const AppSidebar = dynamic(() => import('@/components/app-sidebar'), {
+  loading: () => <Skeleton className="hidden md:flex h-screen w-[3.75rem]" />,
+  ssr: false,
+});
+
+const AppHeader = dynamic(() => import('@/components/app-header'), {
+  loading: () => <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6"><Skeleton className="h-8 w-full" /></header>,
+  ssr: false,
+});
+
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,7 +45,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const isPublicPage =
     pathname === '/' ||
     pathname === '/signup' ||
-    pathname.startsWith('/walkin-drive');
+    pathname.startsWith('/walkin-drive') ||
+    pathname.startsWith('/applicant');
 
   if (loading) {
     return (
