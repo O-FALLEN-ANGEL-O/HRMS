@@ -3,27 +3,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getDashboardDataAction } from './actions';
 import type { DashboardData } from "@/ai/flows/get-dashboard-data.types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2, AlertTriangle, RefreshCw, Construction } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
-const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'));
-const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'));
-const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'));
-const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'));
-const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'));
-const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'));
-const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'));
-const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'));
-const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'));
-const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'));
 
 const loadingMessages = [
     "Connecting to data warehouse...",
@@ -231,6 +220,18 @@ function EnhancedAnalyticsDashboard() {
     );
 }
 
+function EmployeeDashboard() {
+  return (
+    <Card>
+      <CardContent className="p-10 flex flex-col items-center justify-center text-center">
+        <Construction className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold">Analytics Not Available</h3>
+        <p className="text-muted-foreground text-sm">A dedicated analytics dashboard for your role is coming soon.</p>
+      </CardContent>
+    </Card>
+  )
+}
+
 
 export default function AnalyticsPage() {
   const params = useParams();
@@ -241,23 +242,14 @@ export default function AnalyticsPage() {
       case 'admin':
       case 'hr':
       case 'manager':
-        return <EnhancedAnalyticsDashboard />;
-      case 'team-leader':
-        return <TeamLeaderDashboard />;
       case 'recruiter':
-        return <RecruiterDashboard />;
-      case 'qa-analyst':
-        return <QaAnalystDashboard />;
       case 'process-manager':
-        return <ProcessManagerDashboard />;
+      case 'team-leader':
       case 'marketing':
-        return <MarketingDashboard />;
       case 'finance':
-        return <FinanceDashboard />;
       case 'it-manager':
-        return <ItManagerDashboard />;
       case 'operations-manager':
-        return <OperationsDashboard />;
+        return <EnhancedAnalyticsDashboard />;
       case 'employee':
       default:
         return <EmployeeDashboard />;
