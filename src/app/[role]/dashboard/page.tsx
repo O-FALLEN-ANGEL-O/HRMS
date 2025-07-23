@@ -35,6 +35,7 @@ const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketi
 const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'), { ssr: false });
 const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'), { ssr: false });
 const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'), { ssr: false });
+const ClientServicesDashboard = dynamic(() => import('@/components/dashboards/client-services-dashboard'), { ssr: false });
 
 
 
@@ -178,6 +179,8 @@ export default function DashboardPage() {
         return <ItManagerDashboard />;
       case 'operations-manager':
         return <OperationsDashboard />;
+      case 'account-manager':
+        return <ClientServicesDashboard />;
       case 'employee':
       default:
         return <EmployeeDashboard />;

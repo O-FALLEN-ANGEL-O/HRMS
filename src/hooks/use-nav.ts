@@ -22,7 +22,8 @@ import {
   Puzzle,
   BookOpen,
   Bot,
-  TrendingUp
+  TrendingUp,
+  Handshake
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -155,6 +156,14 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'operations-manager': [
+    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Analytics', href: '/analytics', icon: BarChart2 },
+    { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
+    { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
+    { label: 'My Profile', href: '/profile', icon: FileText },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
+  'account-manager': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },

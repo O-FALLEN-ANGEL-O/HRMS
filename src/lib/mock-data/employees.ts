@@ -5,7 +5,7 @@ export type UserProfile = {
   department: { name: string };
   department_id: string;
   job_title: string;
-  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager';
+  role: 'admin' | 'employee' | 'hr' | 'manager' | 'recruiter' | 'qa-analyst' | 'process-manager' | 'team-leader' | 'marketing' | 'finance' | 'it-manager' | 'operations-manager' | 'account-manager';
   employee_id: string;
   profile_picture_url?: string;
   phone_number?: string;
@@ -256,6 +256,23 @@ export const mockUsers: User[] = [
             phone_number: '111-222-3346',
             status: 'Active',
             profile_picture_url: `https://ui-avatars.com/api/?name=Priya+Mehta&background=random`,
+        }
+    },
+    { 
+        id: 'user-015',
+        email: 'account.manager@optitalent.com',
+        role: 'account-manager',
+        profile: {
+            id: 'profile-015',
+            full_name: 'Leo Wilson',
+            department: { name: 'Client Services' },
+            department_id: 'd-010',
+            job_title: 'Account Manager',
+            role: 'account-manager',
+            employee_id: 'PEP0015',
+            phone_number: '111-222-3347',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Leo+Wilson&background=random`,
         }
     },
 ];
