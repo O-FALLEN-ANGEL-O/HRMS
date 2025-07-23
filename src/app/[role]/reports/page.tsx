@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
-import { Download, FileText, BarChart, CheckCircle, Percent, Calendar, Loader2 } from "lucide-react";
+import { Download, FileText, BarChart, CheckCircle, Percent, Calendar, Loader2, Users } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { useTeam } from '@/hooks/use-team';
