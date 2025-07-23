@@ -13,16 +13,16 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Ba
 import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'), { loading: () => <LoadingState /> });
-const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), { loading: () => <LoadingState /> });
-const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'), { loading: () => <LoadingState /> });
-const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'), { loading: () => <LoadingState /> });
-const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'), { loading: () => <LoadingState /> });
-const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'), { loading: () => <LoadingState /> });
-const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'), { loading: () => <LoadingState /> });
-const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'), { loading: () => <LoadingState /> });
-const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'), { loading: () => <LoadingState /> });
-const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'), { loading: () => <LoadingState /> });
+const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'));
+const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'));
+const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'));
+const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'));
+const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'));
+const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'));
+const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'));
+const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'));
+const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'));
+const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'));
 
 const loadingMessages = [
     "Connecting to data warehouse...",
@@ -137,7 +137,7 @@ function EnhancedAnalyticsDashboard() {
                     </CardContent>
                 </Card>
             </div>
-            <div className="grid gap-6 lg:grid-cols-5">
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
                 <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Headcount by Department</CardTitle>
