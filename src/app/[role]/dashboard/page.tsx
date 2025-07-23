@@ -23,7 +23,10 @@ const EmployeeDetailsCard = dynamic(() => import('@/components/employee-details-
   ssr: false,
 });
 const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'), { ssr: false });
-const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), { ssr: false });
+const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), {
+  loading: () => <div className="space-y-6"><Skeleton className="h-24" /><Skeleton className="h-64" /></div>,
+  ssr: false,
+});
 const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'), { ssr: false });
 const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'), { ssr: false });
 const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'), { ssr: false });
