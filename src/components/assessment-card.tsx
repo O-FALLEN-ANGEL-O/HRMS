@@ -23,8 +23,8 @@ const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
     <Card className="flex flex-col">
       <CardHeader>
         <CardTitle>{assessment.title}</CardTitle>
-        <CardDescription asChild>
-          <div><Badge variant="outline">{assessment.process_type}</Badge></div>
+        <CardDescription>
+          <Badge variant="outline">{assessment.process_type}</Badge>
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
