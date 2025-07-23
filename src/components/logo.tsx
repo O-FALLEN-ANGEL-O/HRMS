@@ -3,13 +3,20 @@
 import React from 'react';
 import { motion } from "framer-motion";
 import { cn } from '@/lib/utils';
+import { useSidebar } from './ui/sidebar';
 
 interface LogoProps {
   className?: string;
   showText?: boolean;
 }
 
-const LogoComponent = ({ className, showText = true }: LogoProps) => {
+const LogoComponent = ({ className, showText: showTextProp }: LogoProps) => {
+  const { isMobile } = useSidebar();
+  
+  // On desktop, the text visibility is controlled by the group hover state of the sidebar.
+  // On mobile (or when showText is explicitly passed), we use the prop.
+  const showText = isMobile ? true : showTextProp;
+
   const iconVariants = {
     hidden: {
       pathLength: 0,
@@ -66,7 +73,7 @@ const LogoComponent = ({ className, showText = true }: LogoProps) => {
                 }}
             />
         </motion.svg>
-        {showText && <span>OptiTalent</span>}
+        <span className={cn(showText ? 'inline' : 'group-hover/sidebar:inline hidden')}>{showText ? 'OptiTalent' : 'OptiTalent'}</span>
     </div>
   );
 }

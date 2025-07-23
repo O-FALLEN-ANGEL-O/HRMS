@@ -12,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { useNav } from '@/hooks/use-nav';
 import { Logo } from './logo';
@@ -19,7 +20,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { useSidebar } from './ui/sidebar';
+
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -27,13 +28,13 @@ export default function AppSidebar() {
   const role = (params.role as string) || 'guest';
   const navItems = useNav(role);
   const { user, logout } = useAuth();
-  const { state } = useSidebar();
+  const { isMobile } = useSidebar();
 
   return (
     <Sidebar>
       <ScrollArea className="h-full">
-        <SidebarHeader className={state === 'collapsed' ? 'justify-center' : ''}>
-          <Logo showText={state === 'expanded'} />
+        <SidebarHeader>
+          <Logo showText={!isMobile} />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -45,7 +46,7 @@ export default function AppSidebar() {
                     icon={item.icon}
                     tooltip={item.label}
                   >
-                    <span>{item.label}</span>
+                    {item.label}
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -59,12 +60,10 @@ export default function AppSidebar() {
                         <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person avatar"/>
                         <AvatarFallback>{user.profile.full_name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
                     </Avatar>
-                     {state === 'expanded' && (
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-medium truncate">{user.profile.full_name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                        </div>
-                     )}
+                     <div className="overflow-hidden group-hover/sidebar:inline hidden">
+                        <p className="text-sm font-medium truncate">{user.profile.full_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
                 </div>
             )}
              <SidebarMenu>
@@ -74,7 +73,7 @@ export default function AppSidebar() {
                     icon={LogOut}
                     tooltip="Logout"
                   >
-                  <span>Logout</span>
+                  Logout
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
