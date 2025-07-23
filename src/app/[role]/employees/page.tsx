@@ -130,7 +130,7 @@ export default function EmployeesPage() {
   const { toast } = useToast();
   const teamMembers = useTeam();
   const role = params.role as string;
-  const isManagerView = role === 'manager' || role === 'team-leader' || role === 'trainer';
+  const isTeamView = role === 'manager' || role === 'team-leader' || role === 'trainer';
 
   const handleAddEmployee = (newEmployee: Employee) => {
     setEmployees(prev => [...prev, newEmployee]);
@@ -207,7 +207,7 @@ export default function EmployeesPage() {
     </Card>
   );
 
-  const ManagerView = () => (
+  const TeamView = () => (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {loading ? (
             <p>Loading team...</p>
@@ -221,10 +221,10 @@ export default function EmployeesPage() {
     <div>
       <div className="flex items-center justify-between pb-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">{isManagerView ? "My Team" : "Employees"}</h1>
-          <p className="text-muted-foreground">{isManagerView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
+          <h1 className="text-3xl font-bold font-headline">{isTeamView ? "My Team" : "Employees"}</h1>
+          <p className="text-muted-foreground">{isTeamView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
         </div>
-        {!isManagerView && (
+        {!isTeamView && (
              <Suspense fallback={<Button disabled>Loading...</Button>}>
                 <AddEmployeeDialog onAddEmployee={handleAddEmployee}>
                     <Button>
@@ -235,7 +235,7 @@ export default function EmployeesPage() {
              </Suspense>
         )}
       </div>
-      {isManagerView ? <ManagerView /> : <AdminView />}
+      {isTeamView ? <TeamView /> : <AdminView />}
     </div>
   )
 }

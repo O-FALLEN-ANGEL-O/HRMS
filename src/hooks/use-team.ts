@@ -34,6 +34,7 @@ export function useTeam() {
 
         const membersWithMockData = members.map(member => ({
             ...member,
+            id: member.employee_id,
             status: ['Active', 'Away', 'On Leave'][Math.floor(Math.random() * 3)],
             performance: Math.floor(Math.random() * 40) + 60, // 60-100
             tasksCompleted: Math.floor(Math.random() * 10) + 5,

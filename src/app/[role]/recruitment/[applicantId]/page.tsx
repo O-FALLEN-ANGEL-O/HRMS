@@ -8,17 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Briefcase, FileText, Send, User, MessageSquare, Star, Percent, Type, Clipboard, ShieldAlert, Award, Calendar, Puzzle, Check, X, PlusCircle } from "lucide-react";
+import { Briefcase, FileText, Send, User, MessageSquare, Award, Calendar } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { useState, memo, useMemo, useEffect } from "react";
+import { useState, memo, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { walkinApplicants } from "@/lib/mock-data/walkin";
-import { assessments, type Assessment } from "@/lib/mock-data/assessments";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { StandardAssessmentsTab } from "@/components/standard-assessments-tab";
 
 
@@ -66,165 +61,12 @@ const NoteCard = memo(function NoteCard({ note }: { note: Note }) {
 });
 
 
-const AssessmentsTab = ({ applicantId }: { applicantId: string }) => {
-    const { toast } = useToast();
-    // This state would normally be fetched and updated via API calls
-    const [applicant, setApplicant] = useState(() => walkinApplicants.find(a => a.id === applicantId));
-    const [selectedScores, setSelectedScores] = useState<Record<string, number>>({});
-
-
-    if (!applicant) {
-        // If the applicant is not from a walk-in, we simulate a different structure
-         return <Card><CardContent><p className="p-4 text-muted-foreground">No assessment data for this applicant type.</p></CardContent></Card>
-    }
-
-    const handleAssignTest = (assessmentId: string) => {
-        if (!assessmentId) return;
-
-        const alreadyAssigned = applicant.assessments.some(a => a.assessmentId === assessmentId);
-        if (alreadyAssigned) {
-            toast({ title: 'Already Assigned', description: 'This assessment is already assigned to the applicant.', variant: 'destructive' });
-            return;
-        }
-
-        const newAssessment = {
-            assessmentId,
-            status: 'Not Started' as const,
-            attempts: [],
-        };
-        
-        const updatedApplicant = { ...applicant, assessments: [...applicant.assessments, newAssessment] };
-        // In a real app, this would be an API call
-        // For mock: find and update in walkinApplicants array
-        const index = walkinApplicants.findIndex(a => a.id === applicantId);
-        if (index > -1) {
-            walkinApplicants[index] = updatedApplicant;
-        }
-        setApplicant(updatedApplicant);
-        toast({ title: 'Assessment Assigned', description: 'The new assessment has been assigned to the applicant.' });
-    };
-
-    const handleApproval = (assessmentId: string, approve: boolean) => {
-        const updatedAssessments = applicant.assessments.map(appAssessment => {
-            if (appAssessment.assessmentId === assessmentId && appAssessment.retryRequest?.status === 'Pending') {
-                return {
-                    ...appAssessment,
-                    status: approve ? 'Retry Approved' as const : 'Completed' as const,
-                    retryRequest: {
-                        ...appAssessment.retryRequest,
-                        status: approve ? 'Approved' as const : 'Denied' as const,
-                    }
-                };
-            }
-            return appAssessment;
-        });
-
-        const updatedApplicant = { ...applicant, assessments: updatedAssessments };
-        setApplicant(updatedApplicant);
-        const index = walkinApplicants.findIndex(a => a.id === applicantId);
-        if (index > -1) {
-            walkinApplicants[index] = updatedApplicant;
-        }
-
-        toast({
-            title: `Request ${approve ? 'Approved' : 'Denied'}`,
-            description: `The retry request has been ${approve ? 'approved' : 'denied'}.`,
-        });
-    }
-
-    const availableAssessments = assessments.filter(
-        (a) => !applicant.assessments.some(aa => aa.assessmentId === a.id)
-    );
-    
-    const handleScoreSelect = (assessmentId: string, attemptNumber: number) => {
-        setSelectedScores(prev => ({...prev, [assessmentId]: attemptNumber}));
-        toast({ title: `Score for attempt #${attemptNumber} has been marked as final.`});
-    };
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Assessments & Retries</CardTitle>
-                <CardDescription>Assign tests, review scores, and manage retry requests for this applicant.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Assign New Assessment</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Select onValueChange={handleAssignTest}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a test to assign..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableAssessments.map(a => (
-                                    <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </CardContent>
-                </Card>
-
-                {applicant.assessments.map(appAssessment => {
-                    const assessmentDetails = assessments.find(a => a.id === appAssessment.assessmentId);
-                    if (!assessmentDetails) return null;
-
-                    const retryRequest = appAssessment.retryRequest;
-
-                    return (
-                        <Card key={appAssessment.assessmentId} className="p-4">
-                            <h4 className="font-semibold">{assessmentDetails.title}</h4>
-                            
-                            {retryRequest && retryRequest.status === 'Pending' && (
-                                <Alert className="my-4 border-amber-500/50">
-                                    <AlertTitle className="text-amber-600 dark:text-amber-400">Pending Retry Request</AlertTitle>
-                                    <AlertDescription>
-                                        <p className="text-sm italic">"{retryRequest.reason}"</p>
-                                        <div className="flex gap-2 justify-end mt-2">
-                                            <Button size="sm" onClick={() => handleApproval(appAssessment.assessmentId, true)}><Check className="mr-2 h-4 w-4"/>Approve</Button>
-                                            <Button size="sm" variant="destructive" onClick={() => handleApproval(appAssessment.assessmentId, false)}><X className="mr-2 h-4 w-4"/>Deny</Button>
-                                        </div>
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                            
-                            <div className="mt-2 text-sm text-muted-foreground">Score History:</div>
-                            {appAssessment.attempts.length > 0 ? (
-                                <RadioGroup value={selectedScores[appAssessment.assessmentId]?.toString()} onValueChange={(val) => handleScoreSelect(appAssessment.assessmentId, parseInt(val))}>
-                                <ul className="mt-1 space-y-1">
-                                {appAssessment.attempts.map((attempt, i) => (
-                                    <li key={i} className="flex justify-between items-center text-sm p-2 bg-muted rounded has-[:checked]:bg-primary/20">
-                                        <div className="flex items-center gap-3">
-                                            <RadioGroupItem value={attempt.attemptNumber.toString()} id={`score-${attempt.attemptNumber}`} />
-                                            <Label htmlFor={`score-${attempt.attemptNumber}`} className="cursor-pointer">Attempt {attempt.attemptNumber}</Label>
-                                        </div>
-                                        <span className="font-semibold">{attempt.score ?? 'N/A'}{assessmentDetails.passing_score_type === 'percent' ? '%' : ' WPM'}</span>
-                                    </li>
-                                ))}
-                                </ul>
-                                </RadioGroup>
-                            ) : (
-                                <p className="text-sm text-muted-foreground text-center p-2">No attempts yet.</p>
-                            )}
-                        </Card>
-                    )
-                })}
-            </CardContent>
-        </Card>
-    );
-};
-
-
 export default function ApplicantProfilePage() {
     const params = useParams();
     const applicantId = params.applicantId as string;
     const [notes, setNotes] = useState(MOCK_APPLICANT_BASE.interviewerNotes);
     const [newNote, setNewNote] = useState('');
     const { toast } = useToast();
-
-    // Determine if the applicantId is for a regular applicant or a walk-in
-    const isWalkinApplicant = useMemo(() => walkinApplicants.some(a => a.id === applicantId), [applicantId]);
 
     const handleAddNote = (e: React.FormEvent) => {
         e.preventDefault();
@@ -245,7 +87,7 @@ export default function ApplicantProfilePage() {
     return (
         <div className="space-y-6">
             <Alert variant="destructive" className="border-yellow-500/50 text-yellow-900 dark:text-yellow-200 [&>svg]:text-yellow-500">
-                <ShieldAlert className="h-4 w-4" />
+                <FileText className="h-4 w-4" />
                 <AlertTitle className="text-yellow-600 dark:text-yellow-300">Temporary Applicant Profile</AlertTitle>
                 <AlertDescription className="text-yellow-700 dark:text-yellow-400">
                     This profile is for recruitment purposes only and will be automatically deleted 30 days after the position is closed.
@@ -267,7 +109,7 @@ export default function ApplicantProfilePage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4"/>
-                                    <span>Applied on: {MOCK_APPLICANT_BASE.applicationDate} (ID: {MOCK_APPLICANT_BASE.id})</span>
+                                    <span>Applied on: {MOCK_APPLICANT_BASE.applicationDate} (ID: {applicantId})</span>
                                 </div>
                                  <div className="flex items-center gap-2">
                                     <User className="h-4 w-4"/>
@@ -287,7 +129,7 @@ export default function ApplicantProfilePage() {
                 <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
                     <TabsTrigger value="profile">Profile & Resume</TabsTrigger>
                     <TabsTrigger value="notes">Interviewer Notes</TabsTrigger>
-                    <TabsTrigger value="assessments">Assessments & Retries</TabsTrigger>
+                    <TabsTrigger value="assessments">Assessments</TabsTrigger>
                 </TabsList>
                 <TabsContent value="profile">
                     <Card className="lg:col-span-2">
@@ -361,11 +203,7 @@ export default function ApplicantProfilePage() {
                     </Card>
                 </TabsContent>
                 <TabsContent value="assessments">
-                    { isWalkinApplicant ? (
-                         <AssessmentsTab applicantId={applicantId} />
-                    ) : (
-                         <StandardAssessmentsTab applicantId={applicantId} />
-                    )}
+                     <StandardAssessmentsTab applicantId={applicantId} />
                 </TabsContent>
             </Tabs>
         </div>

@@ -29,6 +29,7 @@ const FinanceKpis = dynamic(() => import('@/components/dashboards/kpi-cards/fina
 const ItManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/it-manager-kpis').then(mod => mod.ItManagerKpis), { ssr: false });
 const OperationsManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/operations-manager-kpis').then(mod => mod.OperationsManagerKpis), { ssr: false });
 const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa-analyst-kpis').then(mod => mod.QaAnalystKpis), { ssr: false });
+const ProcessManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/process-manager-kpis').then(mod => mod.ProcessManagerKpis), { ssr: false });
 
 
 const quickActions = [
@@ -92,6 +93,8 @@ const RoleSpecificKpis = ({ role }: { role: string }) => {
             return <OperationsManagerKpis />;
         case 'qa-analyst':
             return <QaAnalystKpis />;
+        case 'process-manager':
+            return <ProcessManagerKpis />;
         case 'employee':
         case 'trainee':
         default:

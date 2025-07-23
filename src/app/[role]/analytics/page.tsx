@@ -245,12 +245,7 @@ export default function AnalyticsPage() {
       case 'recruiter':
       case 'process-manager':
       case 'team-leader':
-      case 'marketing':
-      case 'finance':
-      case 'it-manager':
-      case 'operations-manager':
         return <EnhancedAnalyticsDashboard />;
-      case 'employee':
       default:
         return <EmployeeDashboard />;
     }
