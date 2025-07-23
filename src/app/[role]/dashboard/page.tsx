@@ -162,6 +162,7 @@ export default function DashboardPage() {
       case 'admin':
       case 'hr':
       case 'manager':
+      case 'trainer':
         return <ManagerDashboard />;
       case 'team-leader':
         return <TeamLeaderDashboard />;

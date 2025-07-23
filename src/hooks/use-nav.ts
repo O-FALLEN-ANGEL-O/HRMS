@@ -23,7 +23,8 @@ import {
   BookOpen,
   Bot,
   TrendingUp,
-  Handshake
+  Handshake,
+  GraduationCap
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -166,6 +167,15 @@ export const navConfig: Record<string, NavItem[]> = {
   'account-manager': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
+    { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
+    { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
+    { label: 'My Profile', href: '/profile', icon: FileText },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ],
+  trainer: [
+    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'My Trainees', href: '/employees', icon: Users },
+    { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
     { label: 'My Profile', href: '/profile', icon: FileText },
