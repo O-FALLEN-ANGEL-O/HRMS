@@ -34,7 +34,7 @@ export default function AppSidebar() {
     <Sidebar>
       <ScrollArea className="h-full">
         <SidebarHeader>
-          <Logo showText={!isMobile} />
+          <Logo />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
