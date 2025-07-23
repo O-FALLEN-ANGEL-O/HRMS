@@ -2,21 +2,16 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, ListChecks, Percent } from "lucide-react";
 import type { Assessment } from "@/lib/mock-data/assessments";
-import { useParams } from 'next/navigation';
 
 type AssessmentCardProps = {
   assessment: Assessment;
 };
 
 const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
-  const params = useParams();
-  const role = params.role as string;
   const totalQuestions = assessment.sections.reduce((acc, section) => acc + section.questions.length, 0);
 
   return (
@@ -41,13 +36,6 @@ const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
           <span>{assessment.passing_score}% passing score</span>
         </div>
       </CardContent>
-      <CardFooter>
-        <Link href={`/${role}/assessments/${assessment.id}`} className="w-full">
-            <Button className="w-full" disabled={totalQuestions === 0}>
-                {totalQuestions > 0 ? 'Start Assessment' : 'Coming Soon'}
-            </Button>
-        </Link>
-      </CardFooter>
     </Card>
   );
 };
