@@ -1,18 +1,15 @@
 
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, सस्पेंस } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Award, Cake, File, ThumbsUp, MoreHorizontal, Search, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useRouter, useParams } from 'next/navigation';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { motion } from 'framer-motion';
 import { mockEmployees } from '@/lib/mock-data/employees';
 import { addDays, subDays } from 'date-fns';
 import { Input } from '@/components/ui/input';
@@ -24,6 +21,15 @@ const EmployeeDetailsCard = dynamic(() => import('@/components/employee-details-
   loading: () => <Skeleton className="h-48" />,
   ssr: false,
 });
+
+const RecruiterKpis = dynamic(() => import('@/components/dashboards/kpi-cards/recruiter-kpis').then(mod => mod.RecruiterKpis), { ssr: false });
+const ManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/manager-kpis').then(mod => mod.ManagerKpis), { ssr: false });
+const EmployeeKpis = dynamic(() => import('@/components/dashboards/kpi-cards/employee-kpis').then(mod => mod.EmployeeKpis), { ssr: false });
+const FinanceKpis = dynamic(() => import('@/components/dashboards/kpi-cards/finance-kpis').then(mod => mod.FinanceKpis), { ssr: false });
+const ItManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/it-manager-kpis').then(mod => mod.ItManagerKpis), { ssr: false });
+const OperationsManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/operations-manager-kpis').then(mod => mod.OperationsManagerKpis), { ssr: false });
+const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa-analyst-kpis').then(mod => mod.QaAnalystKpis), { ssr: false });
+
 
 const quickActions = [
     { label: 'Post', icon: File },
@@ -69,6 +75,30 @@ const employeeAwards = [
     { rank: 3, empId: 'PEP0014', name: 'Priya Mehta', awards: 9, avatar: 'https://ui-avatars.com/api/?name=Priya+Mehta&background=random' },
 ];
 
+const RoleSpecificKpis = ({ role }: { role: string }) => {
+    switch (role) {
+        case 'recruiter':
+            return <RecruiterKpis />;
+        case 'manager':
+        case 'hr':
+        case 'admin':
+        case 'team-leader':
+             return <ManagerKpis />;
+        case 'finance':
+            return <FinanceKpis />;
+        case 'it-manager':
+            return <ItManagerKpis />;
+        case 'operations-manager':
+            return <OperationsManagerKpis />;
+        case 'qa-analyst':
+            return <QaAnalystKpis />;
+        case 'employee':
+        default:
+            return <EmployeeKpis />;
+    }
+}
+
+
 export default function DashboardPage() {
   const router = useRouter();
   const params = useParams();
@@ -81,7 +111,7 @@ export default function DashboardPage() {
 
   const role = (params.role as string) || 'employee';
 
-  const isManager = role === 'manager' || role === 'hr' || role === 'admin';
+  const isManagerView = ['manager', 'hr', 'admin', 'team-leader', 'trainer'].includes(role);
 
   const today = new Date();
   const attendanceModifiers = {
@@ -141,188 +171,191 @@ export default function DashboardPage() {
     );
   };
 
-  const handleWidgetAction = (title: string) => {
-    toast({
-      title: `${title} Widget Clicked`,
-      description: `This would typically expand or navigate to a new page for ${title}.`,
-    });
-  };
-
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-        {/* Left Column */}
-        <div className="md:col-span-3 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Employee of the Week</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <TooltipProvider>
-                         <div className="space-y-2">
-                             {employeeAwards.map(emp => (
-                                <LeaderboardCard
-                                    key={emp.rank}
-                                    rank={emp.rank}
-                                    name={emp.name}
-                                    empId={emp.empId}
-                                    image={emp.avatar}
-                                    awards={emp.awards}
-                                    crown={emp.rank === 1 ? 'gold' : emp.rank === 2 ? 'silver' : 'bronze'}
-                                    isExpanded={true}
-                                />
-                             ))}
-                        </div>
-                    </TooltipProvider>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Celebrations</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                    {celebrations.map((cel) => (
-                      <div key={cel.name} className="flex items-center gap-3 text-sm">
-                          <Cake className="h-4 w-4 text-pink-500" />
-                          <div>
-                              <p className="font-semibold">{cel.name}</p>
-                              <p className="text-muted-foreground">{cel.type}</p>
-                          </div>
-                      </div>
-                    ))}
-                </CardContent>
-            </Card>
-
-             <Card>
-                <CardHeader>
-                    <CardTitle>Upcoming Programs</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                    {upcomingPrograms.map((program) => (
-                      <div key={program.name} className="flex items-center justify-between text-sm">
-                          <p className="font-semibold">{program.name}</p>
-                          <p className="text-muted-foreground">{program.date}</p>
-                      </div>
-                    ))}
-                </CardContent>
-            </Card>
+    <div className="space-y-6">
+        <div className="space-y-2">
+            <h1 className="text-3xl font-headline">Welcome Back!</h1>
+            <p className="text-muted-foreground">Here's a snapshot of what's happening in your workspace today.</p>
         </div>
 
-        {/* Middle Column */}
-        <div className="md:col-span-6 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                    {quickActions.map(action => (
-                        <Button key={action.label} variant="outline" onClick={() => handleQuickAction(action.label)}>
-                            <action.icon className="h-4 w-4 mr-2" />
-                            {action.label}
-                        </Button>
-                    ))}
-                </CardContent>
-            </Card>
-            {posts.map(post => (
-                 <Card key={post.id}>
+        {/* Role-specific KPIs */}
+        <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+            <RoleSpecificKpis role={role} />
+        </Suspense>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column */}
+            <div className="lg:col-span-3 space-y-6">
+                <Card>
                     <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarImage src={post.avatar} data-ai-hint="person portrait"/>
-                                <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="font-semibold">{post.author}</p>
-                                <p className="text-xs text-muted-foreground">{post.authorRole}</p>
+                        <CardTitle>Employee of the Week</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <TooltipProvider>
+                            <div className="space-y-2">
+                                {employeeAwards.map(emp => (
+                                    <LeaderboardCard
+                                        key={emp.rank}
+                                        rank={emp.rank}
+                                        name={emp.name}
+                                        empId={emp.empId}
+                                        image={emp.avatar}
+                                        awards={emp.awards}
+                                        crown={emp.rank === 1 ? 'gold' : emp.rank === 2 ? 'silver' : 'bronze'}
+                                        isExpanded={true}
+                                    />
+                                ))}
                             </div>
-                            <Button variant="ghost" size="icon" className="ml-auto"><MoreHorizontal/></Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm mb-4">{post.content}</p>
-                        {post.image && <img src={post.image} alt="Post image" className="rounded-lg" data-ai-hint={post.imageHint} />}
+                        </TooltipProvider>
                     </CardContent>
-                    <CardFooter className="flex justify-between">
-                         <Button variant="ghost" onClick={() => handleLike(post.id)}>
-                            <ThumbsUp className="mr-2 h-4 w-4" /> Like ({post.likes})
-                        </Button>
-                         <Button variant="ghost" onClick={() => handleComment(post.id)}>
-                            Comment ({post.comments})
-                        </Button>
-                    </CardFooter>
-                 </Card>
-            ))}
-        </div>
-
-        {/* Right Column */}
-        <div className="md:col-span-3 space-y-6">
-            {isManager && (
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Find Employee</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSearch}>
-                           <div className="flex gap-2">
-                             <Input name="search" placeholder="Search by name or ID" disabled={searching}/>
-                             <Button type="submit" size="icon" disabled={searching}>
-                                {searching ? <Loader2 className="h-4 w-4 animate-spin"/> : <Search className="h-4 w-4"/>}
-                             </Button>
-                           </div>
-                        </form>
-                    </CardContent>
-                    {searchedEmployee && (
-                        <CardFooter>
-                             <Suspense fallback={<Skeleton className="h-48" />}>
-                                 <EmployeeDetailsCard employee={searchedEmployee}/>
-                            </Suspense>
-                        </CardFooter>
-                    )}
-                     {searchedEmployee === undefined && (
-                        <CardFooter>
-                            <p className="text-sm text-muted-foreground">No employee found.</p>
-                        </CardFooter>
-                    )}
                 </Card>
-            )}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Attendance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Calendar
-                        mode="multiple"
-                        selected={[today]}
-                        modifiers={attendanceModifiers}
-                        modifiersClassNames={{
-                            present: 'rdp-day_present',
-                            absent: 'rdp-day_absent',
-                            'half-day': 'rdp-day_half-day',
-                            holiday: 'rdp-day_holiday',
-                            dayOff: 'rdp-day_dayOff',
-                        }}
-                    />
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Team on Leave</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex -space-x-2">
-                         {teamLeaves.map((member) => (
-                          <Avatar key={member.name} className="border-2 border-background">
-                            <AvatarImage src={member.avatar} alt={member.name} data-ai-hint="person avatar"/>
-                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Celebrations</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {celebrations.map((cel) => (
+                        <div key={cel.name} className="flex items-center gap-3 text-sm">
+                            <Cake className="h-4 w-4 text-pink-500" />
+                            <div>
+                                <p className="font-semibold">{cel.name}</p>
+                                <p className="text-muted-foreground">{cel.type}</p>
+                            </div>
+                        </div>
                         ))}
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Upcoming Programs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {upcomingPrograms.map((program) => (
+                        <div key={program.name} className="flex items-center justify-between text-sm">
+                            <p className="font-semibold">{program.name}</p>
+                            <p className="text-muted-foreground">{program.date}</p>
+                        </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Middle Column */}
+            <div className="lg:col-span-6 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Quick Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                        {quickActions.map(action => (
+                            <Button key={action.label} variant="outline" onClick={() => handleQuickAction(action.label)}>
+                                <action.icon className="h-4 w-4 mr-2" />
+                                {action.label}
+                            </Button>
+                        ))}
+                    </CardContent>
+                </Card>
+                {posts.map(post => (
+                    <Card key={post.id}>
+                        <CardHeader>
+                            <div className="flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarImage src={post.avatar} data-ai-hint="person portrait"/>
+                                    <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-semibold">{post.author}</p>
+                                    <p className="text-xs text-muted-foreground">{post.authorRole}</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="ml-auto"><MoreHorizontal/></Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm mb-4">{post.content}</p>
+                            {post.image && <img src={post.image} alt="Post image" className="rounded-lg" data-ai-hint={post.imageHint} />}
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                            <Button variant="ghost" onClick={() => handleLike(post.id)}>
+                                <ThumbsUp className="mr-2 h-4 w-4" /> Like ({post.likes})
+                            </Button>
+                            <Button variant="ghost" onClick={() => handleComment(post.id)}>
+                                Comment ({post.comments})
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Right Column */}
+            <div className="lg:col-span-3 space-y-6">
+                {isManagerView && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Find Employee</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleSearch}>
+                            <div className="flex gap-2">
+                                <Input name="search" placeholder="Search by name or ID" disabled={searching}/>
+                                <Button type="submit" size="icon" disabled={searching}>
+                                    {searching ? <Loader2 className="h-4 w-4 animate-spin"/> : <Search className="h-4 w-4"/>}
+                                </Button>
+                            </div>
+                            </form>
+                        </CardContent>
+                        {searchedEmployee && (
+                            <CardFooter>
+                                <Suspense fallback={<Skeleton className="h-48" />}>
+                                    <EmployeeDetailsCard employee={searchedEmployee}/>
+                                </Suspense>
+                            </CardFooter>
+                        )}
+                        {searchedEmployee === undefined && (
+                            <CardFooter>
+                                <p className="text-sm text-muted-foreground">No employee found.</p>
+                            </CardFooter>
+                        )}
+                    </Card>
+                )}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Attendance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Calendar
+                            mode="multiple"
+                            selected={[today]}
+                            modifiers={attendanceModifiers}
+                            modifiersClassNames={{
+                                present: 'rdp-day_present',
+                                absent: 'rdp-day_absent',
+                                'half-day': 'rdp-day_half-day',
+                                holiday: 'rdp-day_holiday',
+                                dayOff: 'rdp-day_dayOff',
+                            }}
+                        />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Team on Leave</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex -space-x-2">
+                            {teamLeaves.map((member) => (
+                            <Avatar key={member.name} className="border-2 border-background">
+                                <AvatarImage src={member.avatar} alt={member.name} data-ai-hint="person avatar"/>
+                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     </div>
   );
 }
-
-    
