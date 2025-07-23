@@ -28,6 +28,7 @@ export function useTeam() {
             tasksPending: Math.floor(Math.random() * 5),
             avatar: member.profile_picture_url,
             name: member.full_name,
+            role: member.job_title,
         }));
         setTeamMembers(membersWithMockData);
     }

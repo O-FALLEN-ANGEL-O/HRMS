@@ -104,7 +104,7 @@ export const navConfig: Record<string, NavItem[]> = {
   ],
   'qa-analyst': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Quality', href: '/quality', icon: ShieldCheck },
+    { label: 'Quality', href: '/qa-analyst/quality', icon: ShieldCheck },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
     { label: 'My Profile', href: '/profile', icon: FileText },
@@ -113,7 +113,7 @@ export const navConfig: Record<string, NavItem[]> = {
   'process-manager': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
-    { label: 'Performance', href: '/performance', icon: TrendingUp },
+    { label: 'Performance', href: '/process-manager/performance', icon: TrendingUp },
     { label: 'Reports', href: '/reports', icon: FileText },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
