@@ -1,12 +1,12 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Award, Badge, CalendarCheck, Cake, File, ThumbsUp, ChevronDown, UserPlus, Gift, Trophy, MoreHorizontal, Search, Loader2 } from 'lucide-react';
+import { Award, Cake, File, ThumbsUp, MoreHorizontal, Search, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { useRouter, useParams } from 'next/navigation';
@@ -17,32 +17,18 @@ import { mockEmployees } from '@/lib/mock-data/employees';
 import { addDays, subDays } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { LeaderboardCard } from '@/components/leaderboard-card';
 
 const EmployeeDetailsCard = dynamic(() => import('@/components/employee-details-card').then(mod => mod.EmployeeDetailsCard), {
   loading: () => <Skeleton className="h-48" />,
   ssr: false,
 });
-const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'), { ssr: false });
-const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'), {
-  loading: () => <div className="space-y-6"><Skeleton className="h-24" /><Skeleton className="h-64" /></div>,
-  ssr: false,
-});
-const EmployeeDashboard = dynamic(() => import('@/components/dashboards/employee-dashboard'), { ssr: false });
-const QaAnalystDashboard = dynamic(() => import('@/components/dashboards/qa-analyst-dashboard'), { ssr: false });
-const ProcessManagerDashboard = dynamic(() => import('@/components/dashboards/process-manager-dashboard'), { ssr: false });
-const TeamLeaderDashboard = dynamic(() => import('@/components/dashboards/team-leader-dashboard'), { ssr: false });
-const MarketingDashboard = dynamic(() => import('@/components/dashboards/marketing-dashboard'), { ssr: false });
-const FinanceDashboard = dynamic(() => import('@/components/dashboards/finance-dashboard'), { ssr: false });
-const ItManagerDashboard = dynamic(() => import('@/components/dashboards/it-manager-dashboard'), { ssr: false });
-const OperationsDashboard = dynamic(() => import('@/components/dashboards/operations-dashboard'), { ssr: false });
-const ClientServicesDashboard = dynamic(() => import('@/components/dashboards/client-services-dashboard'), { ssr: false });
-
-
 
 const quickActions = [
     { label: 'Post', icon: File },
-    { label: 'Badge', icon: Badge },
-    { label: 'Reward Point', icon: Award },
+    { label: 'Badge', icon: Award },
+    { label: 'Reward Point', icon: ThumbsUp },
     { label: 'Endorse', icon: ThumbsUp },
 ];
 
@@ -73,10 +59,10 @@ const initialPosts = [
 ];
 
 const employeeAwards = [
-    { rank: 1, name: 'Anika Sharma', awards: 15 },
-    { rank: 2, name: 'Rohan Verma', awards: 12 },
-    { rank: 3, name: 'Priya Mehta', awards: 9 },
-]
+    { rank: 1, empId: 'PEP0012', name: 'Anika Sharma', awards: 15, avatar: 'https://ui-avatars.com/api/?name=Anika+Sharma&background=random' },
+    { rank: 2, empId: 'PEP0013', name: 'Rohan Verma', awards: 12, avatar: 'https://ui-avatars.com/api/?name=Rohan+Verma&background=random' },
+    { rank: 3, empId: 'PEP0014', name: 'Priya Mehta', awards: 9, avatar: 'https://ui-avatars.com/api/?name=Priya+Mehta&background=random' },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -157,44 +143,164 @@ export default function DashboardPage() {
     });
   };
 
-  const renderDashboard = () => {
-    switch (role) {
-      case 'admin':
-      case 'hr':
-      case 'manager':
-      case 'trainer':
-        return <ManagerDashboard />;
-      case 'team-leader':
-        return <TeamLeaderDashboard />;
-      case 'recruiter':
-        return <RecruiterDashboard />;
-      case 'qa-analyst':
-        return <QaAnalystDashboard />;
-      case 'process-manager':
-        return <ProcessManagerDashboard />;
-      case 'marketing':
-        return <MarketingDashboard />;
-      case 'finance':
-        return <FinanceDashboard />;
-      case 'it-manager':
-        return <ItManagerDashboard />;
-      case 'operations-manager':
-        return <OperationsDashboard />;
-      case 'account-manager':
-        return <ClientServicesDashboard />;
-      case 'employee':
-      default:
-        return <EmployeeDashboard />;
-    }
-  }
 
   return (
-    <div className="space-y-6">
-       <div>
-          <h1 className="font-headline tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">An overview of your workspace and tools.</p>
-       </div>
-       {renderDashboard()}
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        {/* Left Column */}
+        <div className="md:col-span-3 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Employee of the Week</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <TooltipProvider>
+                         <div className="space-y-2">
+                             {employeeAwards.map(emp => (
+                                <LeaderboardCard
+                                    key={emp.rank}
+                                    rank={emp.rank}
+                                    name={emp.name}
+                                    empId={emp.empId}
+                                    image={emp.avatar}
+                                    awards={emp.awards}
+                                    crown={emp.rank === 1 ? 'gold' : emp.rank === 2 ? 'silver' : 'bronze'}
+                                    isExpanded={true}
+                                />
+                             ))}
+                        </div>
+                    </TooltipProvider>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Middle Column */}
+        <div className="md:col-span-6 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-2">
+                    {quickActions.map(action => (
+                        <Button key={action.label} variant="outline" onClick={() => handleQuickAction(action.label)}>
+                            <action.icon className="h-4 w-4 mr-2" />
+                            {action.label}
+                        </Button>
+                    ))}
+                </CardContent>
+            </Card>
+            {posts.map(post => (
+                 <Card key={post.id}>
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <Avatar>
+                                <AvatarImage src={post.avatar} data-ai-hint="person portrait"/>
+                                <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold">{post.author}</p>
+                                <p className="text-xs text-muted-foreground">{post.authorRole}</p>
+                            </div>
+                            <Button variant="ghost" size="icon" className="ml-auto"><MoreHorizontal/></Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm mb-4">{post.content}</p>
+                        {post.image && <img src={post.image} alt="Post image" className="rounded-lg" data-ai-hint={post.imageHint} />}
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                         <Button variant="ghost" onClick={() => handleLike(post.id)}>
+                            <ThumbsUp className="mr-2 h-4 w-4" /> Like ({post.likes})
+                        </Button>
+                         <Button variant="ghost" onClick={() => handleComment(post.id)}>
+                            Comment ({post.comments})
+                        </Button>
+                    </CardFooter>
+                 </Card>
+            ))}
+        </div>
+
+        {/* Right Column */}
+        <div className="md:col-span-3 space-y-6">
+            {isManager && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Find Employee</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSearch}>
+                           <div className="flex gap-2">
+                             <Input name="search" placeholder="Search by name or ID" disabled={searching}/>
+                             <Button type="submit" size="icon" disabled={searching}>
+                                {searching ? <Loader2 className="h-4 w-4 animate-spin"/> : <Search className="h-4 w-4"/>}
+                             </Button>
+                           </div>
+                        </form>
+                    </CardContent>
+                    {searchedEmployee && (
+                        <CardFooter>
+                             <Suspense fallback={<Skeleton className="h-48" />}>
+                                 <EmployeeDetailsCard employee={searchedEmployee}/>
+                            </Suspense>
+                        </CardFooter>
+                    )}
+                     {searchedEmployee === undefined && (
+                        <CardFooter>
+                            <p className="text-sm text-muted-foreground">No employee found.</p>
+                        </CardFooter>
+                    )}
+                </Card>
+            )}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Attendance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Calendar
+                        mode="multiple"
+                        selected={[today]}
+                        modifiers={attendanceModifiers}
+                        modifiersClassNames={{
+                            present: 'rdp-day_present',
+                            absent: 'rdp-day_absent',
+                            'half-day': 'rdp-day_half-day',
+                            holiday: 'rdp-day_holiday',
+                            dayOff: 'rdp-day_dayOff',
+                        }}
+                    />
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Team on Leave</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex -space-x-2">
+                         {teamLeaves.map((member) => (
+                          <Avatar key={member.name} className="border-2 border-background">
+                            <AvatarImage src={member.avatar} alt={member.name} data-ai-hint="person avatar"/>
+                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Celebrations</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    {celebrations.map((cel) => (
+                      <div key={cel.name} className="flex items-center gap-3 text-sm">
+                          <Cake className="h-4 w-4 text-pink-500" />
+                          <div>
+                              <p className="font-semibold">{cel.name}</p>
+                              <p className="text-muted-foreground">{cel.type}</p>
+                          </div>
+                      </div>
+                    ))}
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }
