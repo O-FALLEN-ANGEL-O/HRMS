@@ -44,12 +44,12 @@ export type WalkinApplicant = {
 export const walkinApplicants: WalkinApplicant[] = [
     {
         id: 'WALK-20240729-001',
-        fullName: 'Aarav Sharma',
-        email: 'aarav.sharma@example.com',
-        phone: '9876543210',
+        fullName: 'Liam Johnson',
+        email: 'liam.j@optitalent.com',
+        phone: '111-222-3349',
         status: 'Registered',
         registrationDate: new Date().toISOString(),
-        profilePicture: null,
+        profilePicture: `https://ui-avatars.com/api/?name=Liam+Johnson&background=random`,
         resumeUrl: null,
         experience: [],
         education: [],
@@ -57,18 +57,50 @@ export const walkinApplicants: WalkinApplicant[] = [
             {
                 assessmentId: 'asmt-001',
                 status: 'Completed',
-                attempts: [{ attemptNumber: 1, score: 65, completedAt: '2024-07-30T10:00:00Z' }]
+                attempts: [{ attemptNumber: 1, score: 82, completedAt: '2024-07-30T10:00:00Z' }]
             },
             {
                 assessmentId: 'asmt-004',
-                status: 'Retry Requested',
-                attempts: [{ attemptNumber: 1, score: 45, completedAt: '2024-07-30T11:00:00Z' }],
-                retryRequest: {
-                    reason: 'I experienced a technical issue with my keyboard during the first attempt which affected my speed. I believe I can perform much better.',
-                    status: 'Pending',
-                    requestedAt: '2024-07-30T11:05:00Z'
-                }
+                status: 'Completed',
+                attempts: [{ attemptNumber: 1, score: 58, completedAt: '2024-07-30T11:00:00Z' }],
             }
         ]
+    },
+    {
+        id: 'WALK-20240729-002',
+        fullName: 'Ava Wilson',
+        email: 'ava.w@optitalent.com',
+        phone: '111-222-3350',
+        status: 'Registered',
+        registrationDate: new Date().toISOString(),
+        profilePicture: `https://ui-avatars.com/api/?name=Ava+Wilson&background=random`,
+        resumeUrl: null,
+        experience: [],
+        education: [],
+        assessments: [
+            {
+                assessmentId: 'asmt-001',
+                status: 'Completed',
+                attempts: [{ attemptNumber: 1, score: 76, completedAt: '2024-07-30T10:15:00Z' }]
+            },
+            {
+                assessmentId: 'asmt-004',
+                status: 'Not Started',
+                attempts: [],
+            }
+        ]
+    },
+    {
+        id: 'WALK-20240729-003',
+        fullName: 'Noah Brown',
+        email: 'noah.b@optitalent.com',
+        phone: '111-222-3351',
+        status: 'Registered',
+        registrationDate: new Date().toISOString(),
+        profilePicture: `https://ui-avatars.com/api/?name=Noah+Brown&background=random`,
+        resumeUrl: null,
+        experience: [],
+        education: [],
+        assessments: []
     }
 ];
