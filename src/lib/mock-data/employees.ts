@@ -292,6 +292,57 @@ export const mockUsers: User[] = [
             profile_picture_url: `https://ui-avatars.com/api/?name=Olivia+Chen&background=random`,
         }
     },
+    { 
+        id: 'user-017',
+        email: 'liam.j@optitalent.com',
+        role: 'employee',
+        profile: {
+            id: 'profile-017',
+            full_name: 'Liam Johnson',
+            department: { name: 'Engineering' },
+            department_id: 'd-001',
+            job_title: 'Software Engineer Trainee',
+            role: 'employee',
+            employee_id: 'PEP0017',
+            phone_number: '111-222-3349',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Liam+Johnson&background=random`,
+        }
+    },
+    { 
+        id: 'user-018',
+        email: 'ava.w@optitalent.com',
+        role: 'employee',
+        profile: {
+            id: 'profile-018',
+            full_name: 'Ava Wilson',
+            department: { name: 'Customer Support' },
+            department_id: 'd-005',
+            job_title: 'Support Agent Trainee',
+            role: 'employee',
+            employee_id: 'PEP0018',
+            phone_number: '111-222-3350',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Ava+Wilson&background=random`,
+        }
+    },
+    { 
+        id: 'user-019',
+        email: 'noah.b@optitalent.com',
+        role: 'employee',
+        profile: {
+            id: 'profile-019',
+            full_name: 'Noah Brown',
+            department: { name: 'Quality Assurance' },
+            department_id: 'd-003',
+            job_title: 'QA Analyst Trainee',
+            role: 'employee',
+            employee_id: 'PEP0019',
+            phone_number: '111-222-3351',
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=Noah+Brown&background=random`,
+        }
+    },
 ];
 
 // For list views
