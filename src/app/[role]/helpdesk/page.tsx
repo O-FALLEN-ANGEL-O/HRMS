@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Search, Send, User, Bot, Clock, FileText, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Send, User, Bot, Clock, FileText, Loader2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
@@ -178,7 +178,7 @@ export default function HelpdeskPage() {
   };
 
   const TicketList = () => (
-    <Card className="md:col-span-1 lg:col-span-1 flex flex-col">
+    <Card className="flex flex-col h-full">
         <CardHeader>
         <CardTitle>My Tickets</CardTitle>
         <div className="relative">
@@ -212,12 +212,18 @@ export default function HelpdeskPage() {
   );
 
   const TicketView = () => (
-    <Card className="md:col-span-2 lg:col-span-3 flex flex-col">
+    <Card className="flex flex-col h-full">
         {selectedTicket ? (
         <>
             <CardHeader className="border-b">
             <div className='flex justify-between items-start'>
                 <div>
+                     {isMobile && (
+                        <Button variant="ghost" size="sm" className="mb-2 -ml-2" onClick={() => setSelectedTicket(null)}>
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Back to Tickets
+                        </Button>
+                    )}
                     <CardTitle>{selectedTicket.subject}</CardTitle>
                     <CardDescription>
                         Ticket ID: {selectedTicket.id} &middot; Priority: <span className={getPriorityClass(selectedTicket.priority)}>{selectedTicket.priority}</span>
@@ -239,7 +245,7 @@ export default function HelpdeskPage() {
                             <div className={cn("max-w-xs md:max-w-md rounded-lg p-3", 
                                 message.from === 'user' ? 'bg-primary text-primary-foreground' : 
                                 message.from === 'system' ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800' : 'bg-muted')}>
-                                <p className="text-sm">{message.text}</p>
+                                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                                 <p className="text-xs opacity-70 mt-1 flex items-center gap-1">
                                     <Clock className='h-3 w-3'/> {message.time}
                                 </p>
@@ -302,11 +308,17 @@ export default function HelpdeskPage() {
         </div>
         
         {isMobile ? (
-            selectedTicket ? <TicketView /> : <TicketList />
+            <div className='h-[calc(100vh-12rem)]'>
+                {selectedTicket ? <TicketView /> : <TicketList />}
+            </div>
         ) : (
              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-1 min-h-0">
-                <TicketList />
-                <TicketView />
+                <div className="md:col-span-1 lg:col-span-1 h-full">
+                    <TicketList />
+                </div>
+                <div className="md:col-span-2 lg:col-span-3 h-full">
+                    <TicketView />
+                </div>
             </div>
         )}
     </div>
