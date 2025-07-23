@@ -19,6 +19,7 @@ import { assessments, type Assessment } from "@/lib/mock-data/assessments";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { StandardAssessmentsTab } from "@/components/standard-assessments-tab";
 
 
 // Mock Data - In a real app, this would be fetched based on applicantId
@@ -363,11 +364,7 @@ export default function ApplicantProfilePage() {
                     { isWalkinApplicant ? (
                          <AssessmentsTab applicantId={applicantId} />
                     ) : (
-                         <Card>
-                            <CardContent>
-                                <p className="p-4 text-muted-foreground">Standard assessment module for non-walk-in applicants. Feature to be built.</p>
-                            </CardContent>
-                         </Card>
+                         <StandardAssessmentsTab applicantId={applicantId} />
                     )}
                 </TabsContent>
             </Tabs>
