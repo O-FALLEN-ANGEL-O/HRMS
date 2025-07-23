@@ -92,7 +92,7 @@ export default function FinanceDashboard() {
                         <CardDescription>Monthly overview of departmental spending.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
+                        <ChartContainer config={chartConfig} className="h-[300px] w-full">
                             <BarChart data={budgetData} layout="vertical" margin={{ right: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
                                 <XAxis type="number" tickFormatter={(value) => `$${(value as number)/1000}k`} />
@@ -104,7 +104,7 @@ export default function FinanceDashboard() {
                                 <Bar dataKey="budget" name="Budget" fill="var(--color-budget)" radius={4} />
                                 <Bar dataKey="expenses" name="Expenses" fill="var(--color-expenses)" radius={4} />
                             </BarChart>
-                        </ResponsiveContainer>
+                        </ChartContainer>
                     </CardContent>
                 </Card>
                 <Card>
