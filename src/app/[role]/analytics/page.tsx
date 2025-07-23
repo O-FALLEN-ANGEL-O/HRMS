@@ -10,8 +10,9 @@ import { getDashboardDataAction } from './actions';
 import type { DashboardData } from "@/ai/flows/get-dashboard-data.types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2 } from 'lucide-react';
+import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 const ManagerDashboard = dynamic(() => import('@/components/dashboards/manager-dashboard'));
 const RecruiterDashboard = dynamic(() => import('@/components/dashboards/recruiter-dashboard'));
@@ -33,16 +34,40 @@ const loadingMessages = [
     "Generating visualizations...",
 ];
 
-function LoadingState() {
+function LoadingState({ hasError, onRetry }: { hasError: boolean, onRetry: () => void }) {
   const [messageIndex, setMessageIndex] = useState(0);
+  const [showRetry, setShowRetry] = useState(false);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setMessageIndex(prevIndex => (prevIndex + 1) % loadingMessages.length);
-    }, 2000);
-
+    let intervalId: NodeJS.Timeout;
+    if (!hasError) {
+      intervalId = setInterval(() => {
+        setMessageIndex(prevIndex => (prevIndex + 1) % loadingMessages.length);
+      }, 2000);
+    }
     return () => clearInterval(intervalId);
-  }, []);
+  }, [hasError]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (hasError) {
+      timer = setTimeout(() => setShowRetry(true), 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [hasError]);
+
+  if (hasError) {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Failed to Load Analytics</h2>
+            <p className="text-muted-foreground mb-4">There was an issue fetching the dashboard data.</p>
+            {showRetry && (
+                <Button onClick={onRetry}><RefreshCw className="mr-2 h-4 w-4" /> Try Again</Button>
+            )}
+        </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
@@ -70,23 +95,33 @@ function LoadingState() {
 function EnhancedAnalyticsDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
+    const fetchData = async () => {
+        setLoading(true);
+        setError(false);
+        try {
+            const result = await getDashboardDataAction();
+            if (!result) throw new Error("No data returned");
+            setData(result);
+        } catch (error) {
+            console.error("Failed to fetch dashboard data:", error);
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const result = await getDashboardDataAction();
-                setData(result);
-            } catch (error) {
-                console.error("Failed to fetch dashboard data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchData();
     }, []);
 
-    if (loading || !data) {
-        return <LoadingState />;
+    if (loading || error) {
+        return <LoadingState hasError={error} onRetry={fetchData} />;
+    }
+    
+    if (!data) {
+       return <LoadingState hasError={true} onRetry={fetchData} />;
     }
     
     const { stats, headcountByDept, recruitmentFunnel } = data;
