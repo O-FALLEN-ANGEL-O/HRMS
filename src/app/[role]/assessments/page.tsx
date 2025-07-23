@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { assessments } from "@/lib/mock-data/assessments";
@@ -213,5 +214,6 @@ export default function AssessmentsPage() {
     return <TrainerView />;
   }
 
+  // Trainees and other employees will see the view to take tests
   return <TraineeView />;
 }
