@@ -76,7 +76,7 @@ export default function ChatbotPage() {
                     </Avatar>
                   )}
                   <div className={cn(
-                      "max-w-md rounded-lg px-4 py-3 text-sm",
+                      "max-w-md rounded-lg px-4 py-3 text-sm whitespace-pre-wrap",
                       message.role === 'user' 
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted"
