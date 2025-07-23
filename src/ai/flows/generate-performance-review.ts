@@ -53,7 +53,7 @@ const prompt = ai.definePrompt({
   1.  Write a comprehensive and constructive performance review summary. The summary should be professional, well-structured, and provide clear feedback. Start with achievements and then constructively address areas for improvement.
   2.  Suggest an overall performance rating from the following options: 'Exceeds Expectations', 'Meets Expectations', 'Needs Improvement'. Base your suggestion on the balance of achievements versus areas for improvement.
   
-  Return the output in the specified JSON format.`,
+  Return the output as per the defined output schema.`,
 });
 
 const generatePerformanceReviewFlow = ai.defineFlow(

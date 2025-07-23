@@ -52,8 +52,7 @@ const prompt = ai.definePrompt({
   {{/if}}
 
   Identify any potential errors, and explain why you believe each one is an error. Be specific and provide context. Classify the severity of each error as high, medium, or low.
-
-  Return the errors in the format described in the output schema. Also provide a summary of the errors.
+  Return a list of errors and a summary as per the output schema.
 `,
 });
 

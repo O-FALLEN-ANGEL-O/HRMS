@@ -37,7 +37,9 @@ const prompt = ai.definePrompt({
   name: 'suggestInterviewQuestionsPrompt',
   input: {schema: SuggestInterviewQuestionsInputSchema},
   output: {schema: SuggestInterviewQuestionsOutputSchema},
-  prompt: `You are an expert HR assistant. You are asked to suggest interview questions for the role: {{{role}}}. Return an array of questions. Do not include any introduction or conclusion. Only provide the questions.
+  prompt: `You are an expert HR assistant. You are asked to suggest a list of interview questions for the role: {{{role}}}.
+  
+  Return only an array of questions, with no introduction or conclusion.
 `,
 });
 

@@ -58,7 +58,7 @@ const prompt = ai.definePrompt({
   Consider factors such as workload, work-life balance, stress levels, and overall job satisfaction.
   Determine the burnout risk level (Low, Medium, High, Critical) and list the key factors contributing to the risk.
   Provide specific and actionable recommendations for managers to support the employee and reduce burnout risk.
-  Ensure your output matches the schema exactly, including providing a list of recommendations and a list of risk factors.
+  Ensure your output matches the schema exactly.
   `,
 });
 

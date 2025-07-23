@@ -41,20 +41,20 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert HR assistant. Your task is to generate a personalized welcome email for a new hire.
 
   Here is the new hire's information:
-  First Name: {{{firstName}}}
-  Last Name: {{{lastName}}}
-  Job Title: {{{jobTitle}}}
-  Department: {{{department}}}
-  Start Date: {{{startDate}}}
-  Team Members: {{{teamMembers}}}
+  - First Name: {{{firstName}}}
+  - Last Name: {{{lastName}}}
+  - Job Title: {{{jobTitle}}}
+  - Department: {{{department}}}
+  - Start Date: {{{startDate}}}
+  - Team Members: {{{teamMembers}}}
 
   Here is the company's information:
-  Company Name: {{{companyName}}}
-  Company Culture Values: {{{companyCultureValues}}}
+  - Company Name: {{{companyName}}}
+  - Company Culture Values: {{{companyCultureValues}}}
 
   Here is the HR contact information:
-  HR Contact Name: {{{hrContactName}}}
-  HR Contact Email: {{{hrContactEmail}}}
+  - HR Contact Name: {{{hrContactName}}}
+  - HR Contact Email: {{{hrContactEmail}}}
 
   Please generate a welcome email that includes:
   - A warm and welcoming tone.
@@ -63,14 +63,9 @@ const prompt = ai.definePrompt({
   - Contact information for the HR contact person.
 
   The welcome email subject should be concise and inviting.
-
   Ensure that the generated email is professional and grammatically correct.
-
-  Output the subject and body of the email in the following JSON format:
-  {
-    "subject": "[Subject of the email]",
-    "body": "[Body of the email]"
-  }`,
+  Return only the subject and body of the email as per the output schema.
+  `,
 });
 
 const autoGenerateWelcomeEmailFlow = ai.defineFlow(

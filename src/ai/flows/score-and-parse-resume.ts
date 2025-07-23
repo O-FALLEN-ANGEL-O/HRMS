@@ -76,19 +76,8 @@ const prompt = ai.definePrompt({
   output: {schema: ScoreAndParseResumeOutputSchema},
   prompt: `You are an expert HR recruiter with experience in parsing resumes and matching candidates to job descriptions.
 
-You will be provided with a job description and a resume (either as text from a document or from an image using OCR). Your tasks are:
-1.  Parse the resume to extract structured information. Be as accurate as possible. Extract the following fields:
-    - Candidate's full name.
-    - Contact info: email and phone number.
-    - A professional summary or objective statement if present.
-    - Social and professional links (e.g., LinkedIn, GitHub, portfolio).
-    - A list of key skills (both technical and soft skills).
-    - A list of work experiences, including company, job title, and employment dates.
-    - A list of educational qualifications, including institution, degree, and year.
-    - A list of personal or professional projects, including name, description, and a URL if available.
-    - A list of any certifications mentioned.
-    - A list of languages spoken.
-    - A list of hobbies or interests if mentioned.
+You will be provided with a job description and a resume (as a data URI). Your tasks are:
+1.  Parse the resume to extract structured information. Be as accurate as possible. Extract all fields defined in the output schema.
 2.  Score the resume from 0 to 100 based on how well the candidate's skills and experience match the provided job description.
 3.  Provide a concise justification for the score. Explain the reasoning behind your score, noting how the candidate aligns with the requirements.
 
@@ -100,7 +89,7 @@ Job Description:
 Resume Content:
 {{media url=resumeDataUri}}
 
-Please return the extracted data, score, and justification in the specified JSON format. If a field is not present in the resume, return an empty string or array for it.
+Please return the extracted data, score, and justification as per the defined output schema. If a field is not present in the resume, return an empty string or array for it.
 `,
 });
 

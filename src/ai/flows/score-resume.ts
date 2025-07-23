@@ -46,8 +46,7 @@ You will also provide a justification for the score.
 Job Description: {{{jd}}}
 
 Resume: {{{resume}}}
-
-Score (0-100):`,
+`,
 });
 
 const scoreResumeFlow = ai.defineFlow(

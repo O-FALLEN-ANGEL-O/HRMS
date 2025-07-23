@@ -37,20 +37,20 @@ const prompt = ai.definePrompt({
   Subject: {{{subject}}}
   Description: {{{description}}}
 
-  Categories:
+  Available Categories:
   - IT Support (e.g., software issues, hardware problems, network access)
   - HR Query (e.g., benefits questions, policy clarification, leave requests)
   - Payroll Issue (e.g., payslip errors, salary questions)
   - Facilities (e.g., office maintenance, equipment requests)
   - General Inquiry (e.g., other miscellaneous questions)
   
-  Priorities:
+  Available Priorities:
   - High (e.g., system outage, unable to work, security issue, payroll error)
   - Medium (e.g., software bug, access request, important but not blocking)
   - Low (e.g., general question, minor issue)
 
   Analyze the ticket content and determine the most appropriate category and priority.
-  Return only the category and priority in the specified JSON format.
+  Return only the category and priority as per the output schema.
   `,
 });
 

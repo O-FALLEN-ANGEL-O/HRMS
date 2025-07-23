@@ -37,8 +37,8 @@ const prompt = ai.definePrompt({
   Department: {{{department}}}
   Job Title: {{{jobTitle}}}
 
-  Consider roles such as Admin, HR, Manager, Employee, Recruiter, and Guest.
-  Return only the role, nothing else.
+  Available Roles: Admin, HR, Manager, Employee, Recruiter, Guest.
+  Return only the suggested role.
   `,
 });
 
