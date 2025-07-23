@@ -2,23 +2,35 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { mockEmployees } from '@/lib/mock-data/employees';
 
 /**
- * A custom hook to get the team members for a given department.
- * In a real app, this would take a department ID and fetch from an API.
- * For the prototype, it filters the mock data.
- * @returns An array of employee objects who are in the 'Engineering' department.
+ * A custom hook to get the team members for a given role.
+ * In a real app, this would take a user ID and fetch their direct reports.
+ * For the prototype, it filters the mock data based on role.
+ * @returns An array of employee objects.
  */
 export function useTeam() {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const params = useParams();
+  const role = params.role as string;
 
   useEffect(() => {
     const fetchTeam = () => {
-        // Mocking a manager's team view - showing Engineering dept.
-        const members = mockEmployees.filter(employee => 
-            employee.department.name === 'Engineering' && employee.role !== 'manager'
-        );
+        let members;
+
+        if (role === 'trainer') {
+            // For trainers, find employees with "Trainee" in their job title
+             members = mockEmployees.filter(employee => 
+                employee.job_title.toLowerCase().includes('trainee')
+            );
+        } else {
+            // For other managers/team leaders, mock a team from the Engineering dept.
+            members = mockEmployees.filter(employee => 
+                employee.department.name === 'Engineering' && employee.role !== 'manager'
+            );
+        }
 
         const membersWithMockData = members.map(member => ({
             ...member,
@@ -33,7 +45,7 @@ export function useTeam() {
         setTeamMembers(membersWithMockData);
     }
     fetchTeam();
-  }, []);
+  }, [role]);
 
   return teamMembers;
 }

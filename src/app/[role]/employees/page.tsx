@@ -130,7 +130,7 @@ export default function EmployeesPage() {
   const { toast } = useToast();
   const teamMembers = useTeam();
   const role = params.role as string;
-  const isManagerView = role === 'manager' || role === 'team-leader';
+  const isManagerView = role === 'manager' || role === 'team-leader' || role === 'trainer';
 
   const handleAddEmployee = (newEmployee: Employee) => {
     setEmployees(prev => [...prev, newEmployee]);
