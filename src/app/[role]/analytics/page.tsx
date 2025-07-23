@@ -47,8 +47,7 @@ function LoadingState() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
         <div className="relative mb-6">
-            <Bot className="h-16 w-16 text-primary animate-pulse" />
-            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin absolute -top-2 -right-2" />
+            <div className="custom-loader"></div>
         </div>
         <h2 className="text-xl font-semibold mb-2">Generating Your Analytics Dashboard</h2>
         <AnimatePresence mode="wait">
