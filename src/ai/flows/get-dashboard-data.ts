@@ -46,7 +46,7 @@ const getDashboardDataFlow = ai.defineFlow(
   {
     name: 'getDashboardDataFlow',
     outputSchema: DashboardDataSchema,
-    retries: 3, // Add retry mechanism
+    retries: 3,
   },
   async () => {
     const { output } = await prompt();
