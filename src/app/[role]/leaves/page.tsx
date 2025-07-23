@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Calendar as CalendarIcon, Check, X } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, Check, X, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useParams, useRouter } from 'next/navigation';
 import { leaveBalances, leaveRequests as initialLeaveRequests, type LeaveRequest } from '@/lib/mock-data/leaves';
 
-function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) {
+const ApplyLeaveDialog = dynamic(() => Promise.resolve(({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) => {
     const [open, setOpen] = useState(false);
     const { toast } = useToast();
   
@@ -109,7 +110,10 @@ function ApplyLeaveDialog({ onApply }: { onApply: (newRequest: LeaveRequest) => 
             </DialogContent>
         </Dialog>
     )
-}
+}), {
+    loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Apply for Leave</Button>,
+    ssr: false
+});
 
 export default function LeaveManagementPage() {
     const [leaveRequests, setLeaveRequests] = useState(initialLeaveRequests);
@@ -164,7 +168,9 @@ export default function LeaveManagementPage() {
                     Team Calendar
                 </Button>
             )}
-            <ApplyLeaveDialog onApply={handleApplyLeave} />
+             <Suspense fallback={<Button disabled>Loading...</Button>}>
+                <ApplyLeaveDialog onApply={handleApplyLeave} />
+             </Suspense>
         </div>
       </div>
       

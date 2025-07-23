@@ -2,13 +2,13 @@
 "use client"
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { onboardingCandidates, type OnboardingCandidate } from '@/lib/mock-data/onboarding';
 
-function SendEmailDialog({ onSend, children }: { onSend: (candidate: OnboardingCandidate) => void; children: React.ReactNode }) {
+
+const SendEmailDialog = dynamic(() => Promise.resolve(({ onSend, children }: { onSend: (candidate: OnboardingCandidate) => void; children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [selectedCandidate, setSelectedCandidate] = React.useState<OnboardingCandidate | null>(null);
 
@@ -80,7 +81,11 @@ function SendEmailDialog({ onSend, children }: { onSend: (candidate: OnboardingC
             </DialogContent>
         </Dialog>
     )
-}
+}), {
+    loading: () => <Button className="w-full" disabled><Send className="mr-2 h-4 w-4" /> Send Email</Button>,
+    ssr: false,
+});
+
 
 export default function OnboardingPage() {
   const [result, setResult] = React.useState<AutoGenerateWelcomeEmailOutput | null>(null);

@@ -1,7 +1,8 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { PlusCircle, MoreHorizontal, Bot } from "lucide-react"
 import {
   Table,
@@ -19,15 +20,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -40,10 +32,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { useTeam } from '@/hooks/use-team';
 import { TeamCard } from '@/components/team-card';
 import { mockEmployees } from '@/lib/mock-data/employees';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2 } from 'lucide-react';
+
 
 type Employee = (typeof mockEmployees)[0];
 
-function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employee: Employee) => void; children: React.ReactNode }) {
+const AddEmployeeDialog = dynamic(() => Promise.resolve(({ onAddEmployee, children }: { onAddEmployee: (employee: Employee) => void; children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
   const [loading, setLoading] = useState(false);
@@ -121,7 +116,11 @@ function AddEmployeeDialog({ onAddEmployee, children }: { onAddEmployee: (employ
       </DialogContent>
     </Dialog>
   );
-}
+}), {
+    loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Add Employee</Button>,
+    ssr: false
+});
+
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
@@ -226,12 +225,14 @@ export default function EmployeesPage() {
           <p className="text-muted-foreground">{isManagerView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
         </div>
         {!isManagerView && (
-            <AddEmployeeDialog onAddEmployee={handleAddEmployee}>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Employee
-                </Button>
-            </AddEmployeeDialog>
+             <Suspense fallback={<Button disabled>Loading...</Button>}>
+                <AddEmployeeDialog onAddEmployee={handleAddEmployee}>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Employee
+                    </Button>
+                </AddEmployeeDialog>
+             </Suspense>
         )}
       </div>
       {isManagerView ? <ManagerView /> : <AdminView />}

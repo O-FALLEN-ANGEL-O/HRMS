@@ -50,7 +50,7 @@ const AssessmentCardComponent = ({ assessment }: AssessmentCardProps) => {
       </CardFooter>
     </Card>
   );
-}
+};
 
 AssessmentCardComponent.displayName = 'AssessmentCard';
 export const AssessmentCard = React.memo(AssessmentCardComponent);

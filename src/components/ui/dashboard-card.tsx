@@ -47,7 +47,7 @@ const DashboardCardComponent = ({ title, icon: Icon, actionIcon: ActionIcon, val
   );
 
   return cardContent;
-}
+};
 
 DashboardCardComponent.displayName = 'DashboardCard';
 
