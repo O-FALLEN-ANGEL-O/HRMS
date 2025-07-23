@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getDashboardDataAction } from './actions';
-import type { DashboardData } from "@/ai/flows/get-dashboard-data";
+import type { DashboardData } from "@/ai/flows/get-dashboard-data.types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell } from 'recharts';
 import { Users, Briefcase, TrendingUp, TrendingDown } from 'lucide-react';
