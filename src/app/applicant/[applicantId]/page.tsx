@@ -275,14 +275,14 @@ function AssessmentsTab({ applicant, setApplicant }: { applicant: WalkinApplican
                 <CardDescription>Complete your assigned assessments to proceed.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {applicant.assessments.length === 0 && (
+                {(!applicant.assessments || applicant.assessments.length === 0) && (
                     <div className="text-center py-10 text-muted-foreground">
                         <FileQuestion className="mx-auto h-12 w-12" />
                         <h3 className="mt-4 text-lg font-semibold">No Assessments Assigned</h3>
                         <p className="mt-2 text-sm">HR has not assigned any assessments to you yet. Please check back later.</p>
                     </div>
                 )}
-                {applicant.assessments.map(appAssessment => {
+                {(applicant.assessments || []).map(appAssessment => {
                     const assessmentDetails = assessments.find(a => a.id === appAssessment.assessmentId);
                     if (!assessmentDetails) return null;
                     
@@ -445,3 +445,5 @@ export default function ApplicantDashboardPage() {
         </div>
     );
 }
+
+    
