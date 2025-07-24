@@ -47,7 +47,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'Profile', href: '/profile', icon: FileText },
+    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   hr: [
@@ -63,7 +63,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: Bot },
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'Profile', href: '/profile', icon: FileText },
+    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   manager: [
