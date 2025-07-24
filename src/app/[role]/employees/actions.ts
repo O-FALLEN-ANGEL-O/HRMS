@@ -32,8 +32,8 @@ export async function getEmployees() {
         .from('employees')
         .select(`
             *,
-            user:users!inner(*),
-            department:departments!inner(*)
+            users(*),
+            departments(*)
         `);
     
     if (error) {
@@ -41,16 +41,9 @@ export async function getEmployees() {
         return [];
     }
 
-    // The shape needs to match what the component expects
-    // The query above already joins the necessary tables.
-    // The mapping below ensures the shape is consistent.
-    return data.map(e => ({
-        ...e,
-        // The component expects user and department objects.
-        // The query aliases them, so we just pass them through.
-        user: e.user,
-        department: e.department || { name: 'N/A' }, // Handle case where department might be null
-    }));
+    // The data shape will now be { ..., users: {...}, departments: {...} }
+    // The mapping logic in the component will handle this structure.
+    return data;
 }
 
 export async function deactivateEmployeeAction(employeeId: string) {

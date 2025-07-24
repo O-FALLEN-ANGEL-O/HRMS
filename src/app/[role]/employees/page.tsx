@@ -72,8 +72,13 @@ async function AdminView({ role }: { role: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {employees.map((employee) => (
-                    employee && (
+                {employees.map((employee) => {
+                  const user = Array.isArray(employee.users) ? employee.users[0] : employee.users;
+                  const department = Array.isArray(employee.departments) ? employee.departments[0] : employee.departments;
+                  
+                  if (!employee) return null;
+
+                  return (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
@@ -83,12 +88,12 @@ async function AdminView({ role }: { role: string }) {
                         </Avatar>
                         <div className="grid gap-0.5">
                           <p className="font-medium">{employee.full_name}</p>
-                          <p className="text-sm text-muted-foreground hidden md:inline">{employee.user?.email}</p>
+                          <p className="text-sm text-muted-foreground hidden md:inline">{user?.email}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{employee.department?.name || 'N/A'}</TableCell>
-                    <TableCell>{employee.user?.role}</TableCell>
+                    <TableCell className="hidden md:table-cell">{department?.name || 'N/A'}</TableCell>
+                    <TableCell>{user?.role}</TableCell>
                     <TableCell className="hidden md:table-cell">
                       <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
                         {employee.status}
@@ -109,13 +114,18 @@ async function AdminView({ role }: { role: string }) {
                           </DropdownMenuItem>
                           <DropdownMenuItem>Edit</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DeactivateMenuItem employeeId={employee.id} employeeName={employee.full_name}/>
+                          <form action={handleDeactivate}>
+                              <input type="hidden" name="employeeId" value={employee.id} />
+                              <button type="submit" className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
+                                  Deactivate
+                              </button>
+                          </form>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
                   )
-                ))}
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -152,7 +162,7 @@ export default async function EmployeesPage({ params }: { params: { role: string
   
   // In a real app, you'd fetch only the relevant team members based on the logged-in user.
   // We filter on the client for simplicity.
-  const teamMembers = isTeamView ? employees.filter(e => e.department?.name === 'Engineering' && e.user?.role !== 'manager') : [];
+  const teamMembers = isTeamView ? employees.filter(e => e.departments?.name === 'Engineering' && e.users?.role !== 'manager') : [];
 
   return (
     <div>
