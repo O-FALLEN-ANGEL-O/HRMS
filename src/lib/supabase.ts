@@ -1,4 +1,9 @@
-// This file is intentionally left blank.
-// The Supabase client is no longer needed for the frontend-only prototype.
-// All data is now sourced from mock files in /lib/mock-data.
-export const supabase = {};
+import { createBrowserClient } from '@supabase/ssr'
+import { Database } from './database.types';
+
+export function createClient() {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}

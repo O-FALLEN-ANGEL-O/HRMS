@@ -1,158 +1,63 @@
 
-'use client';
-
-import { useState, Suspense } from 'react';
+import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Calendar as CalendarIcon, Check, X, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { useParams, useRouter } from 'next/navigation';
-import { leaveBalances, leaveRequests as initialLeaveRequests, type LeaveRequest } from '@/lib/mock-data/leaves';
+import { getLeaveRequests, getLeaveBalances, handleLeaveAction, applyForLeaveAction } from './actions';
+import { revalidatePath } from 'next/cache';
+import Link from 'next/link';
 
-const ApplyLeaveDialog = dynamic(() => Promise.resolve(({ onApply }: { onApply: (newRequest: LeaveRequest) => void }) => {
-    const [open, setOpen] = useState(false);
-    const { toast } = useToast();
-  
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const formData = new FormData(e.currentTarget);
-      const leaveType = formData.get('leave-type') as LeaveRequest['leaveType'];
-      const fromDate = formData.get('from-date') as string;
-      const toDate = formData.get('to-date') as string;
-      const reason = formData.get('reason') as string;
-  
-      if (!leaveType || !fromDate || !toDate || !reason) {
-        toast({ title: 'Missing fields', description: 'Please fill out all fields.', variant: 'destructive' });
-        return;
-      }
-  
-      const days = (new Date(toDate).getTime() - new Date(fromDate).getTime()) / (1000 * 3600 * 24) + 1;
-  
-      const newRequest: LeaveRequest = {
-        id: `LR-${String(Math.floor(Math.random() * 900) + 100)}`,
-        employee: 'Current User',
-        leaveType,
-        dates: `${fromDate} to ${toDate}`,
-        days: days,
-        status: 'Pending',
-        reason,
-      };
-  
-      onApply(newRequest);
-      toast({ title: 'Request Submitted', description: 'Your leave request has been submitted for approval.' });
-      setOpen(false);
-    };
-
-    return (
-         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Apply for Leave
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Apply for Leave</DialogTitle>
-                    <DialogDescription>Fill out the form to request time off.</DialogDescription>
-                </DialogHeader>
-                 <form onSubmit={handleSubmit}>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="leave-type">Leave Type</Label>
-                            <Select name="leave-type" required>
-                                <SelectTrigger id="leave-type">
-                                    <SelectValue placeholder="Select a leave type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Sick Leave">Sick Leave</SelectItem>
-                                    <SelectItem value="Casual Leave">Casual Leave</SelectItem>
-                                    <SelectItem value="Paid Time Off">Paid Time Off (PTO)</SelectItem>
-                                    <SelectItem value="Work From Home">Work From Home</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="from-date">From</Label>
-                                <Input id="from-date" name="from-date" type="date" required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="to-date">To</Label>
-                                <Input id="to-date" name="to-date" type="date" required />
-                            </div>
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="reason">Reason</Label>
-                            <Textarea id="reason" name="reason" placeholder="Please provide a reason for your leave." required />
-                        </div>
-                     </div>
-                    <DialogFooter>
-                        <Button type="submit">Submit Request</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}), {
+const ApplyLeaveDialog = dynamic(() => import('@/components/leaves/apply-leave-dialog'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Apply for Leave</Button>,
     ssr: false
 });
 
-export default function LeaveManagementPage() {
-    const [leaveRequests, setLeaveRequests] = useState(initialLeaveRequests);
-    const { toast } = useToast();
-    const params = useParams();
-    const router = useRouter();
-    const role = params.role as string;
+const getStatusBadge = (status: string) => {
+    switch (status) {
+    case 'Approved':
+        return <Badge variant="default" className='bg-green-500 hover:bg-green-600'>Approved</Badge>;
+    case 'Pending':
+        return <Badge variant="secondary">Pending</Badge>;
+    case 'Rejected':
+        return <Badge variant="destructive">Rejected</Badge>;
+    default:
+        return <Badge>{status}</Badge>;
+    }
+};
 
+async function LeaveActionButtons({ requestId }: { requestId: string }) {
+    const takeAction = async (status: 'Approved' | 'Rejected') => {
+        'use server';
+        await handleLeaveAction(requestId, status);
+        revalidatePath('/[role]/leaves', 'page');
+    };
+
+    return (
+        <div className='flex gap-2 justify-end'>
+            <form action={async () => takeAction('Approved')}>
+                <Button variant="outline" size="icon" className='border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600'><Check className="h-4 w-4" /></Button>
+            </form>
+            <form action={async () => takeAction('Rejected')}>
+                 <Button variant="outline" size="icon" className='border-red-500 text-red-500 hover:bg-red-100 hover:text-red-600'><X className="h-4 w-4" /></Button>
+            </form>
+        </div>
+    );
+}
+
+
+export default async function LeaveManagementPage({ params }: { params: { role: string }}) {
+    const role = params.role;
     const isManager = role === 'manager' || role === 'hr' || role === 'admin';
 
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-        case 'Approved':
-            return <Badge variant="default" className='bg-green-500 hover:bg-green-600'>Approved</Badge>;
-        case 'Pending':
-            return <Badge variant="secondary">Pending</Badge>;
-        case 'Rejected':
-            return <Badge variant="destructive">Rejected</Badge>;
-        default:
-            return <Badge>{status}</Badge>;
-        }
-    };
-
-    const handleAction = (id: string, newStatus: 'Approved' | 'Rejected') => {
-        setLeaveRequests(currentRequests =>
-            currentRequests.map(req =>
-                req.id === id ? { ...req, status: newStatus } : req
-            )
-        );
-        toast({
-            title: `Request ${newStatus}`,
-            description: `Leave request ${id} has been successfully ${newStatus.toLowerCase()}.`
-        });
-    };
-    
-    const handleApplyLeave = (newRequest: LeaveRequest) => {
-        setLeaveRequests(prev => [newRequest, ...prev]);
-    }
+    // Fetch data in parallel
+    const [leaveRequests, leaveBalances, pendingCount] = await Promise.all([
+        getLeaveRequests(isManager ? undefined : 'user-012'), // Mock current user ID
+        getLeaveBalances('user-012'), // Mock current user ID
+        getLeaveRequests(isManager ? undefined : 'user-012', 'Pending').then(r => r.length),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -163,13 +68,15 @@ export default function LeaveManagementPage() {
         </div>
         <div className="flex gap-2">
             {isManager && (
-                 <Button variant="outline" onClick={() => router.push(`/${role}/leaves/calendar`)}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Team Calendar
+                 <Button variant="outline" asChild>
+                    <Link href={`/${role}/leaves/calendar`}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        Team Calendar
+                    </Link>
                 </Button>
             )}
              <Suspense fallback={<Button disabled>Loading...</Button>}>
-                <ApplyLeaveDialog onApply={handleApplyLeave} />
+                <ApplyLeaveDialog action={applyForLeaveAction} />
              </Suspense>
         </div>
       </div>
@@ -181,7 +88,7 @@ export default function LeaveManagementPage() {
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{leaveBalances.casual}</div>
             <p className="text-xs text-muted-foreground">out of 12 days remaining</p>
           </CardContent>
         </Card>
@@ -191,7 +98,7 @@ export default function LeaveManagementPage() {
              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-2xl font-bold">{leaveBalances.sick}</div>
             <p className="text-xs text-muted-foreground">out of 7 days remaining</p>
           </CardContent>
         </Card>
@@ -201,7 +108,7 @@ export default function LeaveManagementPage() {
              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">15</div>
+            <div className="text-2xl font-bold">{leaveBalances.pto}</div>
              <p className="text-xs text-muted-foreground">out of 20 days remaining</p>
           </CardContent>
         </Card>
@@ -211,7 +118,7 @@ export default function LeaveManagementPage() {
              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{leaveRequests.filter(r => r.status === 'Pending').length}</div>
+            <div className="text-2xl font-bold">{pendingCount}</div>
              <p className="text-xs text-muted-foreground">waiting for approval</p>
           </CardContent>
         </Card>
@@ -238,19 +145,16 @@ export default function LeaveManagementPage() {
             <TableBody>
               {leaveRequests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell className="font-medium">{isManager ? request.employee : request.id}</TableCell>
-                  <TableCell>{request.leaveType}</TableCell>
-                  <TableCell>{request.dates}</TableCell>
+                  <TableCell className="font-medium">{isManager ? request.employees?.full_name : request.id}</TableCell>
+                  <TableCell>{request.leave_type}</TableCell>
+                  <TableCell>{new Date(request.start_date).toLocaleDateString()} to {new Date(request.end_date).toLocaleDateString()}</TableCell>
                   <TableCell className="text-center">{request.days}</TableCell>
                   <TableCell className="max-w-xs truncate">{request.reason}</TableCell>
                   <TableCell>{getStatusBadge(request.status)}</TableCell>
                   {isManager && (
                     <TableCell className="text-right">
                       {request.status === 'Pending' ? (
-                          <div className='flex gap-2 justify-end'>
-                              <Button variant="outline" size="icon" className='border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600' onClick={() => handleAction(request.id, 'Approved')}><Check className="h-4 w-4" /></Button>
-                              <Button variant="outline" size="icon" className='border-red-500 text-red-500 hover:bg-red-100 hover:text-red-600' onClick={() => handleAction(request.id, 'Rejected')}><X className="h-4 w-4" /></Button>
-                          </div>
+                          <LeaveActionButtons requestId={request.id} />
                       ) : (
                         <span>-</span>
                       )}
@@ -258,6 +162,13 @@ export default function LeaveManagementPage() {
                   )}
                 </TableRow>
               ))}
+                 {leaveRequests.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={isManager ? 7 : 6} className="text-center h-24">
+                            No leave requests found.
+                        </TableCell>
+                    </TableRow>
+                )}
             </TableBody>
           </Table>
         </CardContent>
