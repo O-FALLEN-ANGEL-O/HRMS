@@ -2,84 +2,33 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getDashboardDataAction } from './actions';
-import type { DashboardData } from "@/ai/flows/get-dashboard-data.types";
+import type { DashboardData } from "@/lib/types/analytics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2, AlertTriangle, RefreshCw, Construction } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
-
-const loadingMessages = [
-    "Connecting to data warehouse...",
-    "Compiling HR records...",
-    "Running statistical models...",
-    "Analyzing leave patterns...",
-    "Projecting recruitment funnel...",
-    "Generating visualizations...",
-];
-
-function LoadingState({ hasError, onRetry }: { hasError: boolean, onRetry: () => void }) {
-  const [messageIndex, setMessageIndex] = useState(0);
-  const [showRetry, setShowRetry] = useState(false);
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    if (!hasError) {
-      intervalId = setInterval(() => {
-        setMessageIndex(prevIndex => (prevIndex + 1) % loadingMessages.length);
-      }, 2000);
-    }
-    return () => clearInterval(intervalId);
-  }, [hasError]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (hasError) {
-      timer = setTimeout(() => setShowRetry(true), 3000);
-    }
-    return () => clearTimeout(timer);
-  }, [hasError]);
-
-  if (hasError) {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Failed to Load Analytics</h2>
-            <p className="text-muted-foreground mb-4">There was an issue fetching the dashboard data.</p>
-            {showRetry && (
-                <Button onClick={onRetry}><RefreshCw className="mr-2 h-4 w-4" /> Try Again</Button>
-            )}
-        </div>
-    )
-  }
-
+function LoadingState() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-        <div className="relative mb-6">
-            <div className="custom-loader"></div>
-        </div>
-        <h2 className="text-xl font-semibold mb-2">Generating Your Analytics Dashboard</h2>
-        <AnimatePresence mode="wait">
-            <motion.p
-              key={messageIndex}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.3 }}
-              className="text-muted-foreground"
-            >
-              {loadingMessages[messageIndex]}
-            </motion.p>
-        </AnimatePresence>
-    </div>
+      <div className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+          </div>
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+              <Skeleton className="lg:col-span-3 h-96" />
+              <Skeleton className="lg:col-span-2 h-96" />
+          </div>
+      </div>
   )
 }
-
 
 function EnhancedAnalyticsDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
@@ -105,12 +54,19 @@ function EnhancedAnalyticsDashboard() {
         fetchData();
     }, []);
 
-    if (loading || error) {
-        return <LoadingState hasError={error} onRetry={fetchData} />;
+    if (loading) {
+        return <LoadingState />;
     }
     
-    if (!data) {
-       return <LoadingState hasError={true} onRetry={fetchData} />;
+    if (error || !data) {
+       return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Failed to Load Analytics</h2>
+                <p className="text-muted-foreground mb-4">There was an issue fetching the dashboard data.</p>
+                <Button onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Try Again</Button>
+            </div>
+        )
     }
     
     const { stats, headcountByDept, recruitmentFunnel } = data;
@@ -271,7 +227,9 @@ export default function AnalyticsPage() {
           <h1 className="font-headline tracking-tight">Analytics Dashboard</h1>
           <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
        </div>
-       {renderDashboard()}
+       <Suspense fallback={<LoadingState />}>
+        {renderDashboard()}
+       </Suspense>
     </div>
   );
 }
