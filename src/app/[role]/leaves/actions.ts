@@ -1,11 +1,11 @@
 
 'use server';
 
-import { createClient } from "@/lib/supabase";
+import { createServerClient } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function getLeaveRequests(employeeId?: string, status?: 'Pending' | 'Approved' | 'Rejected') {
-    const supabase = createClient();
+    const supabase = createServerClient();
     let query = supabase.from('leave_requests').select(`*, employees (full_name)`);
 
     if (employeeId) {
@@ -27,7 +27,7 @@ export async function getLeaveRequests(employeeId?: string, status?: 'Pending' |
 export async function getLeaveBalances(employeeId: string) {
     // This is a simplified version. In a real app, this would be a more complex query
     // or a dedicated table for balances.
-    const supabase = createClient();
+    const supabase = createServerClient();
     const { data, error } = await supabase.from('leave_requests')
         .select('leave_type, days')
         .eq('employee_id', employeeId)
@@ -50,7 +50,7 @@ export async function getLeaveBalances(employeeId: string) {
 }
 
 export async function handleLeaveAction(requestId: string, status: 'Approved' | 'Rejected') {
-    const supabase = createClient();
+    const supabase = createServerClient();
     const { error } = await supabase
         .from('leave_requests')
         .update({ status })
@@ -65,7 +65,7 @@ export async function handleLeaveAction(requestId: string, status: 'Approved' | 
 
 
 export async function applyForLeaveAction(formData: FormData) {
-    const supabase = createClient();
+    const supabase = createServerClient();
     
     const fromDate = formData.get('from-date') as string;
     const toDate = formData.get('to-date') as string;
@@ -95,4 +95,3 @@ export async function applyForLeaveAction(formData: FormData) {
     revalidatePath('/[role]/leaves', 'page');
     return { success: true };
 }
-

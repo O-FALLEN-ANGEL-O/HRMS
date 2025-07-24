@@ -2,7 +2,7 @@
 'use server';
 
 import type { AutoAssignRolesInput, AutoAssignRolesOutput } from "@/ai/flows/auto-assign-roles";
-import { createClient } from "@/lib/supabase";
+import { createServerClient } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<AutoAssignRolesOutput> {
@@ -27,7 +27,7 @@ export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<Au
 
 
 export async function getEmployees() {
-    const supabase = createClient();
+    const supabase = createServerClient();
     const { data, error } = await supabase
         .from('employees')
         .select(`
@@ -44,7 +44,7 @@ export async function getEmployees() {
 }
 
 export async function deactivateEmployeeAction(employeeId: string) {
-    const supabase = createClient();
+    const supabase = createServerClient();
     const { error } = await supabase
         .from('employees')
         .update({ status: 'Inactive' })
@@ -61,7 +61,7 @@ export async function deactivateEmployeeAction(employeeId: string) {
 
 
 export async function addEmployeeAction(formData: FormData) {
-    const supabase = createClient();
+    const supabase = createServerClient();
     
     const rawFormData = {
         name: formData.get('name') as string,
@@ -110,4 +110,3 @@ export async function addEmployeeAction(formData: FormData) {
     revalidatePath('/[role]/employees', 'page');
     return { success: true };
 }
-
