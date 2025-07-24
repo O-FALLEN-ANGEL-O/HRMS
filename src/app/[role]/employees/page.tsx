@@ -1,6 +1,5 @@
 
 import React, { Suspense } from 'react';
-import dynamic from 'next/dynamic';
 import { PlusCircle, MoreHorizontal, Bot } from "lucide-react"
 import {
   Table,
@@ -22,25 +21,17 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { suggestRoleAction, getEmployees, deactivateEmployeeAction, addEmployeeAction } from './actions';
-import { useToast } from '@/hooks/use-toast';
+import { getEmployees, deactivateEmployeeAction } from './actions';
 import { TeamCard } from '@/components/team-card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2 } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
-
-
-const AddEmployeeDialog = dynamic(() => import('@/components/employees/add-employee-dialog'), {
-    loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Add Employee</Button>,
-    ssr: false
-});
+import AddEmployeeButton from '@/components/employees/add-employee-button';
 
 type Employee = Awaited<ReturnType<typeof getEmployees>>[0];
 
 function DeactivateMenuItem({ employeeId, employeeName }: { employeeId: string, employeeName: string }) {
     const handleDeactivate = async () => {
+        'use server';
         // In a real app, you might want a confirmation dialog here.
         await deactivateEmployeeAction(employeeId);
         revalidatePath('/[role]/employees', 'page');
@@ -146,9 +137,7 @@ export default async function EmployeesPage({ params }: { params: { role: string
           <p className="text-muted-foreground">{isTeamView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
         </div>
         {!isTeamView && (
-             <Suspense fallback={<Button disabled>Loading...</Button>}>
-                <AddEmployeeDialog />
-             </Suspense>
+            <AddEmployeeButton />
         )}
       </div>
       {isTeamView ? <TeamView members={teamMembers} /> : <AdminView role={role} />}
