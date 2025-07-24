@@ -3,9 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import type { User } from '@/lib/mock-data/employees';
-import { getUserProfileAction } from '@/app/actions';
-
+import { mockUsers, type User } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
   user: User | null;
@@ -42,17 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (employeeId: string) => {
     setLoading(true);
-    const { user: userToLogin, error } = await getUserProfileAction(employeeId);
+    const userToLogin = mockUsers.find(u => u.profile.employee_id === employeeId);
 
     if (userToLogin) {
-      setUser(userToLogin as User);
+      setUser(userToLogin);
       sessionStorage.setItem('authUser', JSON.stringify(userToLogin));
       router.push(`/${userToLogin.role}/dashboard`);
       setLoading(false);
       return { error: null };
     } else {
       setLoading(false);
-      return { error: { message: error || "Invalid Employee ID." } };
+      return { error: { message: "Invalid Employee ID." } };
     }
   };
   

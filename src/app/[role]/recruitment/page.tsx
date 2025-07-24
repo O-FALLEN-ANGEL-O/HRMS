@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Link from 'next/link';
 import { Bot, Search, Filter, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ const getStatusBadge = (status: Applicant['status']) => {
 
 
 export default function RecruitmentPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = React.useState('');
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -76,7 +76,7 @@ export default function RecruitmentPage() {
     });
   };
 
-  const filteredApplicants = useMemo(() => {
+  const filteredApplicants = React.useMemo(() => {
     return initialApplicants.filter(applicant =>
       applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.role.toLowerCase().includes(searchTerm.toLowerCase())

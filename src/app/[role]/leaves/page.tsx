@@ -6,14 +6,26 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Calendar as CalendarIcon, Check, X, Loader2 } from 'lucide-react';
-import { getLeaveRequests, getLeaveBalances, handleLeaveAction, applyForLeaveAction } from './actions';
-import { revalidatePath } from 'next/cache';
+import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 const ApplyLeaveDialog = dynamic(() => import('@/components/leaves/apply-leave-dialog'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Apply for Leave</Button>,
     ssr: false
 });
+
+const mockLeaveRequests = [
+    { id: 'LR-001', employee: 'Anika Sharma', type: 'Sick Leave', dates: '15/07/24 - 16/07/24', days: 2, reason: 'Flu', status: 'Approved' },
+    { id: 'LR-002', employee: 'Rohan Verma', type: 'Casual Leave', dates: '22/07/24 - 26/07/24', days: 5, reason: 'Family vacation', status: 'Approved' },
+    { id: 'LR-003', employee: 'Priya Mehta', type: 'Work From Home', dates: '29/07/24 - 29/07/24', days: 1, reason: 'Plumber visit', status: 'Pending' },
+];
+
+const mockLeaveBalances = {
+    sick: 7,
+    casual: 12,
+    pto: 20
+};
 
 const getStatusBadge = (status: string) => {
     switch (status) {
@@ -28,36 +40,31 @@ const getStatusBadge = (status: string) => {
     }
 };
 
-async function LeaveActionButtons({ requestId }: { requestId: string }) {
-    const takeAction = async (status: 'Approved' | 'Rejected') => {
-        'use server';
-        await handleLeaveAction(requestId, status);
-        revalidatePath('/[role]/leaves', 'page');
+function LeaveActionButtons({ requestId }: { requestId: string }) {
+    const { toast } = useToast();
+    const handleAction = (status: 'Approved' | 'Rejected') => {
+        toast({ title: 'Action Triggered', description: `Request ${requestId} has been ${status}.` });
     };
 
     return (
         <div className='flex gap-2 justify-end'>
-            <form action={async () => takeAction('Approved')}>
-                <Button variant="outline" size="icon" className='border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600'><Check className="h-4 w-4" /></Button>
-            </form>
-            <form action={async () => takeAction('Rejected')}>
-                 <Button variant="outline" size="icon" className='border-red-500 text-red-500 hover:bg-red-100 hover:text-red-600'><X className="h-4 w-4" /></Button>
-            </form>
+            <Button variant="outline" size="icon" className='border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600' onClick={() => handleAction('Approved')}><Check className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className='border-red-500 text-red-500 hover:bg-red-100 hover:text-red-600' onClick={() => handleAction('Rejected')}><X className="h-4 w-4" /></Button>
         </div>
     );
 }
 
 
-export default async function LeaveManagementPage({ params }: { params: { role: string }}) {
-    const role = params.role;
+export default function LeaveManagementPage() {
+    const params = useParams();
+    const role = params.role as string;
     const isManager = role === 'manager' || role === 'hr' || role === 'admin';
+    const pendingCount = mockLeaveRequests.filter(r => r.status === 'Pending').length;
 
-    // Fetch data in parallel
-    const [leaveRequests, leaveBalances, pendingCount] = await Promise.all([
-        getLeaveRequests(isManager ? undefined : 'user-012'), // Mock current user ID
-        getLeaveBalances('user-012'), // Mock current user ID
-        getLeaveRequests(isManager ? undefined : 'user-012', 'Pending').then(r => r.length),
-    ]);
+    const applyForLeaveAction = async (formData: FormData) => {
+        console.log("Mock Action: Applying for leave with data:", Object.fromEntries(formData));
+        return { success: true };
+    };
 
   return (
     <div className="space-y-6">
@@ -88,7 +95,7 @@ export default async function LeaveManagementPage({ params }: { params: { role: 
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{leaveBalances.casual}</div>
+            <div className="text-2xl font-bold">{mockLeaveBalances.casual}</div>
             <p className="text-xs text-muted-foreground">out of 12 days remaining</p>
           </CardContent>
         </Card>
@@ -98,7 +105,7 @@ export default async function LeaveManagementPage({ params }: { params: { role: 
              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{leaveBalances.sick}</div>
+            <div className="text-2xl font-bold">{mockLeaveBalances.sick}</div>
             <p className="text-xs text-muted-foreground">out of 7 days remaining</p>
           </CardContent>
         </Card>
@@ -108,7 +115,7 @@ export default async function LeaveManagementPage({ params }: { params: { role: 
              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{leaveBalances.pto}</div>
+            <div className="text-2xl font-bold">{mockLeaveBalances.pto}</div>
              <p className="text-xs text-muted-foreground">out of 20 days remaining</p>
           </CardContent>
         </Card>
@@ -143,11 +150,11 @@ export default async function LeaveManagementPage({ params }: { params: { role: 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaveRequests.map((request) => (
+              {mockLeaveRequests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell className="font-medium">{isManager ? request.employees?.full_name : request.id}</TableCell>
-                  <TableCell>{request.leave_type}</TableCell>
-                  <TableCell>{new Date(request.start_date).toLocaleDateString()} to {new Date(request.end_date).toLocaleDateString()}</TableCell>
+                  <TableCell className="font-medium">{isManager ? request.employee : request.id}</TableCell>
+                  <TableCell>{request.type}</TableCell>
+                  <TableCell>{request.dates}</TableCell>
                   <TableCell className="text-center">{request.days}</TableCell>
                   <TableCell className="max-w-xs truncate">{request.reason}</TableCell>
                   <TableCell>{getStatusBadge(request.status)}</TableCell>
@@ -162,13 +169,6 @@ export default async function LeaveManagementPage({ params }: { params: { role: 
                   )}
                 </TableRow>
               ))}
-                 {leaveRequests.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={isManager ? 7 : 6} className="text-center h-24">
-                            No leave requests found.
-                        </TableCell>
-                    </TableRow>
-                )}
             </TableBody>
           </Table>
         </CardContent>

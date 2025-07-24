@@ -1,110 +1,23 @@
 
 'use server';
 
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { revalidatePath } from "next/cache";
+// This file is a placeholder for server actions related to leaves.
+// In the reverted version, data is handled by mock imports directly in components.
 
-export async function getLeaveRequests(employeeId?: string, status?: 'Pending' | 'Approved' | 'Rejected') {
-    const supabase = createSupabaseAdminClient();
-    let query = supabase
-        .from('leave_requests')
-        .select(`
-            *,
-            employees ( full_name )
-        `);
-    
-    if (employeeId) {
-        query = query.eq('employee_id', employeeId);
-    }
-    if (status) {
-        query = query.eq('status', status);
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
-
-    if(error) {
-        console.error("Error fetching leave requests:", error);
-        return [];
-    }
-    return data;
+export async function getLeaveRequests() {
+    return Promise.resolve([]);
 }
 
 export async function getLeaveBalances(employeeId: string) {
-    const supabase = createSupabaseAdminClient();
-    
-    const { data: approvedLeaves, error } = await supabase
-        .from('leave_requests')
-        .select('leave_type, days')
-        .eq('employee_id', employeeId)
-        .eq('status', 'Approved');
-
-    if(error) {
-        console.error("Error fetching leave balances:", error);
-        return { sick: 0, casual: 0, pto: 0 };
-    }
-    
-    const sickUsed = approvedLeaves.filter(r => r.leave_type === 'Sick Leave').reduce((acc, r) => acc + r.days, 0);
-    const casualUsed = approvedLeaves.filter(r => r.leave_type === 'Casual Leave').reduce((acc, r) => acc + r.days, 0);
-    const ptoUsed = approvedLeaves.filter(r => r.leave_type === 'Paid Time Off').reduce((acc, r) => acc + r.days, 0);
-
-    // In a real app, these allowances would come from the database per country policy
-    return {
-        sick: 7 - sickUsed,
-        casual: 12 - casualUsed,
-        pto: 20 - ptoUsed
-    };
+    return Promise.resolve({ sick: 7, casual: 12, pto: 20 });
 }
 
 export async function handleLeaveAction(requestId: string, status: 'Approved' | 'Rejected') {
-    const supabase = createSupabaseAdminClient();
-    const { error } = await supabase
-        .from('leave_requests')
-        .update({ status })
-        .eq('id', requestId);
-    
-    if(error) {
-        console.error("Error updating leave request:", error);
-        return { success: false, message: error.message };
-    }
-    
-    revalidatePath('/[role]/leaves', 'page');
-    return { success: true };
+    console.log(`Mock Action: Set status of request ${requestId} to ${status}`);
+    return Promise.resolve({ success: true });
 }
 
-
 export async function applyForLeaveAction(formData: FormData) {
-    const supabase = createSupabaseAdminClient();
-    const fromDate = formData.get('from-date') as string;
-    const toDate = formData.get('to-date') as string;
-    // This should come from the logged-in user context
-    const mockEmployeeId = 'a1b2c3d4-e5f6-7890-1234-567890abcdef'; // Corresponds to Anika Sharma in seed
-
-    const rawData = {
-      leaveType: formData.get('leave-type') as "Sick Leave" | "Casual Leave" | "Paid Time Off" | "Work From Home",
-      fromDate: new Date(fromDate),
-      toDate: new Date(toDate),
-      reason: formData.get('reason') as string,
-    };
-    
-    const days = (rawData.toDate.getTime() - rawData.fromDate.getTime()) / (1000 * 3600 * 24) + 1;
-
-    const { error } = await supabase
-        .from('leave_requests')
-        .insert({
-            employee_id: mockEmployeeId,
-            leave_type: rawData.leaveType,
-            start_date: rawData.fromDate.toISOString(),
-            end_date: rawData.toDate.toISOString(),
-            days: days,
-            reason: rawData.reason,
-            status: 'Pending',
-        });
-
-    if(error) {
-        console.error("Error applying for leave:", error);
-        return { success: false, message: error.message };
-    }
-
-    revalidatePath('/[role]/leaves', 'page');
-    return { success: true };
+     console.log("Mock Action: Applying for leave with data:", Object.fromEntries(formData));
+     return Promise.resolve({ success: true });
 }
