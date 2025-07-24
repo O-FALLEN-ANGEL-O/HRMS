@@ -69,12 +69,12 @@ async function AdminView({ role }: { role: string }) {
                         </Avatar>
                         <div className="grid gap-0.5">
                           <p className="font-medium">{employee.full_name}</p>
-                          <p className="text-sm text-muted-foreground hidden md:inline">{employee.users?.email}</p>
+                          <p className="text-sm text-muted-foreground hidden md:inline">{employee.user?.email}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{employee.departments?.name || 'N/A'}</TableCell>
-                    <TableCell>{employee.users?.role}</TableCell>
+                    <TableCell className="hidden md:table-cell">{employee.department?.name || 'N/A'}</TableCell>
+                    <TableCell>{employee.user?.role}</TableCell>
                     <TableCell className="hidden md:table-cell">
                       <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'} className={employee.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-destructive/20 text-destructive-foreground'}>
                         {employee.status}
@@ -127,7 +127,7 @@ export default async function EmployeesPage({ params }: { params: { role: string
   // In a real app, you'd fetch only the relevant team members.
   const employees = await getEmployees();
 
-  const teamMembers = isTeamView ? employees.filter(e => e.departments?.name === 'Engineering' && e.users?.role !== 'manager') : [];
+  const teamMembers = isTeamView ? employees.filter(e => e.department?.name === 'Engineering' && e.user?.role !== 'manager') : [];
 
   return (
     <div>

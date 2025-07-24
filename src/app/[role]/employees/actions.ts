@@ -28,26 +28,28 @@ export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<Au
 
 export async function getEmployees() {
     const supabase = createServerClient();
-    const { data, error } = await supabase
-        .from('employees')
-        .select(`
-            *,
-            user:users(*),
-            department:departments(*)
-        `);
 
-    if (error) {
-        console.error('Error fetching employees:', error);
+    // Fetch data from each table separately
+    const { data: employeesData, error: employeesError } = await supabase.from('employees').select('*');
+    const { data: usersData, error: usersError } = await supabase.from('users').select('*');
+    const { data: departmentsData, error: departmentsError } = await supabase.from('departments').select('*');
+
+    if (employeesError || usersError || departmentsError) {
+        console.error('Error fetching data:', { employeesError, usersError, departmentsError });
         return [];
     }
 
-    const employees = data.map(e => ({
-        ...e,
-        users: e.user,
-        departments: e.department
+    // Join the data in code
+    const usersById = new Map(usersData.map(user => [user.id, user]));
+    const departmentsById = new Map(departmentsData.map(dept => [dept.id, dept]));
+
+    const combinedData = employeesData.map(employee => ({
+        ...employee,
+        user: usersById.get(employee.user_id),
+        department: departmentsById.get(employee.department_id),
     }));
 
-    return employees;
+    return combinedData;
 }
 
 export async function deactivateEmployeeAction(employeeId: string) {
