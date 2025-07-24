@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getDashboardDataAction } from './actions';
 import type { DashboardData } from "@/ai/flows/get-dashboard-data.types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Users, Briefcase, TrendingUp, TrendingDown, Bot, Loader2, AlertTriangle, RefreshCw, Construction } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -116,6 +116,19 @@ function EnhancedAnalyticsDashboard() {
     const { stats, headcountByDept, recruitmentFunnel } = data;
     const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
+    const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+        const RADIAN = Math.PI / 180;
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+            {`${(percent * 100).toFixed(0)}%`}
+            </text>
+        );
+    };
+
     return (
         <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -201,7 +214,7 @@ function EnhancedAnalyticsDashboard() {
                               cx="50%"
                               cy="50%"
                               labelLine={false}
-                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                              label={renderCustomizedLabel}
                               outerRadius={80}
                               fill="#8884d8"
                               dataKey="count"
@@ -211,6 +224,7 @@ function EnhancedAnalyticsDashboard() {
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))}
                             </Pie>
+                            <Legend/>
                           </PieChart>
                         </ResponsiveContainer>
                     </CardContent>

@@ -19,11 +19,6 @@ const HeadcountByDeptSchema = z.array(z.object({
   count: z.number().describe('The number of employees in the department.'),
 }));
 
-const LeaveTrendsSchema = z.array(z.object({
-  month: z.string().describe('The month (e.g., "Jan", "Feb").'),
-  days: z.number().describe('The total number of leave days taken in that month.'),
-}));
-
 const RecruitmentFunnelSchema = z.array(z.object({
   stage: z.string().describe('The stage in the recruitment funnel.'),
   count: z.number().describe('The number of candidates at that stage.'),
@@ -32,7 +27,6 @@ const RecruitmentFunnelSchema = z.array(z.object({
 export const DashboardDataSchema = z.object({
   stats: DashboardStatsSchema,
   headcountByDept: HeadcountByDeptSchema,
-  leaveTrends: LeaveTrendsSchema,
   recruitmentFunnel: RecruitmentFunnelSchema,
 });
 
