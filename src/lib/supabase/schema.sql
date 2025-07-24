@@ -1,124 +1,147 @@
-
--- This file is intentionally left blank.
--- The database schema is no longer required for the frontend-only prototype,
--- as all data is now mocked.
--- Drop all tables with cascade to handle dependencies
-DROP TABLE IF EXISTS "public"."assessment_answers" CASCADE;
-DROP TABLE IF EXISTS "public"."assessment_questions" CASCADE;
-DROP TABLE IF EXISTS "public"."assessment_results" CASCADE;
-DROP TABLE IF EXISTS "public"."assessments" CASCADE;
-DROP TABLE IF EXISTS "public"."assessment_sections" CASCADE;
-DROP TABLE IF EXISTS "public"."company_posts" CASCADE;
-DROP TABLE IF EXISTS "public"."documents" CASCADE;
-DROP TABLE IF EXISTS "public"."leave_balances" CASCADE;
-DROP TABLE IF EXISTS "public"."leave_requests" CASCADE;
-DROP TABLE IF EXISTS "public"."notifications" CASCADE;
-DROP TABLE IF EXISTS "public"."employees" CASCADE;
-DROP TABLE IF EXISTS "public"."departments" CASCADE;
-DROP TABLE IF EXISTS "public"."roles" CASCADE;
-
--- Custom ENUM types for status fields
-CREATE TYPE role AS ENUM ('admin', 'hr', 'manager', 'employee', 'recruiter', 'it head', 'finance head', 'marketing head', 'operations head', 'team lead', 'qa analyst');
-CREATE TYPE job_status AS ENUM ('Open', 'Paused', 'Closed');
-CREATE TYPE departments AS ENUM ('hr department', 'finance department', 'marketing department', 'operations department', 'team lead department', 'qa analyst department');
-CREATE TYPE applicant_status AS ENUM ('New', 'Screening', 'Interviewing', 'Offer Sent', 'Hired', 'Rejected');
-CREATE TYPE leave_type AS ENUM ('Casual', 'Sick', 'Earned', 'Maternity', 'Paternity', 'WFH', 'Optional');
-CREATE TYPE leave_status AS ENUM ('Pending', 'Approved', 'Rejected');
-
-
--- Create Roles Table
-CREATE TABLE IF NOT EXISTS "public"."roles" (
-    "name" TEXT PRIMARY KEY,
-    "description" TEXT,
-    "departments",
-    "permissions" JSONB
+-- 1. Create custom types (Enums) for consistent data
+CREATE TYPE public.app_role AS ENUM (
+    'admin',
+    'employee',
+    'hr',
+    'manager',
+    'recruiter',
+    'qa-analyst',
+    'process-manager',
+    'team-leader',
+    'marketing',
+    'finance',
+    'it-manager',
+    'operations-manager',
+    'account-manager',
+    'trainer',
+    'trainee'
 );
-COMMENT ON TABLE "public"."roles" IS 'Defines user roles and their associated permissions.';
 
--- Create Departments Table
-CREATE TABLE IF NOT EXISTS "public"."departments" (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "name" TEXT UNIQUE NOT NULL,
-    "head_id" UUID, -- Can be null if no head is assigned
-    "description" TEXT
+CREATE TYPE public.employee_status AS ENum (
+    'Active',
+    'Inactive',
+    'On Leave'
 );
-COMMENT ON TABLE "public"."departments" IS 'Stores company departments.';
 
--- Create Employees Table
-CREATE TABLE IF NOT EXISTS "public"."employees" (
-    "id" UUID PRIMARY KEY REFERENCES "auth"."users" ON DELETE CASCADE,
-    "employee_id" TEXT UNIQUE NOT NULL,
-    "full_name" TEXT,
-    "email" TEXT UNIQUE NOT NULL,
-    "role" TEXT REFERENCES "public"."roles"("name"),
-    "department_id" UUID REFERENCES "public"."departments"("id"),
-    "manager_id" UUID REFERENCES "public"."employees"("id"),
-    "status" TEXT DEFAULT 'active',
-    "hire_date" DATE,
-    "profile_picture_url" TEXT,
-    "phone_number" TEXT,
-    "profile_complete" BOOLEAN DEFAULT FALSE,
-    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TYPE public.leave_request_status AS ENUM (
+    'Pending',
+    'Approved',
+    'Rejected'
 );
-COMMENT ON TABLE "public"."employees" IS 'Stores employee profile information.';
--- Add foreign key constraint for department head after employees table is created
-ALTER TABLE "public"."departments" ADD FOREIGN KEY ("head_id") REFERENCES "public"."employees"("id") ON DELETE SET NULL;
 
-
--- Create Assessments Table
-CREATE TABLE IF NOT EXISTS "public"."assessments" (
-    "id" SERIAL PRIMARY KEY,
-    "role" TEXT,
-    "title" TEXT,
-    "questions" JSONB,
-    "created_by" TEXT REFERENCES "public"."employees"("employee_id"),
-    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TYPE public.leave_type AS ENUM (
+    'Sick Leave',
+    'Casual Leave',
+    'Paid Time Off',
+    'Work From Home'
 );
-COMMENT ON TABLE "public"."assessments" IS 'Stores assessment and quiz templates.';
 
 
--- Create Assessment Results Table
-CREATE TABLE IF NOT EXISTS "public"."assessment_results" (
-    "id" SERIAL PRIMARY KEY,
-    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
-    "assessment_id" INT REFERENCES "public"."assessments"("id"),
-    "score" INT,
-    "answers" JSONB,
-    "submitted_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- 2. Create Departments Table
+-- Stores all company departments.
+CREATE TABLE public.departments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE "public"."assessment_results" IS 'Stores results of completed assessments.';
 
--- Create Documents Table
-CREATE TABLE IF NOT EXISTS "public"."documents" (
-    "id" SERIAL PRIMARY KEY,
-    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
-    "type" TEXT,
-    "url" TEXT,
-    "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- 3. Create Users Table
+-- This table extends the built-in auth.users table with public-facing data.
+CREATE TABLE public.users (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    role app_role NOT NULL DEFAULT 'employee',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE "public"."documents" IS 'Stores employee-related documents.';
 
--- Create Leaves Table
-CREATE TABLE IF NOT EXISTS "public"."leaves" (
-    "id" SERIAL PRIMARY KEY,
-    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
-    "type" TEXT,
-    "start_date" DATE,
-    "end_date" DATE,
-    "reason" TEXT,
-    "status" TEXT DEFAULT 'pending',
-    "approved_by" TEXT,
-    "applied_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- 4. Create Employees (Profiles) Table
+-- Stores detailed profiles for each user who is an employee.
+CREATE TABLE public.employees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID UNIQUE NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL,
+    job_title TEXT NOT NULL,
+    employee_id TEXT UNIQUE NOT NULL,
+    department_id UUID REFERENCES public.departments(id) ON DELETE SET NULL,
+    phone_number TEXT,
+    profile_picture_url TEXT,
+    status employee_status NOT NULL DEFAULT 'Active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE "public"."leaves" IS 'Tracks employee leave requests.';
 
--- Create Notifications Table
-CREATE TABLE IF NOT EXISTS "public"."notifications" (
-    "id" SERIAL PRIMARY KEY,
-    "employee_id" TEXT REFERENCES "public"."employees"("employee_id"),
-    "title" TEXT,
-    "message" TEXT,
-    "seen" BOOLEAN DEFAULT FALSE,
-    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- 5. Create Leave Requests Table
+CREATE TABLE public.leave_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    leave_type leave_type NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    days INT NOT NULL CHECK (days > 0),
+    reason TEXT NOT NULL,
+    status leave_request_status NOT NULL DEFAULT 'Pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE "public"."notifications" IS 'Stores notifications for users.';
+
+
+-- 6. Enable Row Level Security (RLS) for all tables
+ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leave_requests ENABLE ROW LEVEL SECURITY;
+
+
+-- 7. Create RLS Policies
+
+-- USERS Table Policies
+-- Allow users to see their own user record
+CREATE POLICY "Allow individual user read access" ON public.users FOR SELECT USING (auth.uid() = id);
+-- Allow users to update their own record (e.g., if role change was allowed)
+CREATE POLICY "Allow individual user update access" ON public.users FOR UPDATE USING (auth.uid() = id);
+
+-- EMPLOYEES Table Policies
+-- Allow users to see their own employee profile
+CREATE POLICY "Allow individual employee read access" ON public.employees FOR SELECT USING (auth.uid() = user_id);
+-- Allow users to update their own employee profile
+CREATE POLICY "Allow individual employee update access" ON public.employees FOR UPDATE USING (auth.uid() = user_id);
+-- Allow HR/Admin/Managers to see all employee profiles
+CREATE POLICY "Allow HR/Admin/Manager read access to all employees" ON public.employees FOR SELECT USING (
+    (get_my_claim('user_role'::text))::jsonb ?| array['admin', 'hr', 'manager']
+);
+
+
+-- DEPARTMENTS Table Policies
+-- Allow any authenticated user to read departments
+CREATE POLICY "Allow all authenticated users to read departments" ON public.departments FOR SELECT USING (auth.role() = 'authenticated');
+
+
+-- LEAVE_REQUESTS Table Policies
+-- Allow employees to see their own leave requests
+CREATE POLICY "Allow individual read access to own leave requests" ON public.leave_requests FOR SELECT USING (
+    EXISTS (SELECT 1 FROM employees WHERE employees.id = leave_requests.employee_id AND employees.user_id = auth.uid())
+);
+-- Allow employees to create their own leave requests
+CREATE POLICY "Allow individual access to create own leave requests" ON public.leave_requests FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM employees WHERE employees.id = leave_requests.employee_id AND employees.user_id = auth.uid())
+);
+-- Allow HR/Admin/Managers to see all leave requests
+CREATE POLICY "Allow HR/Admin/Manager read access to all leave requests" ON public.leave_requests FOR SELECT USING (
+    (get_my_claim('user_role'::text))::jsonb ?| array['admin', 'hr', 'manager']
+);
+-- Allow HR/Admin/Managers to update status of any leave request
+CREATE POLICY "Allow HR/Admin/Manager update access to all leave requests" ON public.leave_requests FOR UPDATE USING (
+    (get_my_claim('user_role'::text))::jsonb ?| array['admin', 'hr', 'manager']
+);
+
+-- 8. Add a function to get a user's role from a JWT claim
+-- This is useful for RLS policies.
+create or replace function public.get_my_claim(claim text)
+returns jsonb
+language sql
+stable
+as $$
+  select
+  	coalesce(
+      current_setting('request.jwt.claims', true)::jsonb ->> claim,
+      null
+    )::jsonb
+$$;
