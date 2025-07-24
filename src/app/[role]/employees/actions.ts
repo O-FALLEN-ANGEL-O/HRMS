@@ -32,8 +32,8 @@ export async function getEmployees() {
         .from('employees')
         .select(`
             *,
-            user:users(*),
-            department:departments(*)
+            users:user_id(*),
+            departments:department_id(*)
         `);
     
     if (error) {
@@ -46,8 +46,8 @@ export async function getEmployees() {
     return data.map(e => ({
         ...e,
         // The component expects user.role, let's ensure it's there
-        user: e.user ? e.user : { role: e.role }, 
-        department: e.department ? e.department : { name: 'N/A' },
+        user: e.users ? e.users : { role: 'employee' }, 
+        department: e.departments ? e.departments : { name: 'N/A' },
     }));
 }
 

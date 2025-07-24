@@ -73,6 +73,7 @@ async function AdminView({ role }: { role: string }) {
               </TableHeader>
               <TableBody>
                 {employees.map((employee) => (
+                    employee && (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
@@ -113,6 +114,7 @@ async function AdminView({ role }: { role: string }) {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
+                  )
                 ))}
               </TableBody>
             </Table>
