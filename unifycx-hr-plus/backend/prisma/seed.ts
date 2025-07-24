@@ -74,7 +74,7 @@ async function main() {
       employeeId: 'EMP001',
       firstName: 'Admin',
       lastName: 'User',
-      email: 'admin@unifycx.com',
+      email: 'admin@optitalent.com',
       password: hashedPassword,
       jobTitle: 'System Administrator',
       hireDate: new Date(),

@@ -1,8 +1,8 @@
 
 {
-  "name": "unifycx-hr-plus-backend",
+  "name": "optitalent-hrms-backend",
   "version": "1.0.0",
-  "description": "Backend for the UnifyCX HR+ Super App",
+  "description": "Backend for the OptiTalent HRMS Super App",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",

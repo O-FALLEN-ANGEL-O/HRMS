@@ -22,7 +22,7 @@ app.use(morgan('dev'));
 
 // Routes
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'UP', message: 'UnifyCX HR+ API is running.' });
+  res.status(200).json({ status: 'UP', message: 'OptiTalent HRMS API is running.' });
 });
 
 app.use('/api/v1/auth', authRoutes);
