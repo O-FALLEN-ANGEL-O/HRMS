@@ -10,7 +10,7 @@
  *
  * To run:
  * 1. Make sure you have a .env.local file with your Supabase credentials.
- * 2. Run `npx tsx src/lib/supabase/seed.ts` from the root of your project.
+ * 2. Run `npm run db:seed` from the root of your project.
  * -----------------------------------------------------------------------------
  */
 
@@ -35,102 +35,55 @@ const supabaseAdmin = createClient<Database>(
 
 async function main() {
   console.log('🌱 Starting database seeding process...');
+  
+  // --- 1. CLEAN UP AUTH AND PUBLIC DATA ---
+  console.log('🧹 Clearing existing data...');
+  await clearAllData();
 
-  // --- 1. SEED USERS AND EMPLOYEES ---
-  // This must run first to handle auth users.
-  console.log('👥 Seeding users and employees...');
-  const { users, employees } = await seedUsersAndEmployees();
-  console.log(`   - Synced ${users.length} users and ${employees.length} employees.`);
-  
-  // --- 2. CLEAN UP PUBLIC DATA ---
-  console.log('🧹 Clearing existing public data...');
-  await clearPublicTables();
-  
-  // --- 3. SEED DEPARTMENTS ---
+  // --- 2. SEED DEPARTMENTS ---
   console.log('🏢 Seeding departments...');
   const departments = await seedDepartments();
   console.log(`   - Seeded ${departments.length} departments.`);
 
-  // --- 4. RE-INSERT EMPLOYEES AND USERS with correct department IDs ---
-  console.log('🔄 Re-inserting users and employees with correct relationships...');
-  await seedPublicUsersAndEmployees(users, departments);
-  console.log('   - Public user and employee tables populated.');
+  // --- 3. SEED USERS AND EMPLOYEES ---
+  console.log('👥 Seeding users and employees...');
+  const { users, employees } = await seedUsersAndEmployees(departments);
+  console.log(`   - Seeded ${users.length} auth users and ${employees.length} employee profiles.`);
 
   console.log('✅ Seeding complete!');
   process.exit(0);
 }
 
-async function clearPublicTables() {
-    const tables = [
-      'employees', 'users', 'departments'
-    ];
+
+async function clearAllData() {
+    console.log('   - Clearing public tables...');
+    const tables = [ 'employees', 'departments', 'users' ];
   
     for (const table of tables) {
       const { error } = await supabaseAdmin.from(table).delete().gt('id', '0'); // A trick to delete all rows
       if (error) {
-        console.error(`Error clearing table ${table}:`, error.message);
-        // Don't throw, as table might not exist on first run
+        console.error(`   - Error clearing table ${table}:`, error.message);
       }
     }
-}
+    console.log('   - Public tables cleared.');
 
+    console.log('   - Clearing auth users...');
+    const { data: { users: existingUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if(listError) {
+        console.error('   - Error listing auth users:', listError.message);
+        return;
+    }
 
-async function seedUsersAndEmployees() {
-  const { data: { users: existingUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-
-  if (listError) {
-    console.error('Error listing users:', listError);
-    throw listError;
-  }
-  
-  const existingUserEmails = new Set(existingUsers.map(u => u.email));
-  const mockUserEmails = new Set(mockUsers.map(u => u.email));
-  let syncedUsers = [];
-
-  // 1. Create users that are in mock data but not in Supabase auth
-  for (const mockUser of mockUsers) {
-    if (!existingUserEmails.has(mockUser.email)) {
-      console.log(`   - Creating new auth user: ${mockUser.email}`);
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: mockUser.email,
-        password: 'password',
-        email_confirm: true,
-        user_metadata: { full_name: mockUser.profile.full_name },
-      });
-      if (authError) {
-        console.error(`Error creating auth user ${mockUser.email}:`, authError.message);
-        continue;
-      }
-      syncedUsers.push(authData.user);
+    const deletePromises = existingUsers.map(user => supabaseAdmin.auth.admin.deleteUser(user.id));
+    const results = await Promise.allSettled(deletePromises);
+    
+    const failedDeletions = results.filter(result => result.status === 'rejected');
+    if (failedDeletions.length > 0) {
+        console.error('   - Some auth users could not be deleted.');
+        failedDeletions.forEach(failure => console.error(failure.reason));
     } else {
-        const existing = existingUsers.find(u => u.email === mockUser.email);
-        if(existing) syncedUsers.push(existing);
+        console.log(`   - Cleared ${existingUsers.length} auth users.`);
     }
-  }
-
-  // 2. (Optional but recommended) Delete users in Supabase auth that are NOT in mock data
-  const usersToDelete = existingUsers.filter(u => !mockUserEmails.has(u.email!));
-  for (const userToDelete of usersToDelete) {
-      console.log(`   - Deleting old auth user: ${userToDelete.email}`);
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userToDelete.id);
-      if (deleteError) {
-          console.error(`Error deleting user ${userToDelete.email}:`, deleteError.message);
-      }
-  }
-  
-  // Map mock profiles to the now-synced auth users
-  const employeesData = syncedUsers.map(user => {
-    const mock_profile = mockUsers.find(mu => mu.email === user.email)?.profile;
-    return {
-        ...mock_profile, // contains full_name, job_title, etc.
-        user_id: user.id, // Link to the auth user
-        email: user.email,
-        role: mock_profile?.role || 'employee',
-        profile_picture_url: `https://ui-avatars.com/api/?name=${mock_profile?.full_name.replace(/ /g, '+')}&background=random`,
-    }
-  });
-
-  return { users: syncedUsers, employees: employeesData };
 }
 
 
@@ -154,42 +107,62 @@ async function seedDepartments() {
   return data;
 }
 
-async function seedPublicUsersAndEmployees(authUsers: any[], departments: any[]) {
-    // Insert into public.users
-    const usersToInsert = authUsers.map(user => {
-        const mock_user = mockUsers.find(u => u.email === user.email);
-        return {
-            id: user.id,
-            email: user.email,
-            role: mock_user?.role || 'employee',
-        }
-    });
+async function seedUsersAndEmployees(departments: any[]) {
+  const newAuthUsers = [];
+  console.log(`   - Creating ${mockUsers.length} new auth users...`);
+  for (const mockUser of mockUsers) {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: mockUser.email,
+        password: 'password', // A default password for all mock users
+        email_confirm: true,
+        user_metadata: { full_name: mockUser.profile.full_name },
+      });
+      if (authError) {
+        console.error(`   - Error creating auth user ${mockUser.email}:`, authError.message);
+        continue;
+      }
+      newAuthUsers.push(authData.user);
+  }
 
-    const { error: usersError } = await supabaseAdmin.from('users').insert(usersToInsert);
-    if (usersError) throw usersError;
+  // Insert into public.users
+  const usersToInsert = newAuthUsers.map(user => {
+      const mock_user = mockUsers.find(u => u.email === user.email);
+      return {
+          id: user.id,
+          email: user.email,
+          role: mock_user?.role || 'employee',
+      }
+  });
 
+  const { error: usersError } = await supabaseAdmin.from('users').insert(usersToInsert);
+  if (usersError) throw usersError;
 
-    // Insert into public.employees
-    const employeesToInsert = mockUsers.map(mock => {
-        const authUser = authUsers.find(u => u.email === mock.email);
-        const department = departments.find(d => d.name === mock.profile.department.name);
-        return {
-            id: mock.profile.id,
-            user_id: authUser.id,
-            full_name: mock.profile.full_name,
-            job_title: mock.profile.job_title,
-            employee_id: mock.profile.employee_id,
-            department_id: department?.id,
-            phone_number: mock.profile.phone_number,
-            profile_picture_url: mock.profile.profile_picture_url,
-            status: mock.profile.status,
-        };
-    });
+  // Insert into public.employees
+  const employeesToInsert = mockUsers.map(mock => {
+      const authUser = newAuthUsers.find(u => u.email === mock.email);
+      const department = departments.find(d => d.name === mock.profile.department.name);
+      if(!authUser) {
+          console.warn(`   - Could not find matching auth user for ${mock.email}, skipping employee profile.`);
+          return null;
+      }
+      return {
+          id: mock.profile.id,
+          user_id: authUser.id,
+          full_name: mock.profile.full_name,
+          job_title: mock.profile.job_title,
+          employee_id: mock.profile.employee_id,
+          department_id: department?.id,
+          phone_number: mock.profile.phone_number,
+          profile_picture_url: mock.profile.profile_picture_url,
+          status: mock.profile.status,
+      };
+  }).filter(e => e !== null);
 
-    const { error: employeesError } = await supabaseAdmin.from('employees').insert(employeesToInsert);
-    if(employeesError) throw employeesError;
+  const { data: employeesData, error: employeesError } = await supabaseAdmin.from('employees').insert(employeesToInsert as any).select();
+  if(employeesError) throw employeesError;
+
+  return { users: newAuthUsers, employees: employeesData };
 }
-
 
 // --- RUN THE SCRIPT ---
 main().catch(error => {
