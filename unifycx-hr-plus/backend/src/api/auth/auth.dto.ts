@@ -1,7 +1,19 @@
-
-import { body } from 'express-validator';
-
-export const validateLogin = [
-  body('email').isEmail().withMessage('Enter a valid email address'),
-  body('password').notEmpty().withMessage('Password is required'),
-];
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "prisma/seed.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,19 +1,19 @@
-
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in the environment variables');
-}
-
-export function generateToken(employeeId: string, role: string): string {
-  return jwt.sign({ id: employeeId, role }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN || '1d',
-  });
-}
-
-export function verifyToken(token: string) {
-  return jwt.verify(token, JWT_SECRET);
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "prisma/seed.ts"],
+  "exclude": ["node_modules"]
 }

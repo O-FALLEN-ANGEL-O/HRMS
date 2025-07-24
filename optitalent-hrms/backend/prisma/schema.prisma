@@ -1,0 +1,252 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ENUMS
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum EmploymentStatus {
+  PROBATION
+  ACTIVE
+  NOTICE_PERIOD
+  RESIGNED
+  TERMINATED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ShiftType {
+  DAY
+  NIGHT
+  SPLIT
+  FLEX
+}
+
+enum NotificationType {
+  LEAVE_APPROVAL
+  TRAINING_REMINDER
+  ANNOUNCEMENT
+  PERFORMANCE_REVIEW
+}
+
+// MODELS
+model Role {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  employees   Employee[]
+}
+
+model Department {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  employees Employee[]
+}
+
+model Employee {
+  id                  String             @id @default(cuid())
+  employeeId          String             @unique
+  firstName           String
+  lastName            String
+  email               String             @unique
+  password            String
+  phone               String?
+  dob                 DateTime?
+  gender              Gender?
+  hireDate            DateTime
+  resignationDate     DateTime?
+  employmentStatus    EmploymentStatus   @default(PROBATION)
+  jobTitle            String
+  teamHierarchy       Json?
+  bankDetails         Json?
+  complianceDocs      Json?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  role                Role               @relation(fields: [roleId], references: [id])
+  roleId              String
+  department          Department         @relation(fields: [departmentId], references: [id])
+  departmentId        String
+  manager             Employee?          @relation("ManagerSubordinates", fields: [managerId], references: [id])
+  managerId           String?
+  subordinates        Employee[]         @relation("ManagerSubordinates")
+  attendances         Attendance[]
+  leaveRequests       LeaveRequest[]
+  payrolls            Payroll[]
+  performanceReviews  PerformanceReview[]
+  employeeShifts      EmployeeShift[]
+  qaReviews           QAReview[]
+  coachingSessions    CoachingSession[]
+  trainingProgress    TrainingProgress[]
+  documents           Document[]
+  notifications       Notification[]
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  clockIn     DateTime
+  clockOut    DateTime?
+  ipAddress   String?
+  location    String? // Store as "lat,lng"
+  hoursWorked Float?
+  isLate      Boolean  @default(false)
+  notes       String?
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  employeeId  String
+}
+
+model EmployeeShift {
+  id         String    @id @default(cuid())
+  date       DateTime
+  shiftType  ShiftType
+  startTime  DateTime
+  endTime    DateTime
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  employeeId String
+}
+
+model LeaveType {
+  id          String         @id @default(cuid())
+  name        String
+  country     String // e.g., "IN", "US", "PH"
+  daysAllowed Int
+  requests    LeaveRequest[]
+}
+
+model LeaveRequest {
+  id            String      @id @default(cuid())
+  startDate     DateTime
+  endDate       DateTime
+  reason        String
+  status        LeaveStatus @default(PENDING)
+  reviewedBy    String? // Manager's Employee ID
+  employee      Employee    @relation(fields: [employeeId], references: [id])
+  employeeId    String
+  leaveType     LeaveType   @relation(fields: [leaveTypeId], references: [id])
+  leaveTypeId   String
+}
+
+model Payroll {
+  id              String   @id @default(cuid())
+  payPeriodStart  DateTime
+  payPeriodEnd    DateTime
+  grossSalary     Float
+  netSalary       Float
+  deductions      Json
+  overtimeHours   Float?
+  overtimePay     Float?
+  payslipUrl      String?
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  employeeId      String
+}
+
+model PerformanceReview {
+  id                String   @id @default(cuid())
+  reviewPeriod      String // e.g., "Q3 2024"
+  kpiMetrics        Json // Store metrics like AHT, CSAT, QA Score
+  selfFeedback      String?
+  managerFeedback   String?
+  finalRating       Float?
+  promotionNominated Boolean @default(false)
+  employee          Employee @relation(fields: [employeeId], references: [id])
+  employeeId        String
+}
+
+model QAForm {
+  id        String     @id @default(cuid())
+  name      String
+  structure Json // { sections: [{ title, questions: [{ label, score }] }] }
+  reviews   QAReview[]
+}
+
+model QAReview {
+  id             String    @id @default(cuid())
+  interactionId  String // Call or chat ID
+  reviewDate     DateTime  @default(now())
+  score          Float
+  feedback       String?
+  isFatal        Boolean   @default(false)
+  qaForm         QAForm    @relation(fields: [qaFormId], references: [id])
+  qaFormId       String
+  agent          Employee  @relation(fields: [agentId], references: [id])
+  agentId        String
+}
+
+model CoachingSession {
+  id             String   @id @default(cuid())
+  sessionDate    DateTime
+  focusArea      String
+  coachId        String // Employee ID of the coach
+  notes          String?
+  isCompleted    Boolean  @default(false)
+  employee       Employee @relation(fields: [employeeId], references: [id])
+  employeeId     String
+}
+
+model TrainingModule {
+  id            String             @id @default(cuid())
+  title         String
+  description   String?
+  contentUrl    String
+  duration      Int // in minutes
+  quiz          Json? // { questions: [{ q, options, answer }] }
+  progress      TrainingProgress[]
+}
+
+model TrainingProgress {
+  id               String         @id @default(cuid())
+  completionStatus Float
+  quizScore        Float?
+  employee         Employee       @relation(fields: [employeeId], references: [id])
+  employeeId       String
+  module           TrainingModule @relation(fields: [moduleId], references: [id])
+  moduleId         String
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  type        String // e.g., "PAN", "Aadhaar", "Contract"
+  url         String
+  uploadedAt  DateTime @default(now())
+  expiresAt   DateTime?
+  isValidated Boolean  @default(false)
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  employeeId  String
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  content   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  employee  Employee         @relation(fields: [employeeId], references: [id])
+  employeeId String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String // e.g., "LOGIN", "UPDATE_EMPLOYEE"
+  entity    String // e.g., "Employee", "LeaveRequest"
+  entityId  String
+  userId    String // Employee ID of the user who performed the action
+  details   Json?
+  timestamp DateTime @default(now())
+}

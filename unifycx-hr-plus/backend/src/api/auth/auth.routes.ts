@@ -1,10 +1,19 @@
-
-import { Router } from 'express';
-import * as authController from './auth.controller';
-import { validateLogin } from './auth.dto';
-
-const router = Router();
-
-router.post('/login', validateLogin, authController.login);
-
-export default router;
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "prisma/seed.ts"],
+  "exclude": ["node_modules"]
+}
