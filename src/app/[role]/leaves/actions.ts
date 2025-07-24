@@ -1,22 +1,11 @@
 
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/database.types';
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
-function getSupabaseAdmin() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Server not configured for database access.');
-    }
-    return createClient<Database>(supabaseUrl, supabaseServiceKey);
-}
-
 export async function getLeaveRequests(employeeId?: string, status?: 'Pending' | 'Approved' | 'Rejected') {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     let query = supabase
         .from('leave_requests')
         .select(`
@@ -41,7 +30,7 @@ export async function getLeaveRequests(employeeId?: string, status?: 'Pending' |
 }
 
 export async function getLeaveBalances(employeeId: string) {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     
     const { data: approvedLeaves, error } = await supabase
         .from('leave_requests')
@@ -67,7 +56,7 @@ export async function getLeaveBalances(employeeId: string) {
 }
 
 export async function handleLeaveAction(requestId: string, status: 'Approved' | 'Rejected') {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { error } = await supabase
         .from('leave_requests')
         .update({ status })
@@ -84,7 +73,7 @@ export async function handleLeaveAction(requestId: string, status: 'Approved' | 
 
 
 export async function applyForLeaveAction(formData: FormData) {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const fromDate = formData.get('from-date') as string;
     const toDate = formData.get('to-date') as string;
     // This should come from the logged-in user context

@@ -1,21 +1,9 @@
 
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/database.types';
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { AutoAssignRolesInput, AutoAssignRolesOutput } from "@/ai/flows/auto-assign-roles";
 import { revalidatePath } from "next/cache";
-
-function getSupabaseAdmin() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Server not configured for database access.');
-    }
-    return createClient<Database>(supabaseUrl, supabaseServiceKey);
-}
-
 
 export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<AutoAssignRolesOutput> {
     console.log("AI Action (mock): Suggesting role for", input);
@@ -39,7 +27,7 @@ export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<Au
 
 
 export async function getEmployees() {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
         .from('employees')
         .select(`
@@ -64,7 +52,7 @@ export async function getEmployees() {
 }
 
 export async function deactivateEmployeeAction(employeeId: string) {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { error } = await supabase
         .from('employees')
         .update({ status: 'Inactive' })
@@ -81,7 +69,7 @@ export async function deactivateEmployeeAction(employeeId: string) {
 
 
 export async function addEmployeeAction(formData: FormData) {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     
     const rawFormData = {
         name: formData.get('name') as string,

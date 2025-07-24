@@ -1,22 +1,13 @@
 
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/database.types';
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { User } from '@/lib/mock-data/employees';
 
 // This is a server action, so it will only run on the server.
 export async function getUserProfileAction(employeeId: string): Promise<{ user: User | null, error: string | null }> {
     
-    // We must use the service role key to query the users table
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        return { user: null, error: "Server not configured for authentication." };
-    }
-
-    const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey);
+    const supabaseAdmin = createSupabaseAdminClient();
     
     // 1. Find employee by employee_id
     const { data: employeeData, error: employeeError } = await supabaseAdmin
