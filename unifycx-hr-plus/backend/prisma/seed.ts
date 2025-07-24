@@ -1,3 +1,4 @@
+
 import { PrismaClient, EmploymentStatus, Gender, ShiftType } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
