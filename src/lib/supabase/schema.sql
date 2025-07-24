@@ -1,415 +1,369 @@
+-- 1. TEARDOWN
+-- This section will drop all tables, types, and functions to ensure a clean slate.
+-- It is designed to be run multiple times without errors.
 
--- Full Database Reset Script for OptiTalent HRMS
--- This script is designed to be idempotent. It will completely
--- tear down and rebuild the database schema from scratch.
+-- Create a function to drop all policies on a table
+create or replace function drop_all_policies(table_name_param text)
+returns void as $$
+declare
+    policy_name_var text;
+begin
+    for policy_name_var in (select policyname from pg_policies where tablename = table_name_param) loop
+        execute 'DROP POLICY "' || policy_name_var || '" ON "' || table_name_param || '";';
+    end loop;
+end;
+$$ language plpgsql;
 
---
--- I. TEARDOWN PHASE
---
--- Step 1: Drop all tables in the public schema
--- Loop through all tables and drop them with cascade to handle dependencies.
-DO $$
-DECLARE
-    r RECORD;
-BEGIN
-    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-        EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
-    END LOOP;
-END $$;
+-- Drop policies from all tables where RLS is enabled
+-- Note: Order matters due to foreign key constraints.
+select drop_all_policies('helpdesk_messages');
+select drop_all_policies('payroll_history');
+select drop_all_policies('performance_reviews');
+select drop_all_policies('interview_notes');
+select drop_all_policies('applicants');
+select drop_all_policies('job_openings');
+select drop_all_policies('leave_requests');
+select drop_all_policies('leave_balances');
+select drop_all_policies('company_feed_posts');
+select drop_all_policies('employees');
+select drop_all_policies('users');
+select drop_all_policies('departments');
+select drop_all_policies('assessments');
+select drop_all_policies('assessment_attempts');
+select drop_all_policies('bonus_points');
 
--- Step 2: Drop all custom types in the public schema
--- This ensures that if we change an enum, the old type is removed first.
-DO $$
-DECLARE
-    r RECORD;
-BEGIN
-    FOR r IN (SELECT typname FROM pg_type WHERE typnamespace = 'public'::regnamespace) LOOP
-        EXECUTE 'DROP TYPE IF EXISTS public.' || quote_ident(r.typname) || ' CASCADE';
-    END LOOP;
-END $$;
+-- Drop the helper function
+DROP FUNCTION IF EXISTS drop_all_policies;
 
--- Step 3: Disable Row Level Security on all tables (if any policies survived)
--- This is a safety net before re-creating tables.
-DO $$
-DECLARE
-    r RECORD;
-BEGIN
-    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-        EXECUTE 'ALTER TABLE public.' || quote_ident(r.tablename) || ' DISABLE ROW LEVEL SECURITY';
-    END LOOP;
-END $$;
+-- Drop all tables. The CASCADE keyword will handle dependencies.
+DROP TABLE IF EXISTS public.helpdesk_messages CASCADE;
+DROP TABLE IF EXISTS public.payroll_history CASCADE;
+DROP TABLE IF EXISTS public.performance_reviews CASCADE;
+DROP TABLE IF EXISTS public.interview_notes CASCADE;
+DROP TABLE IF EXISTS public.applicants CASCADE;
+DROP TABLE IF EXISTS public.job_openings CASCADE;
+DROP TABLE IF EXISTS public.leave_requests CASCADE;
+DROP TABLE IF EXISTS public.leave_balances CASCADE;
+DROP TABLE IF EXISTS public.company_feed_posts CASCADE;
+DROP TABLE IF EXISTS public.employees CASCADE;
+DROP TABLE IF EXISTS public.users CASCADE;
+DROP TABLE IF EXISTS public.departments CASCADE;
+DROP TABLE IF EXISTS public.assessments CASCADE;
+DROP TABLE IF EXISTS public.assessment_attempts CASCADE;
+DROP TABLE IF EXISTS public.bonus_points CASCADE;
 
---
--- II. SETUP PHASE
---
--- Step 1: Create Custom Types (Enums)
--- These enums provide type safety for specific columns.
-CREATE TYPE public.user_roles AS ENUM (
-    'admin', 'hr', 'manager', 'recruiter', 'employee', 'trainee', 'trainer', 
-    'qa-analyst', 'process-manager', 'team-leader', 'finance', 'it-manager', 'operations-manager'
-);
+-- Drop all custom types.
+DROP TYPE IF EXISTS public.user_role CASCADE;
+DROP TYPE IF EXISTS public.leave_type CASCADE;
+DROP TYPE IF EXISTS public.leave_status CASCADE;
+DROP TYPE IF EXISTS public.ticket_category CASCADE;
+DROP TYPE IF EXISTS public.ticket_priority CASCADE;
+DROP TYPE IF EXISTS public.ticket_status CASCADE;
+DROP TYPE IF EXISTS public.applicant_status CASCADE;
+DROP TYPE IF EXISTS public.performance_rating CASCADE;
+DROP TYPE IF EXISTS public.employee_status CASCADE;
+DROP TYPE IF EXISTS public.assessment_type CASCADE;
 
-CREATE TYPE public.employee_status AS ENUM ('Active', 'Inactive', 'On Leave');
+-- Drop the handle_new_user function if it exists
+DROP FUNCTION IF EXISTS public.handle_new_user();
+
+
+-- 2. SCHEMA CREATION
+-- Create all custom types (enums)
+CREATE TYPE public.user_role AS ENUM ('admin', 'hr', 'manager', 'recruiter', 'employee', 'trainer', 'trainee', 'qa-analyst', 'process-manager', 'team-leader', 'finance', 'it-manager', 'operations-manager');
 CREATE TYPE public.leave_type AS ENUM ('Sick Leave', 'Casual Leave', 'Paid Time Off', 'Work From Home');
 CREATE TYPE public.leave_status AS ENUM ('Pending', 'Approved', 'Rejected');
+CREATE TYPE public.ticket_category AS ENUM ('IT Support', 'HR Query', 'Payroll Issue', 'Facilities', 'General Inquiry');
+CREATE TYPE public.ticket_priority AS ENUM ('Low', 'Medium', 'High');
+CREATE TYPE public.ticket_status AS ENUM ('Open', 'In Progress', 'Closed');
 CREATE TYPE public.applicant_status AS ENUM ('Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected');
-CREATE TYPE public.assessment_status AS ENUM ('Not Started', 'In Progress', 'Completed', 'Retry Requested', 'Retry Approved');
-CREATE TYPE public.helpdesk_category AS ENUM ('IT Support', 'HR Query', 'Payroll Issue', 'Facilities', 'General Inquiry');
-CREATE TYPE public.helpdesk_priority AS ENUM ('Low', 'Medium', 'High');
-CREATE TYPE public.helpdesk_status AS ENUM ('Open', 'In Progress', 'Closed');
+CREATE TYPE public.performance_rating AS ENUM ('Exceeds Expectations', 'Meets Expectations', 'Needs Improvement');
+CREATE TYPE public.employee_status AS ENUM ('Active', 'On Leave', 'Terminated');
+CREATE TYPE public.assessment_type AS ENUM ('mcq', 'typing', 'audio', 'voice_input', 'video_input', 'simulation');
 
---
--- Step 2: Create Tables
---
-
--- Departments Table
+-- Create departments table
 CREATE TABLE public.departments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Job Openings Table
-CREATE TABLE public.job_openings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
-    description TEXT,
-    department_id UUID REFERENCES public.departments(id),
-    status TEXT DEFAULT 'Open',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Users Table (links to auth.users)
+-- Create users table
 CREATE TABLE public.users (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT UNIQUE,
-    role public.user_roles NOT NULL DEFAULT 'employee',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT UNIQUE NOT NULL,
+  role user_role NOT NULL DEFAULT 'employee'::user_role,
+  full_name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Employees Table (Profile information)
+-- Create employees table
 CREATE TABLE public.employees (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID UNIQUE NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-    full_name TEXT NOT NULL,
-    job_title TEXT NOT NULL,
-    employee_id TEXT UNIQUE NOT NULL,
-    department_id UUID REFERENCES public.departments(id),
-    manager_id UUID REFERENCES public.employees(id), -- Self-referencing for manager
-    phone_number TEXT,
-    profile_picture_url TEXT,
-    status public.employee_status DEFAULT 'Active',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  department_id UUID REFERENCES public.departments(id) ON DELETE SET NULL,
+  manager_id UUID REFERENCES public.employees(id) ON DELETE SET NULL, -- Self-referencing manager
+  job_title TEXT NOT NULL,
+  employee_id TEXT UNIQUE NOT NULL,
+  phone_number TEXT,
+  profile_picture_url TEXT,
+  hire_date DATE NOT NULL DEFAULT now(),
+  status employee_status NOT NULL DEFAULT 'Active'::employee_status,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Applicants Table (for external recruitment)
-CREATE TABLE public.applicants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    phone TEXT,
-    role_applied TEXT,
-    application_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    status public.applicant_status DEFAULT 'Applied',
-    resume_url TEXT,
-    profile_picture_url TEXT
-);
-
--- Parsed Resumes Table
-CREATE TABLE public.parsed_resumes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    applicant_id UUID REFERENCES public.applicants(id) ON DELETE CASCADE,
-    score INT,
-    justification TEXT,
-    parsed_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Interviewer Notes Table
-CREATE TABLE public.interviewer_notes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    applicant_id UUID NOT NULL REFERENCES public.applicants(id) ON DELETE CASCADE,
-    interviewer_id UUID NOT NULL REFERENCES public.employees(id),
-    note TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Leave Requests Table
-CREATE TABLE public.leave_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID NOT NULL REFERENCES public.employees(id),
-    leave_type public.leave_type NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    days INT NOT NULL,
-    reason TEXT,
-    status public.leave_status DEFAULT 'Pending',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Leave Balances Table
-CREATE TABLE public.leave_balances (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID NOT NULL REFERENCES public.employees(id),
-    leave_type public.leave_type NOT NULL,
-    balance INT NOT NULL DEFAULT 0,
-    UNIQUE(employee_id, leave_type)
-);
-
--- Company Holidays Table
-CREATE TABLE public.holidays (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    date DATE NOT NULL UNIQUE
-);
-
--- Assessments Table (The master list of all possible tests)
+-- Create assessments table
 CREATE TABLE public.assessments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
-    process_type TEXT,
-    duration_minutes INT,
-    passing_score INT,
-    max_attempts INT DEFAULT 1,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    assessment_type assessment_type NOT NULL,
+    duration_minutes INT NOT NULL,
+    passing_score INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Applicant Assessments Table (Junction table for applicants and their assigned tests)
-CREATE TABLE public.applicant_assessments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    applicant_id UUID NOT NULL REFERENCES public.applicants(id) ON DELETE CASCADE,
-    assessment_id UUID NOT NULL REFERENCES public.assessments(id),
-    status public.assessment_status DEFAULT 'Not Started',
-    retry_reason TEXT,
-    UNIQUE(applicant_id, assessment_id)
-);
-
--- Assessment Attempts Table
+-- Create assessment_attempts table
 CREATE TABLE public.assessment_attempts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    applicant_assessment_id UUID NOT NULL REFERENCES public.applicant_assessments(id) ON DELETE CASCADE,
-    attempt_number INT NOT NULL,
+    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    assessment_id UUID NOT NULL REFERENCES public.assessments(id) ON DELETE CASCADE,
     score INT,
-    completed_at TIMESTAMPTZ
+    status TEXT NOT NULL, -- e.g., 'Completed', 'In Progress'
+    started_at TIMESTAMPTZ DEFAULT now(),
+    completed_at TIMESTAMPTZ,
+    UNIQUE(employee_id, assessment_id)
 );
 
--- Helpdesk Tickets Table
-CREATE TABLE public.helpdesk_tickets (
+-- Create bonus_points table
+CREATE TABLE public.bonus_points (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    requester_id UUID NOT NULL REFERENCES public.employees(id),
-    subject TEXT NOT NULL,
-    description TEXT,
-    category public.helpdesk_category,
-    priority public.helpdesk_priority,
-    status public.helpdesk_status DEFAULT 'Open',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    points INT NOT NULL,
+    reason TEXT,
+    awarded_by_id UUID REFERENCES public.employees(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Helpdesk Messages Table
+-- Create company_feed_posts table
+CREATE TABLE public.company_feed_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  image_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create leave_balances table
+CREATE TABLE public.leave_balances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL UNIQUE REFERENCES public.employees(id) ON DELETE CASCADE,
+  sick_leave INT NOT NULL DEFAULT 7,
+  casual_leave INT NOT NULL DEFAULT 12,
+  paid_time_off INT NOT NULL DEFAULT 20,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create holidays table
+CREATE TABLE public.holidays (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  date DATE NOT NULL
+);
+
+-- Create leave_requests table
+CREATE TABLE public.leave_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  leave_type leave_type NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  reason TEXT NOT NULL,
+  status leave_status NOT NULL DEFAULT 'Pending'::leave_status,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create job_openings table
+CREATE TABLE public.job_openings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  department_id UUID NOT NULL REFERENCES public.departments(id),
+  hiring_manager_id UUID REFERENCES public.employees(id),
+  status TEXT NOT NULL DEFAULT 'Open', -- e.g., Open, Closed, On Hold
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create applicants table
+CREATE TABLE public.applicants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_opening_id UUID NOT NULL REFERENCES public.job_openings(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  resume_url TEXT,
+  status applicant_status NOT NULL DEFAULT 'Applied'::applicant_status,
+  application_date DATE NOT NULL DEFAULT now(),
+  parsed_resume_data JSONB -- To store AI parsed resume
+);
+
+-- Create interview_notes table
+CREATE TABLE public.interview_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  applicant_id UUID NOT NULL REFERENCES public.applicants(id) ON DELETE CASCADE,
+  interviewer_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  notes TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create helpdesk_tickets table
+CREATE TABLE public.helpdesk_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category ticket_category NOT NULL,
+  priority ticket_priority NOT NULL,
+  status ticket_status NOT NULL DEFAULT 'Open'::ticket_status,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create helpdesk_messages table
 CREATE TABLE public.helpdesk_messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id UUID NOT NULL REFERENCES public.helpdesk_tickets(id) ON DELETE CASCADE,
-    sender_id UUID NOT NULL REFERENCES public.employees(id),
+    sender_id UUID NOT NULL REFERENCES public.employees(id), -- Can be employee or support agent
     message TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Company Feed Posts Table
-CREATE TABLE public.company_feed_posts (
+-- Create performance_reviews table
+CREATE TABLE public.performance_reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_id UUID NOT NULL REFERENCES public.employees(id),
-    title TEXT NOT NULL,
-    content TEXT,
-    image_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES public.employees(id),
+    review_period TEXT NOT NULL, -- e.g., "Q2 2024"
+    overall_rating performance_rating NOT NULL,
+    goals_summary TEXT,
+    achievements_summary TEXT,
+    improvement_areas TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Bonus Points Table
-CREATE TABLE public.bonus_points (
+-- Create payroll_history table
+CREATE TABLE public.payroll_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID NOT NULL REFERENCES public.employees(id),
-    points INT NOT NULL,
-    reason TEXT,
-    awarder_id UUID REFERENCES public.employees(id), -- Can be null for system awards
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    pay_period DATE NOT NULL,
+    gross_salary NUMERIC(10, 2) NOT NULL,
+    deductions NUMERIC(10, 2) NOT NULL,
+    net_salary NUMERIC(10, 2) NOT NULL,
+    payslip_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 3. FUNCTIONS
+-- Function to automatically create a user in the public.users table when a new user signs up in auth.users
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.users (id, email, full_name, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name', 'employee');
+  return new;
+end;
+$$;
 
---
--- Step 3: Enable Row Level Security (RLS)
---
+-- Trigger to call the function on new user creation
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+
+-- 4. ROW LEVEL SECURITY (RLS)
+-- Enable RLS for all tables
 ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.applicants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.parsed_resumes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.interviewer_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leave_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leave_balances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.holidays ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.applicant_assessments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.assessment_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.helpdesk_tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.helpdesk_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.company_feed_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bonus_points ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leave_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.job_openings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.applicants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.interview_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.helpdesk_tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.company_feed_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.performance_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payroll_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assessment_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bonus_points ENABLE ROW LEVEL SECURITY;
 
---
--- Step 4: Create RLS Policies
--- These are basic policies. You should refine them based on your app's specific needs.
---
--- Policy: Logged-in users can read all public data (e.g., departments, holidays).
-CREATE POLICY "Allow authenticated read access" ON public.departments FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated read access" ON public.holidays FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated read access" ON public.job_openings FOR SELECT USING (auth.role() = 'authenticated');
+-- POLICIES
+-- Users can view their own data
+CREATE POLICY "Users can view their own data" ON public.users FOR SELECT USING (auth.uid() = id);
+-- Users can update their own data
+CREATE POLICY "Users can update their own data" ON public.users FOR UPDATE USING (auth.uid() = id);
 
--- Policy: Users can view their own profile information.
-CREATE POLICY "Users can view their own employee data" ON public.employees FOR SELECT USING (user_id = auth.uid());
--- Policy: HR and Admins can view all employee data.
-CREATE POLICY "HR/Admins can view all employee data" ON public.employees FOR SELECT USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN ('admin', 'hr', 'manager', 'team-leader')));
+-- Employees can view their own record
+CREATE POLICY "Employees can view their own record" ON public.employees FOR SELECT USING (auth.uid() = user_id);
+-- HR/Admin can view all employee records
+CREATE POLICY "HR and Admins can view all employee records" ON public.employees FOR SELECT USING (
+    (get_my_claim('user_role'::text)) = '"hr"'::jsonb OR
+    (get_my_claim('user_role'::text)) = '"admin"'::jsonb
+);
+-- Managers can view records of employees who report to them
+CREATE POLICY "Managers can view their direct reports" ON public.employees FOR SELECT USING (
+    manager_id = (SELECT id FROM public.employees WHERE user_id = auth.uid())
+);
 
--- Policy: Users can see their own user record.
-CREATE POLICY "Users can view their own user data" ON public.users FOR SELECT USING (id = auth.uid());
+-- Authenticated users can see all departments, company feed, and job openings (public info)
+CREATE POLICY "Allow read access to all authenticated users" ON public.departments FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow read access to all authenticated users" ON public.company_feed_posts FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow read access to all authenticated users" ON public.job_openings FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow read access to all authenticated users" ON public.assessments FOR SELECT USING (auth.role() = 'authenticated');
 
--- Policy: Users can manage their own leave requests.
-CREATE POLICY "Users can manage their own leave requests" ON public.leave_requests FOR ALL USING (EXISTS (SELECT 1 FROM employees WHERE employees.id = leave_requests.employee_id AND employees.user_id = auth.uid()));
--- Policy: HR/Admins can see all leave requests.
-CREATE POLICY "HR/Admins can view all leave requests" ON public.leave_requests FOR SELECT USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN ('admin', 'hr', 'manager')));
+-- Employees can manage their own leave requests
+CREATE POLICY "Employees can manage their own leave data" ON public.leave_requests FOR ALL USING (
+    employee_id = (SELECT id FROM public.employees WHERE user_id = auth.uid())
+);
 
---
--- Step 5: Create a function to handle new user creation
--- This function will be triggered when a new user signs up in Supabase Auth.
---
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.users (id, email, role)
-  VALUES (new.id, new.email, 'employee'); -- Default role is 'employee'
-  
-  INSERT INTO public.employees (user_id, full_name, job_title, employee_id, status)
-  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'New Hire', 'EMP-' || substr(new.id::text, 1, 4), 'Active');
-  
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- HR/Admin can manage all leave requests
+CREATE POLICY "HR and Admins can manage all leave requests" ON public.leave_requests FOR ALL USING (
+    (get_my_claim('user_role'::text)) = '"hr"'::jsonb OR
+    (get_my_claim('user_role'::text)) = '"admin"'::jsonb
+);
 
--- Step 6: Create a trigger to execute the function on new user signup
---
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+-- 5. SEED DATA (Optional but recommended for development)
+INSERT INTO public.departments (name, description) VALUES
+('Administration', 'Overall management and support.'),
+('Engineering', 'Software development and technical innovation.'),
+('Human Resources', 'Manages employee relations, recruitment, and benefits.'),
+('Product', 'Manages product lifecycle and development.'),
+('Design', 'Creates user interfaces and experiences.'),
+('Marketing', 'Promotes the company and its products.'),
+('Sales', 'Drives business growth and revenue.'),
+('Operations', 'Ensures the smooth running of business processes.'),
+('Finance', 'Manages financial planning and records.'),
+('IT', 'Manages information technology and infrastructure.'),
+('Customer Support', 'Assists customers with their inquiries and issues.'),
+('Quality Assurance', 'Ensures product quality and standards.'),
+('Process Excellence', 'Improves business processes and efficiency.'),
+('Learning & Development', 'Provides training and development programs.'),
+('Client Services', 'Manages client relationships and accounts.');
 
---
--- III. SEEDING PHASE
---
--- Step 1: Seed Departments
---
-INSERT INTO public.departments (name) VALUES
-('Administration'), ('Human Resources'), ('Engineering'), 
-('Quality Assurance'), ('Process Excellence'), ('Customer Support'),
-('Marketing'), ('Finance'), ('IT'), ('Operations'), 
-('Client Services'), ('Learning & Development'), ('Product');
+-- Note: Seeding for users and employees should be done via a script (like seed.ts)
+-- that can interact with Supabase Auth to create authenticated users.
+-- The handle_new_user trigger will automatically populate the 'users' and 'employees' tables.
+-- Here is an example of what the script would insert, for reference:
 
--- Step 2: Seed Users and Employees
---
-DO $$
-DECLARE
-    admin_user_id UUID;
-    hr_user_id UUID;
-    manager_user_id UUID;
-    recruiter_user_id UUID;
-    employee_user_id UUID;
-    trainee_user_id UUID;
-    trainer_user_id UUID;
-    
-    eng_dept_id UUID;
-    hr_dept_id UUID;
-    admin_dept_id UUID;
-    ld_dept_id UUID;
-    
-BEGIN
-    -- Get Department IDs
-    SELECT id INTO eng_dept_id FROM public.departments WHERE name = 'Engineering';
-    SELECT id INTO hr_dept_id FROM public.departments WHERE name = 'Human Resources';
-    SELECT id INTO admin_dept_id FROM public.departments WHERE name = 'Administration';
-    SELECT id INTO ld_dept_id FROM public.departments WHERE name = 'Learning & Development';
-
-    -- Create mock auth users and get their IDs
-    admin_user_id := '00000000-0000-0000-0000-000000000001';
-    hr_user_id := '00000000-0000-0000-0000-000000000002';
-    manager_user_id := '00000000-0000-0000-0000-000000000003';
-    recruiter_user_id := '00000000-0000-0000-0000-000000000004';
-    employee_user_id := '00000000-0000-0000-0000-000000000012';
-    trainee_user_id := '00000000-0000-0000-0000-000000000017';
-    trainer_user_id := '00000000-0000-0000-0000-000000000016';
-    
-    -- Insert into public.users
-    INSERT INTO public.users (id, email, role) VALUES
-    (admin_user_id, 'admin@optitalent.com', 'admin'),
-    (hr_user_id, 'hr@optitalent.com', 'hr'),
-    (manager_user_id, 'manager@optitalent.com', 'manager'),
-    (recruiter_user_id, 'recruiter@optitalent.com', 'recruiter'),
-    (employee_user_id, 'employee@optitalent.com', 'employee'),
-    (trainee_user_id, 'trainee@optitalent.com', 'trainee'),
-    (trainer_user_id, 'trainer@optitalent.com', 'trainer');
-
-    -- Insert into public.employees
-    INSERT INTO public.employees (user_id, full_name, job_title, employee_id, department_id, status) VALUES
-    (admin_user_id, 'Admin User', 'System Administrator', 'PEP0001', admin_dept_id, 'Active'),
-    (hr_user_id, 'Jackson Lee', 'HR Manager', 'PEP0002', hr_dept_id, 'Active'),
-    (manager_user_id, 'Isabella Nguyen', 'Engineering Manager', 'PEP0003', eng_dept_id, 'Active'),
-    (recruiter_user_id, 'Sofia Davis', 'Talent Acquisition', 'PEP0004', hr_dept_id, 'Active'),
-    (employee_user_id, 'Anika Sharma', 'Software Engineer', 'PEP0012', eng_dept_id, 'Active'),
-    (trainee_user_id, 'Liam Johnson', 'Software Engineer Trainee', 'PEP0017', eng_dept_id, 'Active'),
-    (trainer_user_id, 'Olivia Chen', 'Corporate Trainer', 'PEP0016', ld_dept_id, 'Active');
-
-END $$;
-
--- Step 3: Seed Leave Requests for Anika Sharma
-DO $$
-DECLARE
-    anika_employee_id UUID;
-BEGIN
-    SELECT id INTO anika_employee_id FROM public.employees WHERE employee_id = 'PEP0012';
-
-    INSERT INTO public.leave_requests (employee_id, leave_type, start_date, end_date, days, reason, status) VALUES
-    (anika_employee_id, 'Paid Time Off', '2024-08-05', '2024-08-07', 3, 'Family vacation', 'Approved'),
-    (anika_employee_id, 'Sick Leave', '2024-08-01', '2024-08-01', 1, 'Fever', 'Approved'),
-    (anika_employee_id, 'Casual Leave', '2024-08-12', '2024-08-12', 1, 'Personal appointment', 'Pending');
-END $$;
-
-
--- Step 4: Seed Company Feed Posts
-DO $$
-DECLARE
-    admin_employee_id UUID;
-    hr_employee_id UUID;
-    manager_employee_id UUID;
-BEGIN
-    SELECT id INTO admin_employee_id FROM public.employees WHERE employee_id = 'PEP0001';
-    SELECT id INTO hr_employee_id FROM public.employees WHERE employee_id = 'PEP0002';
-    SELECT id INTO manager_employee_id FROM public.employees WHERE employee_id = 'PEP0003';
-    
-    INSERT INTO public.company_feed_posts (author_id, title, content, image_url) VALUES
-    (admin_employee_id, 'Announcing Our Series B Funding!', 'We are thrilled to announce that we have successfully closed our Series B funding round, raising $50 million.', 'https://placehold.co/600x400.png'),
-    (hr_employee_id, 'Upcoming Holiday: Annual Company Retreat', 'Get ready for some fun! Our annual company retreat is just around the corner.', 'https://placehold.co/600x400.png'),
-    (manager_employee_id, 'Tech Talk: The Future of AI in HR Tech', 'Join us next Wednesday at 3 PM for an insightful tech talk on how AI is revolutionizing the HR industry.', 'https://placehold.co/600x400.png');
-END $$;
-
--- Step 5: Seed Applicants
-INSERT INTO public.applicants (name, email, phone, role_applied, status) VALUES
-('Aarav Sharma', 'aarav.sharma@example.com', '555-0101', 'Senior Frontend Developer', 'Interview'),
-('Priya Patel', 'priya.patel@example.com', '555-0102', 'Product Manager', 'Applied'),
-('Rohan Gupta', 'rohan.gupta@example.com', '555-0103', 'UI/UX Designer', 'Screening');
-
--- Step 6: Seed Holidays
+-- Example Seed for a few holidays
 INSERT INTO public.holidays (name, date) VALUES
-('Thanksgiving Day', '2024-11-28'),
-('Christmas Day', '2024-12-25');
-
-
--- End of Script
--- The database should now be fully set up and seeded.
+('New Year''s Day', CONCAT(EXTRACT(YEAR FROM now()), '-01-01')),
+('Memorial Day', CONCAT(EXTRACT(YEAR FROM now()), '-05-27')),
+('Independence Day', CONCAT(EXTRACT(YEAR FROM now()), '-07-04')),
+('Labor Day', CONCAT(EXTRACT(YEAR FROM now()), '-09-02')),
+('Thanksgiving Day', CONCAT(EXTRACT(YEAR FROM now()), '-11-28')),
+('Christmas Day', CONCAT(EXTRACT(YEAR FROM now()), '-12-25'));
