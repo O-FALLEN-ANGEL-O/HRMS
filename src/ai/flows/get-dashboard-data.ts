@@ -17,7 +17,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
 const prompt = ai.definePrompt({
   name: 'getDashboardDataPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-pro',
   output: { schema: DashboardDataSchema },
   prompt: `You are an expert HR Data Analyst. Your task is to generate a realistic but fictional set of HR dashboard data for a mid-sized tech company named OptiTalent. The data should be comprehensive and suitable for populating a dashboard with charts and statistics.
 
