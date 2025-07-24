@@ -7,10 +7,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("POSTGRES_PRISMA_URL") // uses a pgbouncer-ready URL
 }
 
+// ----------------------------------------
 // ENUMS
+// ----------------------------------------
+
 enum Gender {
   MALE
   FEMALE
@@ -18,9 +21,8 @@ enum Gender {
 }
 
 enum EmploymentStatus {
-  ACTIVE
-  INACTIVE
   PROBATION
+  ACTIVE
   NOTICE_PERIOD
   RESIGNED
   TERMINATED
@@ -45,228 +47,316 @@ enum NotificationStatus {
   READ
 }
 
-enum LogAction {
-  CREATE
-  UPDATE
-  DELETE
-  LOGIN
-  LOGOUT
-}
-
-
-// MODELS
-
-model Department {
-  id        String     @id @default(uuid())
-  name      String     @unique
-  employees Employee[]
-}
+// ----------------------------------------
+// CORE HR TABLES
+// ----------------------------------------
 
 model Role {
-  id          String     @id @default(uuid())
-  name        String     @unique
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
   description String?
   employees   Employee[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  employees Employee[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("departments")
 }
 
 model Employee {
-  id                 String               @id @default(uuid())
-  employeeId         String               @unique
-  firstName          String
-  lastName           String
-  email              String               @unique
-  password           String
-  phone              String?
-  gender             Gender?
-  dob                DateTime?
-  hireDate           DateTime
-  employmentStatus   EmploymentStatus
-  jobTitle           String
-  department         Department           @relation(fields: [departmentId], references: [id])
-  departmentId       String
-  role               Role                 @relation(fields: [roleId], references: [id])
-  roleId             String
-  manager            Employee?            @relation("ManagerSubordinates", fields: [managerId], references: [id])
-  managerId          String?
-  subordinates       Employee[]           @relation("ManagerSubordinates")
-  bankDetails        Json?
-  complianceDocs     Json?
-  profilePictureUrl  String?
-  country            String? // e.g., 'IN', 'US', 'PH'
-  timezone           String? // e.g., 'Asia/Kolkata'
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  attendances        Attendance[]
-  shifts             EmployeeShift[]
-  leaveRequests      LeaveRequest[]
-  payrolls           Payroll[]
-  performanceReviews PerformanceReview[]
-  qaReviews          QAReview[]           @relation("AgentReviews")
-  coachingSessions   CoachingSession[]    @relation("AgentCoaching")
-  coachForSessions   CoachingSession[]    @relation("CoachSessions")
-  trainingProgress   TrainingProgress[]
-  documents          Document[]
-  notifications      Notification[]
-  auditLogs          AuditLog[]
+  id                  Int       @id @default(autoincrement())
+  employeeId          String    @unique @map("employee_id")
+  firstName           String    @map("first_name")
+  lastName            String    @map("last_name")
+  email               String    @unique
+  password            String
+  jobTitle            String    @map("job_title")
+  hireDate            DateTime  @map("hire_date")
+  employmentStatus    EmploymentStatus @default(PROBATION) @map("employment_status")
+  personalEmail       String?   @unique @map("personal_email")
+  phone               String?
+  dob                 DateTime? @map("date_of_birth")
+  gender              Gender?
+  address             Json?
+  bankDetails         Json?     @map("bank_details")
+  complianceDetails   Json?     @map("compliance_details")
+  country             String?   // e.g., 'IN', 'US', 'PH'
+  timezone            String?   // e.g., 'Asia/Kolkata'
+
+  departmentId        Int?      @map("department_id")
+  roleId              Int       @map("role_id")
+  managerId           Int?      @map("manager_id")
+
+  department          Department? @relation(fields: [departmentId], references: [id])
+  role                Role        @relation(fields: [roleId], references: [id])
+  manager             Employee?   @relation("TeamHierarchy", fields: [managerId], references: [id])
+  reports             Employee[]  @relation("TeamHierarchy")
+
+  attendances         Attendance[]
+  leaveRequests       LeaveRequest[] @relation("EmployeeLeaveRequests")
+  approvedLeaves      LeaveRequest[] @relation("ApproverLeaveRequests")
+  shifts              EmployeeShift[]
+  payrolls            Payroll[]
+  performanceReviews  PerformanceReview[] @relation("EmployeeReviews")
+  managerReviews      PerformanceReview[] @relation("ManagerReviews")
+  qaReviews           QAReview[]
+  coachingSessions    CoachingSession[] @relation("EmployeeCoaching")
+  coachOfSessions     CoachingSession[] @relation("CoachCoaching")
+  trainingProgress    TrainingProgress[]
+  documents           Document[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  @@map("employees")
 }
+
+
+// ----------------------------------------
+// MODULES
+// ----------------------------------------
 
 model Attendance {
-  id        String    @id @default(uuid())
-  employee  Employee  @relation(fields: [employeeId], references: [id])
-  employeeId String
-  date      DateTime  @db.Date
-  clockIn   DateTime
-  clockOut  DateTime?
-  totalHours Decimal?
-  ipAddress String?
-  gpsCoords String?
-  isLate    Boolean   @default(false)
-  createdAt DateTime  @default(now())
-}
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  clockIn         DateTime  @map("clock_in")
+  clockOut        DateTime? @map("clock_out")
+  durationHours   Float?    @map("duration_hours")
+  ipAddress       String?   @map("ip_address")
+  gpsCoordinates  Json?     @map("gps_coordinates")
+  isLate          Boolean   @default(false) @map("is_late")
+  status          String // e.g., Present, Half-Day, Absent
 
-model LeaveType {
-  id          String         @id @default(uuid())
-  name        String
-  country     String // 'IN', 'US', 'PH'
-  daysAllowed Int
-  requests    LeaveRequest[]
-}
+  employee        Employee  @relation(fields: [employeeId], references: [id])
 
-model LeaveRequest {
-  id          String      @id @default(uuid())
-  employee    Employee    @relation(fields: [employeeId], references: [id])
-  employeeId  String
-  leaveType   LeaveType   @relation(fields: [leaveTypeId], references: [id])
-  leaveTypeId String
-  startDate   DateTime    @db.Date
-  endDate     DateTime    @db.Date
-  reason      String
-  status      LeaveStatus @default(PENDING)
-  approvedBy  String? // Manager's Employee ID
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("attendance")
 }
 
 model EmployeeShift {
-  id         String   @id @default(uuid())
-  employee   Employee @relation(fields: [employeeId], references: [id])
-  employeeId String
-  date       DateTime @db.Date
-  shiftType  ShiftType
-  startTime  DateTime
-  endTime    DateTime
-  createdAt  DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  shiftDate       DateTime  @map("shift_date")
+  shiftType       ShiftType @map("shift_type")
+  startTime       DateTime  @map("start_time")
+  endTime         DateTime  @map("end_time")
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id])
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("employee_shifts")
+}
+
+model LeaveType {
+  id              Int       @id @default(autoincrement())
+  name            String
+  daysAllowed     Int       @map("days_allowed")
+  country         String    // e.g., 'IN', 'US', 'PH'
+  carryForward    Boolean   @default(false) @map("carry_forward")
+  encashment      Boolean   @default(false)
+
+  leaveRequests   LeaveRequest[]
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("leave_types")
+}
+
+model LeaveRequest {
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  leaveTypeId     Int       @map("leave_type_id")
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime  @map("end_date")
+  reason          String?
+  status          LeaveStatus @default(PENDING)
+  approvedById    Int?      @map("approved_by_id")
+
+  employee        Employee    @relation("EmployeeLeaveRequests", fields: [employeeId], references: [id])
+  leaveType       LeaveType   @relation(fields: [leaveTypeId], references: [id])
+  approver        Employee?   @relation("ApproverLeaveRequests", fields: [approvedById], references: [id])
+
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@map("leave_requests")
 }
 
 model Payroll {
-  id              String   @id @default(uuid())
-  employee        Employee @relation(fields: [employeeId], references: [id])
-  employeeId      String
-  payPeriodStart  DateTime @db.Date
-  payPeriodEnd    DateTime @db.Date
-  grossSalary     Decimal
-  deductions      Decimal
-  netSalary       Decimal
-  payslipData     Json // Detailed breakdown
-  isProcessed     Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  payPeriodStart  DateTime  @map("pay_period_start")
+  payPeriodEnd    DateTime  @map("pay_period_end")
+  grossSalary     Float     @map("gross_salary")
+  netSalary       Float     @map("net_salary")
+  deductions      Json?
+  overtime        Json?
+  payslipUrl      String?   @map("payslip_url")
+
+  employee        Employee  @relation(fields: [employeeId], references: [id])
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("payrolls")
 }
 
 model PerformanceReview {
-  id                  String   @id @default(uuid())
-  employee            Employee @relation(fields: [employeeId], references: [id])
-  employeeId          String
-  reviewPeriod        String // e.g., "Q3 2024"
-  managerFeedback     String?
-  employeeFeedback    String?
-  overallRating       Int // e.g., 1 to 5
-  kpiData             Json? // CSAT, AHT etc.
-  createdAt           DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  managerId       Int       @map("manager_id")
+  reviewPeriod    String    @map("review_period") // e.g., "Q3 2024"
+  kpiData         Json?     @map("kpi_data")
+  selfFeedback    String?   @map("self_feedback")
+  managerFeedback String?   @map("manager_feedback")
+  finalRating     Float?    @map("final_rating")
+
+  employee        Employee  @relation("EmployeeReviews", fields: [employeeId], references: [id])
+  manager         Employee  @relation("ManagerReviews", fields: [managerId], references: [id])
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("performance_reviews")
 }
 
 model QAForm {
-  id         String     @id @default(uuid())
-  name       String
-  structure  Json // JSON structure of the form with sections, questions, and scores
-  reviews    QAReview[]
-  createdAt  DateTime   @default(now())
+  id              Int        @id @default(autoincrement())
+  name            String
+  structure       Json       // Defines sections, questions, and scores
+  reviews         QAReview[]
+
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@map("qa_forms")
 }
 
 model QAReview {
-  id            String   @id @default(uuid())
-  agent         Employee @relation("AgentReviews", fields: [agentId], references: [id])
-  agentId       String
-  interactionId String // Call or chat ID
-  score         Int
-  reviewData    Json // Filled out QA form
-  qaForm        QAForm   @relation(fields: [qaFormId], references: [id])
-  qaFormId      String
-  createdAt     DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  agentId         Int       @map("agent_id")
+  qaFormId        Int       @map("qa_form_id")
+  interactionId   String    @map("interaction_id") // Call or chat ID
+  score           Float
+  feedback        String?
+  reviewData      Json      // The filled out form data
+
+  agent           Employee  @relation(fields: [agentId], references: [id])
+  qaForm          QAForm    @relation(fields: [qaFormId], references: [id])
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("qa_reviews")
 }
 
 model CoachingSession {
-  id           String   @id @default(uuid())
-  agent        Employee @relation("AgentCoaching", fields: [agentId], references: [id])
-  agentId      String
-  coach        Employee @relation("CoachSessions", fields: [coachId], references: [id])
-  coachId      String
-  sessionDate  DateTime
-  notes        String
-  actionItems  String
-  isCompleted  Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  coachId         Int       @map("coach_id")
+  sessionDate     DateTime  @map("session_date")
+  notes           String?
+  actionItems     Json?     @map("action_items")
+  effectiveness   Float?    // Score of effectiveness
+
+  employee        Employee  @relation("EmployeeCoaching", fields: [employeeId], references: [id])
+  coach           Employee  @relation("CoachCoaching", fields: [coachId], references: [id])
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("coaching_sessions")
 }
 
 model TrainingModule {
-  id        String             @id @default(uuid())
-  title     String
-  content   String
-  quizData  Json? // Questions and answers
-  progress  TrainingProgress[]
-  createdAt DateTime           @default(now())
+  id              Int                @id @default(autoincrement())
+  title           String
+  description     String?
+  content         Json               // Could be links to videos, docs, quiz structure
+  duration        Int                // in minutes
+  
+  progress        TrainingProgress[]
+
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  @@map("training_modules")
 }
 
 model TrainingProgress {
-  id               String         @id @default(uuid())
-  employee         Employee       @relation(fields: [employeeId], references: [id])
-  employeeId       String
-  trainingModule   TrainingModule @relation(fields: [moduleId], references: [id])
-  moduleId         String
-  status           String // e.g., 'Not Started', 'In Progress', 'Completed'
-  score            Int?
-  completionDate   DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  moduleId        Int       @map("module_id")
+  status          String    // e.g., 'Not Started', 'In Progress', 'Completed'
+  progress        Int       @default(0) // Percentage
+  score           Float?
+  
+  employee        Employee        @relation(fields: [employeeId], references: [id])
+  trainingModule  TrainingModule  @relation(fields: [moduleId], references: [id])
+
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  @@unique([employeeId, moduleId])
+  @@map("training_progress")
 }
 
 model Document {
-  id         String   @id @default(uuid())
-  employee   Employee @relation(fields: [employeeId], references: [id])
-  employeeId String
-  docType    String // e.g., 'PAN', 'Aadhaar', 'Contract'
-  docUrl     String
-  expiryDate DateTime?
-  isValidated Boolean  @default(false)
-  uploadedAt DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  employeeId      Int       @map("employee_id")
+  documentType    String    @map("document_type") // e.g., 'PAN', 'Aadhaar', 'Contract'
+  documentUrl     String    @map("document_url")
+  expiryDate      DateTime? @map("expiry_date")
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id])
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("documents")
 }
 
 model Notification {
-  id         String             @id @default(uuid())
-  employee   Employee           @relation(fields: [employeeId], references: [id])
-  employeeId String
-  message    String
-  link       String?
-  status     NotificationStatus @default(UNREAD)
-  createdAt  DateTime           @default(now())
+  id              Int                @id @default(autoincrement())
+  employeeId      Int                @map("employee_id")
+  message         String
+  url             String?
+  status          NotificationStatus @default(UNREAD)
+
+  employee        Employee           @relation(fields: [employeeId], references: [id])
+
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  @@map("notifications")
 }
 
 model AuditLog {
-  id         String    @id @default(uuid())
-  employee   Employee  @relation(fields: [employeeId], references: [id])
-  employeeId String
-  action     LogAction
-  target     String // e.g., 'Employee', 'LeaveRequest'
-  targetId   String
-  details    Json
-  createdAt  DateTime  @default(now())
+  id              Int      @id @default(autoincrement())
+  actorId         Int      @map("actor_id")
+  action          String
+  entity          String   // e.g., 'Employee', 'LeaveRequest'
+  entityId        Int      @map("entity_id")
+  details         Json?
+
+  actor           Employee @relation(fields: [actorId], references: [id])
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
 }
