@@ -28,7 +28,7 @@ import { revalidatePath } from 'next/cache';
 import AddEmployeeButton from '@/components/employees/add-employee-button';
 import { useAuth } from '@/hooks/use-auth';
 
-type Employee = Awaited<ReturnType<typeof getEmployees>>[0];
+type EmployeeWithRelations = Awaited<ReturnType<typeof getEmployees>>[0];
 
 function DeactivateMenuItem({ employeeId, employeeName }: { employeeId: string, employeeName: string }) {
     
@@ -75,9 +75,9 @@ async function AdminView({ role }: { role: string }) {
                 {employees.map((employee) => {
                   if (!employee) return null;
 
-                  // Safely access nested data. Supabase returns nested objects or arrays.
-                  const user = Array.isArray(employee.users) ? employee.users[0] : employee.users;
-                  const department = Array.isArray(employee.departments) ? employee.departments[0] : employee.departments;
+                  // Safely access nested data.
+                  const user = employee.users;
+                  const department = employee.departments;
 
                   return (
                   <TableRow key={employee.id}>
@@ -136,7 +136,7 @@ async function AdminView({ role }: { role: string }) {
     );
 }
 
-function TeamView({ members }: { members: Employee[] }) {
+function TeamView({ members }: { members: EmployeeWithRelations[] }) {
     if (members.length === 0) {
        return (
              <Card>
@@ -149,7 +149,7 @@ function TeamView({ members }: { members: Employee[] }) {
 
     return (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {members.map((member: any) => (
+            {members.map((member) => (
                 <TeamCard key={member.id} member={member} />
             ))}
         </div>

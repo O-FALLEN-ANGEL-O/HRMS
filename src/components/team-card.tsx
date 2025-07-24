@@ -12,10 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter, useParams } from "next/navigation";
 
 type Member = {
-  name: string;
-  avatar: string;
+  id: string;
+  full_name: string;
+  profile_picture_url?: string | null;
   status: string;
-  role: string;
+  job_title: string;
   performance?: number;
   tasksCompleted?: number;
   tasksPending?: number;
@@ -30,11 +31,24 @@ const getStatusIndicator = (status: string) => {
     }
 };
 
-const TeamCardComponent = ({ member }: { member: Member }) => {
+const TeamCardComponent = ({ member }: { member: any }) => {
     const { toast } = useToast();
     const router = useRouter();
     const params = useParams();
     const role = params.role as string;
+    
+    // Adding mock data locally for display purposes
+    const displayMember = {
+        ...member,
+        status: ['Active', 'Away', 'On Leave'][Math.floor(Math.random() * 3)],
+        performance: Math.floor(Math.random() * 40) + 60, // 60-100
+        tasksCompleted: Math.floor(Math.random() * 10) + 5,
+        tasksPending: Math.floor(Math.random() * 5),
+        avatar: member.profile_picture_url,
+        name: member.full_name,
+        role: member.job_title,
+    }
+
 
     const handleAction = (action: string) => {
         if(action === 'profile') {
@@ -42,7 +56,7 @@ const TeamCardComponent = ({ member }: { member: Member }) => {
         } else if (action === 'message') {
             toast({
                 title: `Message Sent`,
-                description: `Your message to ${member.name} has been sent.`
+                description: `Your message to ${displayMember.name} has been sent.`
             })
         }
     }
@@ -53,14 +67,14 @@ const TeamCardComponent = ({ member }: { member: Member }) => {
                 <div className="flex items-center gap-4">
                     <div className="relative">
                         <Avatar className="w-12 h-12">
-                            <AvatarImage src={member.avatar} alt={member.name} data-ai-hint="person portrait" />
-                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={displayMember.avatar} alt={displayMember.name} data-ai-hint="person portrait" />
+                            <AvatarFallback>{displayMember.name.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ${getStatusIndicator(member.status)} border-2 border-background`} />
+                        <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ${getStatusIndicator(displayMember.status)} border-2 border-background`} />
                     </div>
                     <div className="flex-1">
-                        <p className="font-semibold">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.role}</p>
+                        <p className="font-semibold">{displayMember.name}</p>
+                        <p className="text-xs text-muted-foreground">{displayMember.role}</p>
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -72,16 +86,16 @@ const TeamCardComponent = ({ member }: { member: Member }) => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                {member.performance !== undefined && (
+                {displayMember.performance !== undefined && (
                 <div className="mt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tasks:</span>
-                        <span>{member.tasksCompleted || 0} done / {member.tasksPending || 0} pending</span>
+                        <span>{displayMember.tasksCompleted || 0} done / {displayMember.tasksPending || 0} pending</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Performance:</span>
-                        <Progress value={member.performance} className="h-2 flex-1" />
-                        <span>{member.performance}%</span>
+                        <Progress value={displayMember.performance} className="h-2 flex-1" />
+                        <span>{displayMember.performance}%</span>
                     </div>
                 </div>
                 )}
