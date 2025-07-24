@@ -75,6 +75,7 @@ const prompt = ai.definePrompt({
   name: 'scoreAndParseResumePrompt',
   input: {schema: ScoreAndParseResumeInputSchema},
   output: {schema: ScoreAndParseResumeOutputSchema},
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR recruiter with experience in parsing resumes and matching candidates to job descriptions.
 
 You will be provided with a job description and a resume (as a data URI). Your tasks are:
