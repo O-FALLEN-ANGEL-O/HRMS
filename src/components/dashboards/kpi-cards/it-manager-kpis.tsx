@@ -2,11 +2,18 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { kpiData } from "@/lib/mock-data/kpis";
 import { Server, ShieldCheck, Ticket, Database } from "lucide-react";
 
+// Mock data is now hardcoded to remove dependency on the deleted kpis.ts file.
+const data = {
+    systemUptime: 99.9,
+    openTickets: 24,
+    highPriorityTickets: 3,
+    securityAlerts: 7,
+    assetCount: 512
+};
+
 export function ItManagerKpis() {
-    const data = kpiData.itManager;
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>

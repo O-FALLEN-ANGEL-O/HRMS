@@ -2,11 +2,17 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { kpiData } from "@/lib/mock-data/kpis";
 import { ClipboardList, ShieldCheck, TrendingUp, UserCheck } from "lucide-react";
 
+// Mock data is now hardcoded to remove dependency on the deleted kpis.ts file.
+const data = {
+    pendingEvaluations: 14,
+    avgTeamScore: 92.1,
+    scoreTrend: 1.5,
+    coachingSessions: 5
+};
+
 export function QaAnalystKpis() {
-    const data = kpiData.qaAnalyst;
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>

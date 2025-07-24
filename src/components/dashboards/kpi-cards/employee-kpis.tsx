@@ -2,11 +2,18 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { kpiData } from "@/lib/mock-data/kpis";
 import { CheckCircle, Calendar, Wallet } from "lucide-react";
 
+// Mock data is now hardcoded to remove dependency on the deleted kpis.ts file.
+const data = {
+    tasksCompleted: 8,
+    tasksTotal: 10,
+    leaveBalance: 15,
+    nextPayout: 4250.50,
+    payoutDate: "July 31st"
+};
+
 export function EmployeeKpis() {
-    const data = kpiData.employee;
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
