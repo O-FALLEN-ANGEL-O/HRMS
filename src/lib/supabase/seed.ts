@@ -21,13 +21,13 @@ import { mockUsers } from '../mock-data/employees';
 import * as dotenv from 'dotenv';
 
 // Ensure environment variables are loaded from .env.local
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: 'src/.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 // --- VALIDATE ENVIRONMENT VARIABLES ---
-if (!supabaseUrl || supabaseUrl === 'YOUR_SUPABASE_URL_HERE' || !supabaseServiceKey || supabaseServiceKey.includes('YOUR_SUPABASE_SERVICE_KEY')) {
+if (!supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE_URL_HERE') || !supabaseServiceKey || supabaseServiceKey.includes('YOUR_SUPABASE_SERVICE_KEY')) {
   throw new Error(
     'Supabase URL or Service Role Key is not defined or is still set to the placeholder value in .env.local. Please update it with your actual Supabase credentials.'
   );
@@ -97,8 +97,7 @@ async function seedUsersAndEmployees(departments: any[]) {
     const { data: { users: existingAuthUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     if (listError) throw listError;
     
-    const existingEmails = new Set(existingAuthUsers.map(u => u.email));
-    console.log(`   - Found ${existingEmails.size} existing auth users.`);
+    console.log(`   - Found ${existingAuthUsers.length} existing auth users.`);
 
     const newAuthUsers = [];
     const newPublicUsers = [];

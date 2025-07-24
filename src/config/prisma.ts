@@ -1,7 +1,3 @@
 
-import { PrismaClient } from '@prisma/client';
-
-// Ensures a single instance of PrismaClient is used across the application.
-const prisma = new PrismaClient();
-
-export default prisma;
+// This file has been removed as part of the transition to a full-stack Next.js application.
+// The Prisma client will be initialized in a central lib file within the new structure.
