@@ -25,3 +25,10 @@ export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<Au
 
     return { suggestedRole: 'employee' };
 }
+
+export async function addEmployeeAction(formData: FormData): Promise<{success: boolean, message?: string}> {
+    console.log("Mock Action: Adding employee with data:", Object.fromEntries(formData));
+    // Simulate a successful action
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { success: true };
+}
