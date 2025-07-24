@@ -32,15 +32,22 @@ export async function getEmployees() {
         .from('employees')
         .select(`
             *,
-            users ( email, role ),
-            departments ( name )
+            user:users(*),
+            department:departments(*)
         `);
 
     if (error) {
         console.error('Error fetching employees:', error);
         return [];
     }
-    return data;
+
+    const employees = data.map(e => ({
+        ...e,
+        users: e.user,
+        departments: e.department
+    }));
+
+    return employees;
 }
 
 export async function deactivateEmployeeAction(employeeId: string) {
