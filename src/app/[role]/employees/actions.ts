@@ -40,9 +40,6 @@ export async function getEmployees() {
         console.error("Error fetching employees:", error);
         return [];
     }
-
-    // The data shape will now be { ..., users: {...}, departments: {...} }
-    // The mapping logic in the component will handle this structure.
     return data;
 }
 

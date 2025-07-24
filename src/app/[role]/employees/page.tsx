@@ -73,10 +73,11 @@ async function AdminView({ role }: { role: string }) {
               </TableHeader>
               <TableBody>
                 {employees.map((employee) => {
+                  if (!employee) return null;
+
+                  // Safely access nested data. Supabase returns nested objects or arrays.
                   const user = Array.isArray(employee.users) ? employee.users[0] : employee.users;
                   const department = Array.isArray(employee.departments) ? employee.departments[0] : employee.departments;
-                  
-                  if (!employee) return null;
 
                   return (
                   <TableRow key={employee.id}>
@@ -114,8 +115,10 @@ async function AdminView({ role }: { role: string }) {
                           </DropdownMenuItem>
                           <DropdownMenuItem>Edit</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <form action={handleDeactivate}>
-                              <input type="hidden" name="employeeId" value={employee.id} />
+                          <form action={async () => {
+                                'use server';
+                                await deactivateEmployeeAction(employee.id);
+                            }}>
                               <button type="submit" className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
                                   Deactivate
                               </button>
