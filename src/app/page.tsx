@@ -82,9 +82,10 @@ export default function RoleSelectorPage() {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     useEffect(() => {
+        // We can shorten or remove the artificial delay now
         const timer = setTimeout(() => {
             setIsInitialLoading(false);
-        }, 4000);
+        }, 1500); // Reduced from 4000ms
         return () => clearTimeout(timer);
     }, []);
 
@@ -120,7 +121,7 @@ export default function RoleSelectorPage() {
         }
     };
     
-    if (isInitialLoading) {
+    if (authLoading || isInitialLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <LoadingLogo />

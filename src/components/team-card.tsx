@@ -105,5 +105,4 @@ const TeamCardComponent = ({ member }: { member: any }) => {
 }
 
 TeamCardComponent.displayName = 'TeamCard';
-
 export const TeamCard = React.memo(TeamCardComponent);

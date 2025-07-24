@@ -3,6 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import React from 'react';
 
 type LeaderboardCardProps = {
   rank: number;
@@ -20,7 +21,7 @@ const crownIcon = {
     bronze: '🥉'
 }
 
-export function LeaderboardCard({ name, empId, image, awards, crown, isExpanded }: LeaderboardCardProps) {
+const LeaderboardCardComponent = ({ name, empId, image, awards, crown, isExpanded }: LeaderboardCardProps) => {
 
   const content = (
     <div className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
@@ -57,3 +58,6 @@ export function LeaderboardCard({ name, empId, image, awards, crown, isExpanded 
     </Tooltip>
   );
 }
+
+LeaderboardCardComponent.displayName = 'LeaderboardCard';
+export const LeaderboardCard = React.memo(LeaderboardCardComponent);
