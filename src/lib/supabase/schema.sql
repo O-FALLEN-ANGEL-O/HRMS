@@ -1,332 +1,305 @@
---
--- Enums (Custom Types)
---
+-- ------------------------------------------------------------------------------------
+-- 1. Create custom types
+-- ------------------------------------------------------------------------------------
 
--- User and Auth Roles
-create type public.app_role as enum ('admin', 'hr', 'manager', 'employee', 'recruiter', 'guest', 'finance', 'it-manager', 'operations-manager', 'process-manager', 'team-leader', 'trainer', 'trainee', 'qa-analyst', 'account-manager');
-create type public.user_status as enum ('Active', 'Inactive', 'Pending');
+-- Custom type for user roles
+create type public.user_roles as enum (
+  'admin',
+  'hr',
+  'manager',
+  'recruiter',
+  'employee',
+  'trainee',
+  'qa-analyst',
+  'process-manager',
+  'team-leader',
+  'marketing',
+  'finance',
+  'it-manager',
+  'operations-manager',
+  'account-manager',
+  'trainer'
+);
 
--- Recruitment Status
-create type public.applicant_status as enum ('Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected');
-create type public.job_status as enum ('Draft', 'Published', 'Archived');
-create type public.offer_status as enum ('Draft', 'Sent', 'Accepted', 'Declined');
-
--- Onboarding Status
-create type public.onboarding_status as enum ('Not Started', 'In Progress', 'Completed');
-create type public.task_status as enum ('Todo', 'In Progress', 'Done');
-
--- Leave and Attendance
-create type public.leave_type as enum ('Sick Leave', 'Casual Leave', 'Paid Time Off', 'Work From Home');
+-- Custom type for leave request status
 create type public.leave_status as enum ('Pending', 'Approved', 'Rejected');
-create type public.attendance_type as enum ('Check-in', 'Check-out');
 
--- Helpdesk and Support
+-- Custom type for leave types
+create type public.leave_type as enum ('Sick Leave', 'Casual Leave', 'Paid Time Off', 'Work From Home');
+
+-- Custom type for ticket status
+create type public.ticket_status as enum ('Open', 'In Progress', 'Closed');
+
+-- Custom type for ticket priority
+create type public.ticket_priority as enum ('Low', 'Medium', 'High');
+
+-- Custom type for ticket category
 create type public.ticket_category as enum ('IT Support', 'HR Query', 'Payroll Issue', 'Facilities', 'General Inquiry');
-create type public.ticket_status as enum ('Open', 'In Progress', 'Closed', 'Resolved');
-create type public.ticket_priority as enum ('Low', 'Medium', 'High', 'Critical');
 
--- Performance
-create type public.review_status as enum ('Pending', 'In Progress', 'Completed');
+-- Custom type for assessment types
+create type public.assessment_type as enum ('mcq', 'typing', 'audio', 'voice_input', 'video_input', 'simulation');
 
---
--- Tables
---
 
--- Department Table
+-- ------------------------------------------------------------------------------------
+-- 2. Create tables
+-- ------------------------------------------------------------------------------------
+
+-- Departments table
 create table public.departments (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  created_at timestamp with time zone default now() not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-comment on table public.departments is 'Stores company departments like Engineering, HR, etc.';
+comment on table public.departments is 'Stores company departments.';
 
--- Employees Table
--- Stores profile information for each user.
+-- Users table, links to auth.users
+create table public.users (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text unique,
+  role public.user_roles default 'employee'::public.user_roles not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+comment on table public.users is 'Profile data for each user.';
+
+-- Employees table, contains profile information
 create table public.employees (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade not null,
-  department_id uuid references public.departments(id) on delete set null,
-  full_name text,
-  job_title text,
-  employee_id text unique,
+  user_id uuid unique references public.users (id) on delete cascade not null,
+  full_name text not null,
+  job_title text not null,
+  employee_id text unique not null,
+  department_id uuid references public.departments (id) on delete set null,
+  manager_id uuid references public.employees (id) on delete set null,
   phone_number text,
   profile_picture_url text,
-  status user_status default 'Pending'::user_status,
-  created_at timestamp with time zone default now() not null,
-  manager_id uuid references public.employees(id) on delete set null
+  status text default 'Active'::text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-comment on table public.employees is 'Stores profile information for each user.';
+comment on table public.employees is 'Stores detailed employee profile information.';
 
--- Users Table
--- Stores application-specific user data, linking to auth.users and employees.
-create table public.users (
-  id uuid primary key references auth.users(id) on delete cascade not null,
-  email text unique not null,
-  employee_id uuid references public.employees(id) on delete set null,
-  role app_role default 'guest'::app_role not null,
-  created_at timestamp with time zone default now() not null
-);
-comment on table public.users is 'Application-specific user data.';
-
--- Job Postings Table
-create table public.job_postings (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  department_id uuid references public.departments(id),
-  description text,
-  requirements text,
-  status job_status default 'Draft'::job_status not null,
-  posted_by uuid references public.employees(id),
-  posted_at timestamp with time zone,
-  created_at timestamp with time zone default now() not null
-);
-comment on table public.job_postings is 'Stores job openings and their details.';
-
--- Applicants Table
-create table public.applicants (
-  id uuid primary key default gen_random_uuid(),
-  job_id uuid references public.job_postings(id) on delete set null,
-  full_name text not null,
-  email text not null,
-  phone text,
-  resume_url text,
-  parsed_resume_data jsonb,
-  ai_score numeric(5, 2), -- Score from 0.00 to 100.00
-  status applicant_status default 'Applied'::applicant_status not null,
-  applied_at timestamp with time zone default now() not null
-);
-comment on table public.applicants is 'Tracks candidates for job openings.';
-
--- Interviews Table
-create table public.interviews (
-  id uuid primary key default gen_random_uuid(),
-  applicant_id uuid references public.applicants(id) on delete cascade,
-  interviewer_id uuid references public.employees(id) on delete set null,
-  scheduled_time timestamp with time zone not null,
-  duration_minutes integer default 60,
-  feedback text,
-  score numeric(5, 2),
-  created_at timestamp with time zone default now() not null
-);
-comment on table public.interviews is 'Schedules and stores feedback for interviews.';
-
--- Offers Table
-create table public.offers (
-  id uuid primary key default gen_random_uuid(),
-  applicant_id uuid references public.applicants(id) on delete cascade,
-  job_id uuid references public.job_postings(id),
-  offer_details jsonb, -- salary, start_date, etc.
-  status offer_status default 'Draft'::offer_status not null,
-  sent_at timestamp with time zone,
-  expires_at timestamp with time zone,
-  created_at timestamp with time zone default now() not null
-);
-comment on table public.offers is 'Manages job offers sent to candidates.';
-
-
--- Onboarding Checklists Table
-create table public.onboarding_checklists (
-  id uuid primary key default gen_random_uuid(),
-  employee_id uuid references public.employees(id) on delete cascade,
-  status onboarding_status default 'Not Started'::onboarding_status not null,
-  due_date date,
-  created_at timestamp with time zone default now() not null
-);
-comment on table public.onboarding_checklists is 'Tracks the overall onboarding process for a new hire.';
-
--- Onboarding Tasks Table
-create table public.onboarding_tasks (
-  id uuid primary key default gen_random_uuid(),
-  checklist_id uuid references public.onboarding_checklists(id) on delete cascade,
-  title text not null,
-  description text,
-  status task_status default 'Todo'::task_status not null,
-  assigned_to_dept_id uuid references public.departments(id),
-  completed_at timestamp with time zone
-);
-comment on table public.onboarding_tasks is 'Individual tasks within an onboarding checklist.';
-
-
--- Leave Requests Table
+-- Leave Requests table
 create table public.leave_requests (
   id uuid primary key default gen_random_uuid(),
-  employee_id uuid references public.employees(id) on delete cascade,
-  leave_type leave_type not null,
+  employee_id uuid references public.employees (id) on delete cascade not null,
+  leave_type public.leave_type not null,
   start_date date not null,
   end_date date not null,
+  days integer not null,
   reason text,
-  status leave_status default 'Pending'::leave_status not null,
-  approved_by uuid references public.employees(id),
-  created_at timestamp with time zone default now() not null
+  status public.leave_status default 'Pending'::public.leave_status not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-comment on table public.leave_requests is 'Manages employee leave requests.';
+comment on table public.leave_requests is 'Stores employee leave requests.';
 
--- Attendance Records Table
-create table public.attendance_records (
-  id uuid primary key default gen_random_uuid(),
-  employee_id uuid references public.employees(id) on delete cascade,
-  timestamp timestamp with time zone default now() not null,
-  type attendance_type not null,
-  location text,
-  verified_by_face boolean
-);
-comment on table public.attendance_records is 'Logs employee check-ins and check-outs.';
-
-
--- Payroll Records Table
-create table public.payroll (
-  id uuid primary key default gen_random_uuid(),
-  employee_id uuid references public.employees(id) on delete cascade,
-  pay_period_start date not null,
-  pay_period_end date not null,
-  gross_salary numeric(10, 2) not null,
-  deductions numeric(10, 2) default 0,
-  net_salary numeric(10, 2) not null,
-  processed_at timestamp with time zone,
-  payslip_url text
-);
-comment on table public.payroll is 'Stores historical payroll data for each employee.';
-
-
--- Performance Reviews Table
-create table public.performance_reviews (
-  id uuid primary key default gen_random_uuid(),
-  employee_id uuid references public.employees(id) on delete cascade,
-  reviewer_id uuid references public.employees(id),
-  review_period text not null, -- e.g., "Q3 2024"
-  goals text,
-  achievements text,
-  areas_for_improvement text,
-  overall_rating numeric(3, 1),
-  status review_status default 'Pending'::review_status not null,
-  completed_at timestamp with time zone
-);
-comment on table public.performance_reviews is 'Contains data for employee performance reviews.';
-
-
--- Helpdesk Tickets Table
+-- Helpdesk Tickets table
 create table public.helpdesk_tickets (
-  id uuid primary key default gen_random_uuid(),
-  requester_id uuid references public.employees(id) on delete cascade,
-  assignee_id uuid references public.employees(id),
-  subject text not null,
-  description text,
-  category ticket_category,
-  priority ticket_priority default 'Medium'::ticket_priority,
-  status ticket_status default 'Open'::ticket_status,
-  created_at timestamp with time zone default now() not null,
-  resolved_at timestamp with time zone
-);
-comment on table public.helpdesk_tickets is 'Manages support tickets from employees.';
-
--- Ticket Messages Table
-create table public.ticket_messages (
-  id uuid primary key default gen_random_uuid(),
-  ticket_id uuid references public.helpdesk_tickets(id) on delete cascade,
-  sender_id uuid references public.employees(id),
-  message text not null,
-  created_at timestamp with time zone default now() not null
-);
-comment on table public.ticket_messages is 'Stores messages related to a helpdesk ticket.';
-
--- Company Feed/Announcements Table
-create table public.company_feed (
     id uuid primary key default gen_random_uuid(),
-    author_id uuid references public.employees(id),
-    title text not null,
-    content text,
-    created_at timestamp with time zone default now() not null
+    user_id uuid references public.users(id) on delete cascade not null,
+    subject text not null,
+    description text not null,
+    status public.ticket_status default 'Open'::public.ticket_status not null,
+    priority public.ticket_priority not null,
+    category public.ticket_category not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-comment on table public.company_feed is 'Stores company-wide announcements and posts.';
+comment on table public.helpdesk_tickets is 'Stores support tickets submitted by users.';
 
---
--- Security Policies (RLS - Row-Level Security)
---
+-- Ticket Messages table
+create table public.helpdesk_ticket_messages (
+    id uuid primary key default gen_random_uuid(),
+    ticket_id uuid references public.helpdesk_tickets(id) on delete cascade not null,
+    user_id uuid references public.users(id) on delete cascade not null,
+    from_type text not null check (from_type in ('user', 'support', 'system')),
+    content text not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+comment on table public.helpdesk_ticket_messages is 'Stores messages for each helpdesk ticket.';
 
--- Enable RLS for all tables
+-- Company Feed Posts table
+create table public.company_feed_posts (
+    id uuid primary key default gen_random_uuid(),
+    author_id uuid references public.users(id) on delete cascade not null,
+    title text not null,
+    content text not null,
+    likes integer default 0,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+comment on table public.company_feed_posts is 'Stores posts for the company feed.';
+
+-- Assessments table
+create table public.assessments (
+    id uuid primary key default gen_random_uuid(),
+    title text not null,
+    process_type text not null,
+    duration integer not null, -- in minutes
+    passing_score integer not null,
+    max_attempts integer default 1 not null,
+    created_by uuid references public.users(id) on delete set null
+);
+comment on table public.assessments is 'Defines available assessments.';
+
+-- Assessment Attempts table
+create table public.assessment_attempts (
+    id uuid primary key default gen_random_uuid(),
+    assessment_id uuid references public.assessments(id) on delete cascade not null,
+    user_id uuid references public.users(id) on delete cascade not null,
+    score integer,
+    status text not null check (status in ('Not Started', 'In Progress', 'Completed')),
+    started_at timestamp with time zone,
+    completed_at timestamp with time zone
+);
+comment on table public.assessment_attempts is 'Tracks user attempts at assessments.';
+
+-- ------------------------------------------------------------------------------------
+-- 3. Create functions
+-- ------------------------------------------------------------------------------------
+
+-- Function to create a public user profile when a new auth user signs up
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.users (id, email)
+  values (new.id, new.email);
+  return new;
+end;
+$$;
+
+-- Trigger to call the function on new user signup
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+
+-- ------------------------------------------------------------------------------------
+-- 4. Enable Row Level Security (RLS)
+-- ------------------------------------------------------------------------------------
 alter table public.departments enable row level security;
-alter table public.employees enable row level security;
 alter table public.users enable row level security;
-alter table public.job_postings enable row level security;
-alter table public.applicants enable row level security;
-alter table public.interviews enable row level security;
-alter table public.offers enable row level security;
-alter table public.onboarding_checklists enable row level security;
-alter table public.onboarding_tasks enable row level security;
+alter table public.employees enable row level security;
 alter table public.leave_requests enable row level security;
-alter table public.attendance_records enable row level security;
-alter table public.payroll enable row level security;
-alter table public.performance_reviews enable row level security;
 alter table public.helpdesk_tickets enable row level security;
-alter table public.ticket_messages enable row level security;
-alter table public.company_feed enable row level security;
+alter table public.helpdesk_ticket_messages enable row level security;
+alter table public.company_feed_posts enable row level security;
+alter table public.assessments enable row level security;
+alter table public.assessment_attempts enable row level security;
 
 
--- Helper function to get the role of the current user
-create or replace function public.get_my_role()
-returns app_role
-language sql
-security definer
-set search_path = public
-as $$
-  select role from public.users where id = auth.uid()
-$$;
+-- ------------------------------------------------------------------------------------
+-- 5. Define RLS Policies
+-- ------------------------------------------------------------------------------------
 
--- Helper function to get the employee ID of the current user
-create or replace function public.get_my_employee_id()
-returns uuid
-language sql
-security definer
-set search_path = public
-as $$
-  select employee_id from public.users where id = auth.uid()
-$$;
+-- Policies for `departments` table
+create policy "Authenticated users can read departments" on public.departments
+  for select using (auth.role() = 'authenticated');
+create policy "Admins and HR can manage departments" on public.departments
+  for all using (auth.uid() in (select id from public.users where role in ('admin', 'hr')));
 
--- Policies for 'employees' table
--- Users can see their own profile.
-create policy "Users can view their own profile" on public.employees for select
-  using (id = public.get_my_employee_id());
--- Admins and HR can see all profiles.
-create policy "Admins and HR can view all profiles" on public.employees for select
-  using (public.get_my_role() IN ('admin', 'hr'));
--- Users can update their own profile.
-create policy "Users can update their own profile" on public.employees for update
-  using (id = public.get_my_employee_id());
--- Admins and HR can update all profiles.
-create policy "Admins and HR can update all profiles" on public.employees for update
-  using (public.get_my_role() IN ('admin', 'hr'));
+-- Policies for `users` table
+create policy "Users can view their own data" on public.users
+  for select using (auth.uid() = id);
+create policy "Admins and HR can view all users" on public.users
+  for select using (auth.uid() in (select id from public.users where role in ('admin', 'hr')));
+
+-- Policies for `employees` table
+create policy "Employees can view their own profile" on public.employees
+  for select using (auth.uid() = user_id);
+create policy "Employees can view profiles of others (read-only)" on public.employees
+  for select using (auth.role() = 'authenticated');
+create policy "Admins and HR can manage all employee profiles" on public.employees
+  for all using (auth.uid() in (select id from public.users where role in ('admin', 'hr')));
+create policy "Managers can view their direct reports" on public.employees
+  for select using (manager_id = (select id from public.employees where user_id = auth.uid()));
+
+-- Policies for `leave_requests` table
+create policy "Employees can manage their own leave requests" on public.leave_requests
+  for all using (employee_id = (select id from public.employees where user_id = auth.uid()));
+create policy "Managers can view leave requests of their reports" on public.leave_requests
+  for select using ((select department_id from public.employees where id = employee_id) in 
+    (select department_id from public.employees where user_id = auth.uid()));
+create policy "Admins and HR can manage all leave requests" on public.leave_requests
+  for all using (auth.uid() in (select id from public.users where role in ('admin', 'hr')));
+
+-- Policies for `helpdesk_tickets` table
+create policy "Users can manage their own helpdesk tickets" on public.helpdesk_tickets
+  for all using (auth.uid() = user_id);
+create policy "IT and HR can view all tickets" on public.helpdesk_tickets
+  for select using (auth.uid() in (select id from public.users where role in ('it-manager', 'hr', 'admin')));
+
+-- Policies for `company_feed_posts` table
+create policy "Authenticated users can read posts" on public.company_feed_posts
+  for select using (auth.role() = 'authenticated');
+create policy "Admins and HR can create posts" on public.company_feed_posts
+  for insert with check (auth.uid() in (select id from public.users where role in ('admin', 'hr')));
+  
+-- Policies for `assessments` and `assessment_attempts`
+create policy "Authenticated users can view assessments" on public.assessments
+    for select using (auth.role() = 'authenticated');
+create policy "HR and trainers can manage assessments" on public.assessments
+    for all using (auth.uid() in (select id from public.users where role in ('hr', 'trainer', 'admin')));
+create policy "Users can manage their own attempts" on public.assessment_attempts
+    for all using (auth.uid() = user_id);
+create policy "HR and trainers can view all attempts" on public.assessment_attempts
+    for select using (auth.uid() in (select id from public.users where role in ('hr', 'trainer', 'admin')));
 
 
--- Policies for 'leave_requests' table
--- Employees can view their own leave requests.
-create policy "Employees can view own leave requests" on public.leave_requests for select
-  using (employee_id = public.get_my_employee_id());
--- Employees can create their own leave requests.
-create policy "Employees can create leave requests" on public.leave_requests for insert
-  with check (employee_id = public.get_my_employee_id());
--- Managers can see their team's leave requests (this requires manager_id to be set up correctly).
-create policy "Managers can view team leave requests" on public.leave_requests for select
-  using (employee_id in (select id from public.employees where manager_id = public.get_my_employee_id()));
--- Admins and HR can see all leave requests.
-create policy "Admins and HR can manage all leave requests" on public.leave_requests for all
-  using (public.get_my_role() IN ('admin', 'hr'));
+-- ------------------------------------------------------------------------------------
+-- 6. Insert Seed Data
+-- ------------------------------------------------------------------------------------
 
+-- Insert Departments
+insert into public.departments (name) values
+  ('Administration'), ('Human Resources'), ('Engineering'),
+  ('Quality Assurance'), ('Process Excellence'), ('Customer Support'),
+  ('Marketing'), ('Finance'), ('IT'), ('Operations'), ('Client Services'),
+  ('Learning & Development');
 
--- Policies for 'helpdesk_tickets'
--- Users can manage their own tickets.
-create policy "Users can manage their own helpdesk tickets" on public.helpdesk_tickets for all
-  using (requester_id = public.get_my_employee_id());
--- Admins, HR, IT can see all tickets.
-create policy "Support roles can view all tickets" on public.helpdesk_tickets for select
-  using (public.get_my_role() IN ('admin', 'hr', 'it-manager', 'finance'));
+-- The rest of the seed data will be added automatically when a user signs up.
+-- You can add specific users and employees here if you need to pre-populate the database for testing.
+-- Example of adding a user and employee record:
 
+-- -- Step 1: Create an auth user in the Supabase Dashboard (Authentication -> Users)
+-- -- Note down the user's UID. Let's assume it's '8d1f7c8e-8a2c-4b5a-9a9a-1b1c3d4e5f6a'
 
--- Policies for 'company_feed'
--- All authenticated users can read the feed.
-create policy "Authenticated users can read the company feed" on public.company_feed for select
-  using (auth.role() = 'authenticated');
--- Admins and HR can post to the feed.
-create policy "Admins and HR can create feed posts" on public.company_feed for insert
-  with check (public.get_my_role() IN ('admin', 'hr'));
+-- -- Step 2: Insert into public.users and public.employees using the UID
+-- with dept as (select id from public.departments where name = 'Engineering')
+-- insert into public.users (id, email, role)
+-- values ('8d1f7c8e-8a2c-4b5a-9a9a-1b1c3d4e5f6a', 'test.manager@example.com', 'manager');
 
--- Add other policies as needed. By default, no one can access anything.
+-- with usr as (select id from public.users where email = 'test.manager@example.com'),
+--      dept as (select id from public.departments where name = 'Engineering')
+-- insert into public.employees (user_id, full_name, job_title, employee_id, department_id)
+-- values ((select id from usr), 'Test Manager', 'Engineering Manager', 'PEPTEST1', (select id from dept));
+
+-- You would repeat this for all the roles you want to pre-populate.
+-- The current setup will create a basic user record on signup, which can then be updated.
+
+-- The following is an example based on the mock data. You MUST create these users
+-- in the Supabase Auth dashboard first and then replace the UUIDs below.
+
+-- -- Assuming you've created users in Supabase Auth and have their UUIDs:
+-- with admin_user as (
+--   insert into public.users (id, email, role)
+--   values ('<admin_uuid_here>', 'admin@optitalent.com', 'admin') returning id
+-- ),
+-- admin_dept as (
+--   select id from public.departments where name = 'Administration'
+-- )
+-- insert into public.employees (user_id, full_name, job_title, employee_id, department_id)
+-- select id, 'Admin User', 'System Administrator', 'PEP0001', (select id from admin_dept) from admin_user;
+
+-- with hr_user as (
+--   insert into public.users (id, email, role)
+--   values ('<hr_uuid_here>', 'hr@optitalent.com', 'hr') returning id
+-- ),
+-- hr_dept as (
+--   select id from public.departments where name = 'Human Resources'
+-- )
+-- insert into public.employees (user_id, full_name, job_title, employee_id, department_id)
+-- select id, 'Jackson Lee', 'HR Manager', 'PEP0002', (select id from hr_dept) from hr_user;
+
+-- -- etc. for all other roles...
+```
