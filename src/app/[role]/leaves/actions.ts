@@ -1,77 +1,120 @@
 
 'use server';
 
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
 import { revalidatePath } from "next/cache";
 
-// Mock data, in a real app this would be a database.
-let mockLeaveRequests = [
-    { id: 'leave-001', employee_id: 'user-012', employees: { full_name: 'Anika Sharma' }, leave_type: 'Paid Time Off', start_date: '2024-08-05', end_date: '2024-08-07', days: 3, reason: 'Family vacation', status: 'Approved' },
-    { id: 'leave-002', employee_id: 'user-013', employees: { full_name: 'Rohan Verma' }, leave_type: 'Sick Leave', start_date: '2024-08-01', end_date: '2024-08-01', days: 1, reason: 'Fever', status: 'Approved' },
-    { id: 'leave-003', employee_id: 'user-014', employees: { full_name: 'Priya Mehta' }, leave_type: 'Casual Leave', start_date: '2024-08-12', end_date: '2024-08-12', days: 1, reason: 'Personal appointment', status: 'Pending' },
-];
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Server not configured for database access.');
+    }
+    return createClient<Database>(supabaseUrl, supabaseServiceKey);
+}
 
 export async function getLeaveRequests(employeeId?: string, status?: 'Pending' | 'Approved' | 'Rejected') {
-    let requests = mockLeaveRequests;
+    const supabase = getSupabaseAdmin();
+    let query = supabase
+        .from('leave_requests')
+        .select(`
+            *,
+            employees ( full_name )
+        `);
+    
     if (employeeId) {
-        requests = requests.filter(r => r.employee_id === employeeId);
+        query = query.eq('employee_id', employeeId);
     }
     if (status) {
-        requests = requests.filter(r => r.status === status);
+        query = query.eq('status', status);
     }
-    return Promise.resolve(requests);
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if(error) {
+        console.error("Error fetching leave requests:", error);
+        return [];
+    }
+    return data;
 }
 
 export async function getLeaveBalances(employeeId: string) {
-    const approvedLeaves = mockLeaveRequests.filter(r => r.employee_id === employeeId && r.status === 'Approved');
+    const supabase = getSupabaseAdmin();
+    
+    const { data: approvedLeaves, error } = await supabase
+        .from('leave_requests')
+        .select('leave_type, days')
+        .eq('employee_id', employeeId)
+        .eq('status', 'Approved');
+
+    if(error) {
+        console.error("Error fetching leave balances:", error);
+        return { sick: 0, casual: 0, pto: 0 };
+    }
     
     const sickUsed = approvedLeaves.filter(r => r.leave_type === 'Sick Leave').reduce((acc, r) => acc + r.days, 0);
     const casualUsed = approvedLeaves.filter(r => r.leave_type === 'Casual Leave').reduce((acc, r) => acc + r.days, 0);
     const ptoUsed = approvedLeaves.filter(r => r.leave_type === 'Paid Time Off').reduce((acc, r) => acc + r.days, 0);
 
-    return Promise.resolve({
+    // In a real app, these allowances would come from the database per country policy
+    return {
         sick: 7 - sickUsed,
         casual: 12 - casualUsed,
         pto: 20 - ptoUsed
-    });
+    };
 }
 
 export async function handleLeaveAction(requestId: string, status: 'Approved' | 'Rejected') {
-    const requestIndex = mockLeaveRequests.findIndex(r => r.id === requestId);
-    if(requestIndex > -1) {
-        mockLeaveRequests[requestIndex].status = status;
-        revalidatePath('/[role]/leaves', 'page');
-        return { success: true };
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+        .from('leave_requests')
+        .update({ status })
+        .eq('id', requestId);
+    
+    if(error) {
+        console.error("Error updating leave request:", error);
+        return { success: false, message: error.message };
     }
-    return { success: false, message: 'Request not found' };
+    
+    revalidatePath('/[role]/leaves', 'page');
+    return { success: true };
 }
 
 
 export async function applyForLeaveAction(formData: FormData) {
+    const supabase = getSupabaseAdmin();
     const fromDate = formData.get('from-date') as string;
     const toDate = formData.get('to-date') as string;
+    // This should come from the logged-in user context
+    const mockEmployeeId = 'a1b2c3d4-e5f6-7890-1234-567890abcdef'; // Corresponds to Anika Sharma in seed
 
     const rawData = {
       leaveType: formData.get('leave-type') as "Sick Leave" | "Casual Leave" | "Paid Time Off" | "Work From Home",
-      fromDate: fromDate,
-      toDate: toDate,
+      fromDate: new Date(fromDate),
+      toDate: new Date(toDate),
       reason: formData.get('reason') as string,
     };
     
-    const days = (new Date(rawData.toDate).getTime() - new Date(rawData.fromDate).getTime()) / (1000 * 3600 * 24) + 1;
+    const days = (rawData.toDate.getTime() - rawData.fromDate.getTime()) / (1000 * 3600 * 24) + 1;
 
-    const newRequest = {
-        id: `leave-${Date.now()}`,
-        employee_id: 'user-012', // Mock current user
-        employees: { full_name: 'Anika Sharma' },
-        leave_type: rawData.leaveType,
-        start_date: new Date(rawData.fromDate).toISOString(),
-        end_date: new Date(rawData.toDate).toISOString(),
-        days: days,
-        reason: rawData.reason,
-        status: 'Pending' as const,
-    };
-    
-    mockLeaveRequests.unshift(newRequest);
+    const { error } = await supabase
+        .from('leave_requests')
+        .insert({
+            employee_id: mockEmployeeId,
+            leave_type: rawData.leaveType,
+            start_date: rawData.fromDate.toISOString(),
+            end_date: rawData.toDate.toISOString(),
+            days: days,
+            reason: rawData.reason,
+            status: 'Pending',
+        });
+
+    if(error) {
+        console.error("Error applying for leave:", error);
+        return { success: false, message: error.message };
+    }
 
     revalidatePath('/[role]/leaves', 'page');
     return { success: true };

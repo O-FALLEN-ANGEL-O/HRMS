@@ -1,9 +1,21 @@
 
 'use server';
 
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
 import type { AutoAssignRolesInput, AutoAssignRolesOutput } from "@/ai/flows/auto-assign-roles";
-import { mockEmployees } from "@/lib/mock-data/employees";
 import { revalidatePath } from "next/cache";
+
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Server not configured for database access.');
+    }
+    return createClient<Database>(supabaseUrl, supabaseServiceKey);
+}
+
 
 export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<AutoAssignRolesOutput> {
     console.log("AI Action (mock): Suggesting role for", input);
@@ -27,51 +39,117 @@ export async function suggestRoleAction(input: AutoAssignRolesInput): Promise<Au
 
 
 export async function getEmployees() {
-    // Reverted to mock data to fix persistent db error
-    return mockEmployees.map(e => ({
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+        .from('employees')
+        .select(`
+            *,
+            user:users(*),
+            department:departments(*)
+        `);
+    
+    if (error) {
+        console.error("Error fetching employees:", error);
+        return [];
+    }
+
+    // The shape needs to match what the component expects
+    // The query above already joins the necessary tables.
+    return data.map(e => ({
         ...e,
-        user: { email: e.email, role: e.role },
-        department: { name: e.department.name }
+        // The component expects user.role, let's ensure it's there
+        user: e.user ? e.user : { role: e.role }, 
+        department: e.department ? e.department : { name: 'N/A' },
     }));
 }
 
 export async function deactivateEmployeeAction(employeeId: string) {
-    // This is a mock action
-    console.log(`Deactivating employee ${employeeId}`);
-    const employee = mockEmployees.find(e => e.id === employeeId);
-    if(employee) {
-        employee.status = 'Inactive';
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+        .from('employees')
+        .update({ status: 'Inactive' })
+        .eq('id', employeeId);
+
+    if (error) {
+        console.error("Error deactivating employee:", error);
+        return { success: false, message: error.message };
     }
+    
     revalidatePath('/[role]/employees', 'page');
     return { success: true };
 }
 
 
 export async function addEmployeeAction(formData: FormData) {
-    // This is a mock action
+    const supabase = getSupabaseAdmin();
+    
     const rawFormData = {
         name: formData.get('name') as string,
         email: formData.get('email') as string,
         jobTitle: formData.get('jobTitle') as string,
         departmentName: formData.get('department') as string,
         role: formData.get('role') as any,
-    }
-    console.log("Adding new employee (mock):", rawFormData);
-
-    const newEmployee = {
-        id: `profile-${Date.now()}`,
-        full_name: rawFormData.name,
-        email: rawFormData.email,
-        job_title: rawFormData.jobTitle,
-        department: { name: rawFormData.departmentName },
-        department_id: `d-${Date.now()}`,
-        role: rawFormData.role,
-        employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
-        status: 'Active' as 'Active',
     };
+    console.log("Adding new employee:", rawFormData);
 
-    mockEmployees.push(newEmployee);
+    // 1. Find department
+    const { data: department, error: deptError } = await supabase
+        .from('departments')
+        .select('id')
+        .eq('name', rawFormData.departmentName)
+        .single();
+        
+    if(deptError || !department) {
+        console.error("Department not found:", deptError);
+        return { success: false, message: "Department not found" };
+    }
     
+    // 2. Create auth user
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: rawFormData.email,
+        password: 'Password123!', // Default password
+        email_confirm: true,
+        user_metadata: { full_name: rawFormData.name }
+    });
+
+    if (authError || !authData.user) {
+        console.error("Error creating auth user:", authError);
+        return { success: false, message: authError?.message || "Could not create user." };
+    }
+    
+    // 3. Create public user row
+    const { error: publicUserError } = await supabase
+        .from('users')
+        .insert({ id: authData.user.id, email: rawFormData.email, role: rawFormData.role });
+
+    if(publicUserError) {
+         console.error("Error creating public user:", publicUserError);
+        // Attempt to clean up the auth user
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        return { success: false, message: publicUserError.message };
+    }
+    
+    // 4. Create employee profile
+     const { error: employeeError } = await supabase
+        .from('employees')
+        .insert({
+            user_id: authData.user.id,
+            full_name: rawFormData.name,
+            job_title: rawFormData.jobTitle,
+            department_id: department.id,
+            employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
+            status: 'Active',
+            email: rawFormData.email, // Denormalized for convenience
+        });
+
+    if(employeeError) {
+        console.error("Error creating employee profile:", employeeError);
+        // Clean up created records
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        // The public.users row will be deleted by cascade
+        return { success: false, message: employeeError.message };
+    }
+
     revalidatePath('/[role]/employees', 'page');
     return { success: true };
 }

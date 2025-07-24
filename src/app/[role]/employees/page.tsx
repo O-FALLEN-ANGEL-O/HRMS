@@ -26,10 +26,12 @@ import { TeamCard } from '@/components/team-card';
 import { Loader2 } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
 import AddEmployeeButton from '@/components/employees/add-employee-button';
+import { useAuth } from '@/hooks/use-auth';
 
 type Employee = Awaited<ReturnType<typeof getEmployees>>[0];
 
 function DeactivateMenuItem({ employeeId, employeeName }: { employeeId: string, employeeName: string }) {
+    
     const handleDeactivate = async () => {
         'use server';
         // In a real app, you might want a confirmation dialog here.
@@ -43,6 +45,17 @@ function DeactivateMenuItem({ employeeId, employeeName }: { employeeId: string, 
 
 async function AdminView({ role }: { role: string }) {
     const employees = await getEmployees();
+
+    if (!employees || employees.length === 0) {
+        return (
+             <Card>
+                <CardContent className="p-10 text-center">
+                    <p className="text-muted-foreground">No employees found in the database. Try seeding the data.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <Card>
           <CardContent>
@@ -65,7 +78,7 @@ async function AdminView({ role }: { role: string }) {
                       <div className="flex items-center gap-3">
                         <Avatar className="hidden h-9 w-9 sm:flex">
                           <AvatarImage src={employee.profile_picture_url || undefined} alt="Avatar" data-ai-hint="person avatar" />
-                          <AvatarFallback>{employee.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback>{employee.full_name?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <div className="grid gap-0.5">
                           <p className="font-medium">{employee.full_name}</p>
@@ -109,6 +122,16 @@ async function AdminView({ role }: { role: string }) {
 }
 
 function TeamView({ members }: { members: Employee[] }) {
+    if (members.length === 0) {
+       return (
+             <Card>
+                <CardContent className="p-10 text-center">
+                    <p className="text-muted-foreground">No team members found for your department.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {members.map((member: any) => (
@@ -122,11 +145,11 @@ function TeamView({ members }: { members: Employee[] }) {
 export default async function EmployeesPage({ params }: { params: { role: string } }) {
   const role = params.role;
   const isTeamView = role === 'manager' || role === 'team-leader' || role === 'trainer';
-
-  // We fetch all employees and filter on the client for the team view for simplicity
-  // In a real app, you'd fetch only the relevant team members.
+  
   const employees = await getEmployees();
-
+  
+  // In a real app, you'd fetch only the relevant team members based on the logged-in user.
+  // We filter on the client for simplicity.
   const teamMembers = isTeamView ? employees.filter(e => e.department?.name === 'Engineering' && e.user?.role !== 'manager') : [];
 
   return (
@@ -140,7 +163,9 @@ export default async function EmployeesPage({ params }: { params: { role: string
             <AddEmployeeButton />
         )}
       </div>
-      {isTeamView ? <TeamView members={teamMembers} /> : <AdminView role={role} />}
+      <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+        {isTeamView ? <TeamView members={teamMembers} /> : <AdminView role={role} />}
+      </Suspense>
     </div>
   )
 }

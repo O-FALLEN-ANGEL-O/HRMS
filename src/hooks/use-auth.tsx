@@ -3,7 +3,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers, type User } from '@/lib/mock-data/employees';
+import type { User } from '@/lib/mock-data/employees';
+import { getUserProfileAction } from '@/app/actions';
+
 
 interface AuthContextType {
   user: User | null;
@@ -40,47 +42,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (employeeId: string) => {
     setLoading(true);
-    const userToLogin = mockUsers.find(u => u.profile.employee_id === employeeId);
+    const { user: userToLogin, error } = await getUserProfileAction(employeeId);
 
     if (userToLogin) {
-      setUser(userToLogin);
+      setUser(userToLogin as User);
       sessionStorage.setItem('authUser', JSON.stringify(userToLogin));
       router.push(`/${userToLogin.role}/dashboard`);
       setLoading(false);
       return { error: null };
     } else {
       setLoading(false);
-      return { error: { message: "Invalid Employee ID." } };
+      return { error: { message: error || "Invalid Employee ID." } };
     }
   };
   
   const signUp = async (data: any) => {
     setLoading(true);
-    const { email, password, firstName, lastName } = data;
+    // This is a mock function and needs to be connected to Supabase auth signup
+    console.log("Mock sign up with:", data);
+    // Simulate a network delay
+    await new Promise(res => setTimeout(res, 1000));
     
-    const newUser: User = {
-        id: `user-${Date.now()}`,
-        email,
-        role: 'employee',
-        profile: {
-            id: `profile-${Date.now()}`,
-            full_name: `${firstName} ${lastName}`,
-            email,
-            job_title: 'New Hire',
-            employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
-            status: 'Active',
-            role: 'employee',
-            department_id: "d-001",
-            department: { name: "Engineering" },
-            profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
-            phone_number: '123-456-7890'
-        }
-    };
-    
-    mockUsers.push(newUser);
-    setUser(newUser);
-    sessionStorage.setItem('authUser', JSON.stringify(newUser));
-    router.push(`/${newUser.role}/dashboard`);
+    // For now, just log in as a default employee for demo purposes
+    await login('PEP0012');
     setLoading(false);
     return { error: null };
   }
