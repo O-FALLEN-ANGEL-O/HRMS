@@ -24,14 +24,14 @@ const EmployeeDetailsCard = dynamic(() => import('@/components/employee-details-
   ssr: false,
 });
 
-const RecruiterKpis = dynamic(() => import('@/components/dashboards/kpi-cards/recruiter-kpis'), { ssr: false });
-const ManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/manager-kpis'), { ssr: false });
-const EmployeeKpis = dynamic(() => import('@/components/dashboards/kpi-cards/employee-kpis'), { ssr: false });
-const FinanceKpis = dynamic(() => import('@/components/dashboards/kpi-cards/finance-kpis'), { ssr: false });
-const ItManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/it-manager-kpis'), { ssr: false });
-const OperationsManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/operations-manager-kpis'), { ssr: false });
-const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa-analyst-kpis'), { ssr: false });
-const ProcessManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/process-manager-kpis'), { ssr: false });
+const RecruiterKpis = dynamic(() => import('@/components/dashboards/kpi-cards/recruiter-kpis').then(mod => mod.RecruiterKpis), { ssr: false });
+const ManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/manager-kpis').then(mod => mod.ManagerKpis), { ssr: false });
+const EmployeeKpis = dynamic(() => import('@/components/dashboards/kpi-cards/employee-kpis').then(mod => mod.EmployeeKpis), { ssr: false });
+const FinanceKpis = dynamic(() => import('@/components/dashboards/kpi-cards/finance-kpis').then(mod => mod.FinanceKpis), { ssr: false });
+const ItManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/it-manager-kpis').then(mod => mod.ItManagerKpis), { ssr: false });
+const OperationsManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/operations-manager-kpis').then(mod => mod.OperationsManagerKpis), { ssr: false });
+const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa-analyst-kpis').then(mod => mod.QaAnalystKpis), { ssr: false });
+const ProcessManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/process-manager-kpis').then(mod => mod.ProcessManagerKpis), { ssr: false });
 
 const celebrations = [
     { type: 'Birthday', name: 'Anika Sharma', avatar: `https://ui-avatars.com/api/?name=Anika+Sharma&background=random`, role: "Software Engineer" },
@@ -259,4 +259,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
