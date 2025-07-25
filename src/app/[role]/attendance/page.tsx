@@ -1,238 +1,203 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { LogIn, LogOut, CameraOff, MapPin, Loader2, UserCheck, ShieldAlert } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { verifyFaceAction } from './actions';
+import { Calendar } from '@/components/ui/calendar';
+import { subDays, addDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Check, X, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'next/navigation';
 
-// In a real app, this URI would come from user data, pointing to a secure storage location.
-// For this prototype, we use a placeholder that will resolve to an image.
-const MOCK_PROFILE_IMAGE_URI = 'https://placehold.co/400x400.png';
+const ApplyLeaveDialog = dynamic(() => import('@/components/leaves/apply-leave-dialog'), {
+    loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Apply for Leave</Button>,
+    ssr: false
+});
 
-type AttendanceLog = {
-  type: 'check-in' | 'check-out';
-  time: string;
-  verified: boolean;
+
+const mockLeaveRequests = [
+    { id: 'LR-001', employee: 'Anika Sharma', type: 'Sick Leave', dates: '15/07/24 - 16/07/24', days: 2, reason: 'Flu', status: 'Approved' },
+    { id: 'LR-002', employee: 'Rohan Verma', type: 'Casual Leave', dates: '22/07/24 - 26/07/24', days: 5, reason: 'Family vacation', status: 'Approved' },
+    { id: 'LR-003', employee: 'Priya Mehta', type: 'Work From Home', dates: '29/07/24 - 29/07/24', days: 1, reason: 'Plumber visit', status: 'Pending' },
+];
+
+const getStatusBadge = (status: string) => {
+    switch (status) {
+    case 'Approved':
+        return <Badge variant="default" className='bg-green-500 hover:bg-green-600'>Approved</Badge>;
+    case 'Pending':
+        return <Badge variant="secondary">Pending</Badge>;
+    case 'Rejected':
+        return <Badge variant="destructive">Rejected</Badge>;
+    default:
+        return <Badge>{status}</Badge>;
+    }
 };
 
-export default function AttendancePage() {
-  const [status, setStatus] = useState('Checked Out');
-  const [lastActionTime, setLastActionTime] = useState<string | null>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [attendanceLog, setAttendanceLog] = useState<AttendanceLog[]>([]);
-  
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const getCameraPermission = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.error('Camera API not supported.');
-        setHasCameraPermission(false);
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-        setHasCameraPermission(false);
-      }
+function LeaveActionButtons({ requestId }: { requestId: string }) {
+    const { toast } = useToast();
+    const handleAction = (status: 'Approved' | 'Rejected') => {
+        toast({ title: 'Action Triggered', description: `Request ${requestId} has been ${status}.` });
     };
 
-    getCameraPermission();
+    return (
+        <div className='flex gap-2 justify-end'>
+            <Button variant="outline" size="icon" className='border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600' onClick={() => handleAction('Approved')}><Check className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className='border-red-500 text-red-500 hover:bg-red-100 hover:text-red-600' onClick={() => handleAction('Rejected')}><X className="h-4 w-4" /></Button>
+        </div>
+    );
+}
 
-    return () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-            const stream = videoRef.current.srcObject as MediaStream;
-            stream.getTracks().forEach(track => track.stop());
-        }
-    }
-  }, []);
-  
-  const captureImage = (): string | null => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      if (context) {
-        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        return canvas.toDataURL('image/jpeg');
-      }
-    }
-    return null;
-  };
+const attendanceData = {
+    present: [new Date(), subDays(new Date(), 1), subDays(new Date(), 4)],
+    absent: [subDays(new Date(), 2)],
+    leave: [subDays(new Date(), 8), subDays(new Date(), 9), subDays(new Date(), 10)],
+    dayOff: [subDays(new Date(), 6), subDays(new Date(), 7)],
+    holidays: [subDays(new Date(), 3)],
+    halfDay: [subDays(new Date(), 5)],
+};
 
-  const handleAction = async (type: 'check-in' | 'check-out') => {
-    setIsProcessing(true);
-    const captureImageUri = captureImage();
+const attendanceLog = [
+    { date: '2024-07-29', checkIn: '09:01 AM', checkOut: '06:05 PM', hours: '9h 4m' },
+    { date: '2024-07-28', checkIn: '09:05 AM', checkOut: '06:00 PM', hours: '8h 55m' },
+    { date: '2024-07-27', checkIn: '-', checkOut: '-', hours: 'Absent' },
+    { date: '2024-07-26', checkIn: '09:15 AM', checkOut: '06:10 PM', hours: '8h 55m' },
+];
 
-    if (!captureImageUri) {
-      toast({ variant: 'destructive', title: 'Capture Failed', description: 'Could not capture image from camera.' });
-      setIsProcessing(false);
-      return;
-    }
+
+export default function AttendancePage() {
+    const params = useParams();
+    const role = params.role as string;
+    const isManager = role === 'manager' || role === 'hr' || role === 'admin';
     
-    // In a real app, you would fetch a data URI for the user's actual profile photo.
-    // For now, we simulate this by fetching the placeholder and converting it to a data URI.
-    const response = await fetch(MOCK_PROFILE_IMAGE_URI);
-    const blob = await response.blob();
-    const profileImageUri = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
+    const applyForLeaveAction = async (formData: FormData) => {
+        console.log("Mock Action: Applying for leave with data:", Object.fromEntries(formData));
+        return { success: true };
+    };
 
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Attendance Calendar</CardTitle>
+                    <CardDescription>View your monthly attendance, leaves, and holidays.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Calendar
+                        mode="multiple"
+                        modifiers={attendanceData}
+                        modifiersClassNames={{
+                            present: 'rdp-day_present',
+                            absent: 'rdp-day_absent',
+                            leave: 'rdp-day_leave',
+                            dayOff: 'rdp-day_dayOff',
+                            holidays: 'rdp-day_holiday',
+                            halfDay: 'rdp-day_half-day',
+                        }}
+                    />
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center p-4 border-t mt-4 text-sm">
+                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500"></span>Present</div>
+                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500"></span>Absent</div>
+                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-yellow-500"></span>Leave</div>
+                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
+                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-muted-foreground/30"></span>Week Off</div>
+                    </div>
+                </CardContent>
+            </Card>
 
-    try {
-      const verificationResult = await verifyFaceAction({
-        profileImageUri: profileImageUri,
-        captureImageUri,
-      });
-
-      if (verificationResult.isSamePerson && verificationResult.confidence > 0.7) {
-        const currentTime = new Date().toLocaleTimeString();
-        setStatus(type === 'check-in' ? 'Checked In' : 'Checked Out');
-        setLastActionTime(currentTime);
-        setAttendanceLog(prev => [{ type, time: currentTime, verified: true }, ...prev]);
-        toast({
-          title: 'Success',
-          description: `Verified and checked ${type === 'check-in' ? 'in' : 'out'} at ${currentTime}.`,
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Verification Failed',
-          description: verificationResult.reasoning || 'Could not verify your identity. Please try again.',
-        });
-      }
-    } catch(err) {
-         toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: (err as Error).message,
-        });
-    } finally {
-        setIsProcessing(false);
-    }
-  };
-
-  return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
-    <Card className="lg:col-span-2">
-        <CardHeader>
-        <CardTitle>Live Check-in / Check-out</CardTitle>
-        <CardDescription>
-            Your identity will be verified using your profile picture. Look at the camera and click the appropriate button.
-        </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-            <div className="relative aspect-square w-full max-w-sm mx-auto bg-muted rounded-lg overflow-hidden border">
-                <video ref={videoRef} className="h-full w-full object-cover scale-x-[-1]" autoPlay muted playsInline />
-                {!hasCameraPermission && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4">
-                    <CameraOff className="h-12 w-12 mb-4" />
-                    <h3 className="text-lg font-semibold">Camera Access Denied</h3>
-                    <p className="text-center text-sm">Please enable camera permissions in your browser settings to use this feature.</p>
-                </div>
-                )}
-            </div>
-            <div className="relative aspect-square w-full max-w-sm mx-auto bg-muted rounded-lg overflow-hidden border flex flex-col items-center justify-center">
-                <Image src={MOCK_PROFILE_IMAGE_URI} alt="Profile" width={400} height={400} className="h-full w-full object-cover" data-ai-hint="person face" />
-                <Badge variant="secondary" className="absolute bottom-2">Your Profile Picture</Badge>
-            </div>
+            <Tabs defaultValue="log">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="log">Attendance Log</TabsTrigger>
+                    <TabsTrigger value="requests">Leave Requests</TabsTrigger>
+                </TabsList>
+                <TabsContent value="log">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Attendance Log</CardTitle>
+                                <CardDescription>Your check-in and check-out history.</CardDescription>
+                            </div>
+                            <Button><Plus className="mr-2 h-4 w-4"/> Request Regularization</Button>
+                        </CardHeader>
+                        <CardContent>
+                             <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Check-in</TableHead>
+                                        <TableHead>Check-out</TableHead>
+                                        <TableHead>Working Hours</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {attendanceLog.map((log) => (
+                                        <TableRow key={log.date}>
+                                            <TableCell>{log.date}</TableCell>
+                                            <TableCell>{log.checkIn}</TableCell>
+                                            <TableCell>{log.checkOut}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={log.hours === 'Absent' ? 'destructive' : 'outline'}>{log.hours}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="requests">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <div>
+                            <CardTitle>Leave Requests</CardTitle>
+                            <CardDescription>{isManager ? "All leave requests from your team." : "Your leave request history."}</CardDescription>
+                          </div>
+                          <Suspense fallback={<Button disabled>Loading...</Button>}>
+                             <ApplyLeaveDialog action={applyForLeaveAction} />
+                          </Suspense>
+                        </CardHeader>
+                        <CardContent>
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead>{isManager ? 'Employee' : 'Request ID'}</TableHead>
+                                <TableHead>Leave Type</TableHead>
+                                <TableHead>Dates</TableHead>
+                                <TableHead>Reason</TableHead>
+                                <TableHead>Status</TableHead>
+                                {isManager && <TableHead className="text-right">Actions</TableHead>}
+                            </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {mockLeaveRequests.map((request) => (
+                                <TableRow key={request.id}>
+                                <TableCell className="font-medium">{isManager ? request.employee : request.id}</TableCell>
+                                <TableCell>{request.type}</TableCell>
+                                <TableCell>{request.dates}</TableCell>
+                                <TableCell className="max-w-xs truncate">{request.reason}</TableCell>
+                                <TableCell>{getStatusBadge(request.status)}</TableCell>
+                                {isManager && (
+                                    <TableCell className="text-right">
+                                    {request.status === 'Pending' ? (
+                                        <LeaveActionButtons requestId={request.id} />
+                                    ) : (
+                                        <span>-</span>
+                                    )}
+                                    </TableCell>
+                                )}
+                                </TableRow>
+                            ))}
+                            </TableBody>
+                        </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
-        <canvas ref={canvasRef} className="hidden" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Button
-            size="lg"
-            onClick={() => handleAction('check-in')}
-            disabled={isProcessing || status === 'Checked In' || !hasCameraPermission}
-            className="h-14 text-lg"
-            >
-            {isProcessing && status === 'Checked Out' ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <LogIn className="mr-2 h-6 w-6" />} 
-            Check In
-            </Button>
-            <Button
-            size="lg"
-            variant="destructive"
-            onClick={() => handleAction('check-out')}
-            disabled={isProcessing || status === 'Checked Out' || !hasCameraPermission}
-            className="h-14 text-lg"
-            >
-            {isProcessing && status === 'Checked In' ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <LogOut className="mr-2 h-6 w-6" />}
-            Check Out
-            </Button>
-        </div>
-        <Alert variant="destructive">
-                <ShieldAlert className="h-4 w-4" />
-                <AlertTitle>Security Notice</AlertTitle>
-                <AlertDescription>
-                Your image is captured for identity verification and is not stored. This action is logged for security purposes.
-                </AlertDescription>
-            </Alert>
-        </CardContent>
-    </Card>
-
-    <div className="space-y-6 lg:col-span-1">
-        <Card>
-        <CardHeader>
-            <CardTitle>Current Status</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className={`p-4 rounded-md text-center ${status === 'Checked In' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}`}>
-                <p className={`text-2xl font-bold ${status === 'Checked In' ? 'text-green-700 dark:text-green-200' : 'text-red-700 dark:text-red-200'}`}>
-                    {status}
-                </p>
-                {lastActionTime && <p className="text-sm text-muted-foreground">at {lastActionTime}</p>}
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-2" />
-            <span>Location: Bangalore, India (Approx.)</span>
-            </div>
-        </CardContent>
-        </Card>
-        
-        <Card>
-            <CardHeader>
-                <CardTitle>Today's Log</CardTitle>
-            </CardHeader>
-            <CardContent>
-                {attendanceLog.length > 0 ? (
-                    <ul className="space-y-3">
-                        {attendanceLog.map((log, index) => (
-                            <li key={index} className="flex items-center justify-between text-sm">
-                                <div className='flex items-center gap-3'>
-                                    {log.type === 'check-in' ? <LogIn className='h-4 w-4 text-green-500'/> : <LogOut className='h-4 w-4 text-red-500'/>}
-                                    <span className='font-medium'>{log.type === 'check-in' ? 'Checked In' : 'Checked Out'}</span>
-                                </div>
-                                <div className='flex items-center gap-2'>
-                                    {log.verified && <Badge variant="outline" className="text-green-600 border-green-600"><UserCheck className="h-3 w-3 mr-1"/>Verified</Badge>}
-                                    <span className='text-muted-foreground'>{log.time}</span>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">No activity yet for today.</p>
-                )}
-            </CardContent>
-        </Card>
-    </div>
-    </div>
-  );
+    );
 }

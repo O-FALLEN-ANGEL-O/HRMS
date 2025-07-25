@@ -104,21 +104,27 @@
   .dark .rdp-day_absent {
     @apply bg-red-600 text-white hover:bg-red-500;
   }
+   .rdp-day_leave {
+    @apply bg-yellow-500 text-white rounded-full hover:bg-yellow-600 focus:bg-yellow-600;
+  }
+  .dark .rdp-day_leave {
+    @apply bg-yellow-600 text-white hover:bg-yellow-500;
+  }
   .rdp-day_half-day > .rdp-day-content {
      background: linear-gradient(to bottom right, theme('colors.green.500') 0%, theme('colors.green.500') 50%, theme('colors.red.500') 50%, theme('colors.red.500') 100%);
      @apply text-white hover:opacity-90 rounded-full;
   }
   .rdp-day_dayOff {
-     @apply bg-yellow-400 text-black rounded-full hover:bg-yellow-500 focus:bg-yellow-500;
+     @apply bg-muted-foreground/30 text-muted-foreground rounded-full hover:bg-muted-foreground/40;
   }
   .dark .rdp-day_dayOff {
-     @apply bg-yellow-500 text-black hover:bg-yellow-400;
+     @apply bg-muted-foreground/30 text-muted-foreground hover:bg-muted-foreground/40;
   }
    .rdp-day_holiday {
-     @apply bg-indigo-500 text-white rounded-full hover:bg-indigo-600 focus:bg-indigo-600;
+     @apply bg-purple-500 text-white rounded-full hover:bg-purple-600 focus:bg-purple-600;
   }
   .dark .rdp-day_holiday {
-     @apply bg-indigo-500 text-white hover:bg-indigo-400;
+     @apply bg-purple-600 text-white hover:bg-purple-500;
   }
 }
 
