@@ -5,25 +5,32 @@ import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon } from 'lucide-react';
+import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
-const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: string, setActiveView: (view: string) => void }) => {
+type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback';
+
+const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: AnalyticsView, setActiveView: (view: AnalyticsView) => void }) => {
     const { user } = useAuth();
     if (!user) return null;
 
     const navItems = [
         { id: 'benchmarking', label: 'Benchmarking', icon: BarChart },
         { id: 'performance', label: 'Performance Metrics', icon: TrendingUpIcon },
-        { id: 'employee-management', label: 'Employee Management', icon: Users },
-        { id: 'recruitment', label: 'Recruitment', icon: FileText },
+        { id: 'demographics', label: 'Employee Demographics', icon: Users },
+        { id: 'recruitment', label: 'Recruitment Statistics', icon: FileText },
+        { id: 'retention', label: 'Retention Analysis', icon: Flag },
+        { id: 'training', label: 'Training & Development', icon: BrainCircuit },
     ];
 
     return (
@@ -31,7 +38,7 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: string, s
             {navItems.map(item => (
                 <button
                     key={item.id}
-                    onClick={() => setActiveView(item.id)}
+                    onClick={() => setActiveView(item.id as AnalyticsView)}
                     className={cn(
                         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
                         activeView === item.id
@@ -43,14 +50,18 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: string, s
                 </button>
             ))}
             <div className="pt-4 mt-auto space-y-2">
-                <Link href={`/${user.role}/settings`} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
-                    <HelpCircle className="h-5 w-5" />
+                <button
+                    onClick={() => setActiveView('glossary')}
+                    className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left", activeView === 'glossary' ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                    <BookOpen className="h-5 w-5" />
                     Glossary & FAQ
-                </Link>
-                <Link href={`/${user.role}/helpdesk`} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+                </button>
+                <button
+                     onClick={() => setActiveView('feedback')}
+                     className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left", activeView === 'feedback' ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                     <MessageSquare className="h-5 w-5" />
                     Give Feedback
-                </Link>
+                </button>
             </div>
         </aside>
     )
@@ -348,6 +359,90 @@ const PerformanceMetricsView = () => (
     </div>
 );
 
+function ComingSoonView({ title, icon: Icon }: { title: string, icon: React.ElementType }) {
+    return (
+      <Card>
+        <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="p-4 bg-primary/10 rounded-full">
+            <Icon className="h-12 w-12 text-primary" />
+          </div>
+          <h3 className="text-lg font-semibold">{title} Analytics</h3>
+          <p className="text-muted-foreground text-sm max-w-md">A dedicated analytics dashboard for this section is under construction. Key metrics and visualizations for {title.toLowerCase()} will be available here soon.</p>
+        </CardContent>
+      </Card>
+    )
+}
+
+function GlossaryView() {
+    const glossaryTerms = [
+        { term: 'Employee Turnover Rate', definition: 'The percentage of employees who leave an organization during a certain period. It is calculated by dividing the number of employees who left by the average number of employees.' },
+        { term: 'Cost Per Hire', definition: 'The total cost associated with recruiting and hiring a new employee. This includes advertising costs, recruiter fees, and time spent on interviewing and onboarding.' },
+        { term: 'Employee Engagement', definition: 'The extent to which employees feel passionate about their jobs, are committed to the organization, and put discretionary effort into their work.' },
+    ];
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Glossary</CardTitle>
+                <CardDescription>Definitions for HR terms used throughout the dashboard.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <dl className="space-y-4">
+                    {glossaryTerms.map(item => (
+                        <div key={item.term}>
+                            <dt className="font-semibold">{item.term}</dt>
+                            <dd className="text-sm text-muted-foreground">{item.definition}</dd>
+                        </div>
+                    ))}
+                </dl>
+            </CardContent>
+        </Card>
+    );
+}
+
+function FeedbackView() {
+    const { toast } = useToast();
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        toast({
+            title: "Feedback Submitted",
+            description: "Thank you for helping us improve the dashboard!",
+        });
+        (e.target as HTMLFormElement).reset();
+    }
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Submit Feedback</CardTitle>
+                <CardDescription>Help us improve the dashboard. Share your suggestions or report a bug.</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                    <div className="space-y-1">
+                        <label htmlFor="feedback-category">Category</label>
+                        <Select name="feedback-category" required>
+                             <SelectTrigger id="feedback-category">
+                                <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="suggestion">General Suggestion</SelectItem>
+                                <SelectItem value="bug">Bug Report</SelectItem>
+                                <SelectItem value="data">Data Inaccuracy</SelectItem>
+                                <SelectItem value="feature">Feature Request</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-1">
+                        <label htmlFor="feedback-comment">Comments</label>
+                        <Textarea id="feedback-comment" name="feedback-comment" placeholder="Describe your feedback in detail..." required rows={5}/>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit">Submit Feedback</Button>
+                </CardFooter>
+            </form>
+        </Card>
+    )
+}
 
 function LoadingState() {
   return (
@@ -366,36 +461,23 @@ function LoadingState() {
   )
 }
 
-function ComingSoonView({ title }: { title: string }) {
-    return (
-      <Card>
-        <CardContent className="p-10 flex flex-col items-center justify-center text-center">
-          <Construction className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold">{title} Analytics Coming Soon</h3>
-          <p className="text-muted-foreground text-sm">A dedicated analytics dashboard for this section is under construction.</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
 
 export default function AnalyticsPage() {
   const params = useParams();
   const role = params.role as string || 'employee';
-  const [activeView, setActiveView] = useState('benchmarking');
+  const [activeView, setActiveView] = useState<AnalyticsView>('benchmarking');
 
   const renderContent = () => {
     switch(activeView) {
-      case 'benchmarking':
-        return <BenchmarkingView />;
-      case 'performance':
-        return <PerformanceMetricsView />;
-      case 'employee-management':
-        return <ComingSoonView title="Employee Management" />;
-      case 'recruitment':
-        return <ComingSoonView title="Recruitment" />;
-      default:
-        return <BenchmarkingView />;
+      case 'benchmarking': return <BenchmarkingView />;
+      case 'performance': return <PerformanceMetricsView />;
+      case 'demographics': return <ComingSoonView title="Employee Demographics" icon={Users} />;
+      case 'recruitment': return <ComingSoonView title="Recruitment Statistics" icon={FileText} />;
+      case 'retention': return <ComingSoonView title="Retention Analysis" icon={Flag} />;
+      case 'training': return <ComingSoonView title="Training & Development" icon={BrainCircuit} />;
+      case 'glossary': return <GlossaryView />;
+      case 'feedback': return <FeedbackView />;
+      default: return <BenchmarkingView />;
     }
   };
 
@@ -403,8 +485,12 @@ export default function AnalyticsPage() {
      switch(activeView) {
       case 'benchmarking': return 'Benchmarking';
       case 'performance': return 'Performance Metrics';
-      case 'employee-management': return 'Employee Management';
-      case 'recruitment': return 'Recruitment Analytics';
+      case 'demographics': return 'Employee Demographics';
+      case 'recruitment': return 'Recruitment Statistics';
+      case 'retention': return 'Retention Analysis';
+      case 'training': return 'Training & Development';
+      case 'glossary': return 'Glossary & FAQ';
+      case 'feedback': return 'Give Feedback';
       default: return 'Analytics Dashboard';
     }
   }
@@ -433,7 +519,7 @@ export default function AnalyticsPage() {
             </div>
         )
       default:
-        return <ComingSoonView title="Analytics" />;
+        return <ComingSoonView title="Analytics" icon={BarChart} />;
     }
   }
 
@@ -443,3 +529,5 @@ export default function AnalyticsPage() {
     </React.Suspense>
   );
 }
+
+    
