@@ -110,13 +110,13 @@
   
   /* Detailed Calendar Styles */
   .detailed-calendar .rdp-day {
-    @apply h-24 w-full rounded-none;
+    @apply h-28 w-full rounded-none;
   }
   .detailed-calendar .rdp-head_cell {
     @apply text-muted-foreground rounded-md w-full font-semibold;
   }
   .detailed-calendar .rdp-cell {
-    @apply h-24 w-full text-center text-sm p-0 relative focus-within:relative focus-within:z-20;
+    @apply h-28 w-full text-center text-sm p-0 relative focus-within:relative focus-within:z-20;
     @apply border-r border-b;
   }
   .detailed-calendar .rdp-row {

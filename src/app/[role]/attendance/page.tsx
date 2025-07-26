@@ -10,7 +10,7 @@ import { format, getMonth, getYear, setMonth, setYear, subDays, isValid } from '
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Check, X, Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Check, X, Loader2, Calendar as CalendarIcon, Briefcase, Clock, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -54,15 +54,15 @@ function LeaveActionButtons({ requestId }: { requestId: string }) {
 }
 
 // Enhanced attendance data for detailed calendar view
-const detailedAttendanceLog: Record<string, { status: 'P' | 'A' | 'L' | 'WO' | 'H', checkIn?: string, checkOut?: string, totalHours?: string }> = {
-    [format(new Date(), 'yyyy-MM-dd')]: { status: 'P', checkIn: '09:01', checkOut: '18:05', totalHours: '9h 4m' },
-    [format(subDays(new Date(), 1), 'yyyy-MM-dd')]: { status: 'P', checkIn: '08:58', checkOut: '17:59', totalHours: '9h 1m' },
-    [format(subDays(new Date(), 2), 'yyyy-MM-dd')]: { status: 'A' },
-    [format(subDays(new Date(), 3), 'yyyy-MM-dd')]: { status: 'H' },
-    [format(subDays(new Date(), 4), 'yyyy-MM-dd')]: { status: 'P', checkIn: '09:10', checkOut: '18:15', totalHours: '9h 5m' },
-    [format(subDays(new Date(), 5), 'yyyy-MM-dd')]: { status: 'L' },
-    [format(subDays(new Date(), 6), 'yyyy-MM-dd')]: { status: 'WO' },
-    [format(subDays(new Date(), 7), 'yyyy-MM-dd')]: { status: 'WO' },
+const detailedAttendanceLog: Record<string, { status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday', checkIn?: string, checkOut?: string, totalHours?: string, location: 'Office' | 'Home' }> = {
+    [format(subDays(new Date(), 0), 'yyyy-MM-dd')]: { status: 'Present', checkIn: '09:01', checkOut: '18:05', totalHours: '9h 4m', location: 'Office' },
+    [format(subDays(new Date(), 1), 'yyyy-MM-dd')]: { status: 'Present', checkIn: '08:58', checkOut: '17:59', totalHours: '9h 1m', location: 'Office' },
+    [format(subDays(new Date(), 2), 'yyyy-MM-dd')]: { status: 'Absent', location: 'Office' },
+    [format(subDays(new Date(), 3), 'yyyy-MM-dd')]: { status: 'Holiday', location: 'Office' },
+    [format(subDays(new Date(), 4), 'yyyy-MM-dd')]: { status: 'Present', checkIn: '09:10', checkOut: '18:15', totalHours: '9h 5m', location: 'Home' },
+    [format(subDays(new Date(), 5), 'yyyy-MM-dd')]: { status: 'Leave', location: 'Office' },
+    [format(subDays(new Date(), 6), 'yyyy-MM-dd')]: { status: 'Week Off', location: 'Office' },
+    [format(subDays(new Date(), 7), 'yyyy-MM-dd')]: { status: 'Week Off', location: 'Office' },
 };
 
 
@@ -89,7 +89,6 @@ export default function AttendancePage() {
     };
 
     const DayCellContent = ({ date }: { date: Date }) => {
-        // Defensive check to ensure date is valid before formatting
         if (!isValid(date)) {
             return null;
         }
@@ -100,26 +99,27 @@ export default function AttendancePage() {
 
         const getStatusClass = (status: string) => {
             switch (status) {
-                case 'P': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-                case 'A': return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-                case 'L': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-                case 'WO': return 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300';
-                case 'H': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300';
+                case 'Present': return 'bg-green-500';
+                case 'Absent': return 'bg-red-500';
+                case 'Leave': return 'bg-yellow-500';
+                case 'Week Off': return 'bg-gray-400';
+                case 'Holiday': return 'bg-purple-500';
                 default: return '';
             }
         }
         
         return (
-            <div className='absolute inset-0 p-1 text-xs text-left overflow-hidden flex flex-col justify-between'>
-                <div>
-                  <div className='flex justify-end'>
-                     <Badge variant="secondary" className={`h-5 w-5 p-0 justify-center font-bold ${getStatusClass(dayData.status)}`}>{dayData.status}</Badge>
-                  </div>
+            <div className='absolute inset-0 p-1.5 text-xs text-left overflow-hidden flex flex-col justify-between'>
+                <div className='flex justify-end'>
+                    <span className={`h-2 w-2 rounded-full ${getStatusClass(dayData.status)}`} title={dayData.status}></span>
                 </div>
-                {dayData.status === 'P' && (
+                {dayData.status === 'Present' && (
                     <div className='space-y-0.5'>
-                        <p className='text-muted-foreground'>{dayData.checkIn} - {dayData.checkOut}</p>
-                        <p>Total: <span className='font-semibold'>{dayData.totalHours}</span></p>
+                        <p className='text-[10px] text-muted-foreground'>{dayData.checkIn} - {dayData.checkOut}</p>
+                        <div className="flex items-center gap-1 text-[11px] font-semibold">
+                            {dayData.location === 'Home' ? <Home className="h-3 w-3" /> : <Briefcase className="h-3 w-3" />}
+                            <span>{dayData.totalHours}</span>
+                        </div>
                     </div>
                 )}
             </div>
@@ -152,7 +152,7 @@ export default function AttendancePage() {
                                     {months.map(m => <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>)}
                                 </SelectContent>
                             </Select>
-                             <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Regularization</Button>
+                             <Button><Plus className="mr-2 h-4 w-4"/> Regularization</Button>
                       </div>
                    </div>
                 </CardHeader>
@@ -166,11 +166,11 @@ export default function AttendancePage() {
                         className="detailed-calendar"
                     />
                     <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center p-4 border-t mt-4 text-sm">
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500"></span>Present</div>
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500"></span>Absent</div>
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-yellow-500"></span>Leave</div>
-                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-muted-foreground/30"></span>Week Off</div>
+                        <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-500"></span>Present</div>
+                        <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-500"></span>Absent</div>
+                        <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-yellow-500"></span>Leave</div>
+                        <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-purple-500"></span>Holiday</div>
+                        <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-400"></span>Week Off</div>
                     </div>
                 </CardContent>
             </Card>
@@ -204,7 +204,7 @@ export default function AttendancePage() {
                                             <TableCell>{log.checkOut || '-'}</TableCell>
                                             <TableCell>{log.totalHours || '-'}</TableCell>
                                             <TableCell>
-                                                <Badge variant={log.status === 'A' ? 'destructive' : 'outline'}>{log.status}</Badge>
+                                                <Badge variant={log.status === 'Absent' ? 'destructive' : 'outline'}>{log.status}</Badge>
                                             </TableCell>
                                         </TableRow>
                                     ))}
