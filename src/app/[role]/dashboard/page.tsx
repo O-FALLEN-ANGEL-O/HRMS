@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Award, Cake, FileText, MoreHorizontal, Inbox, Gift, WavingHand, Search, Bell, Settings } from 'lucide-react';
+import { Award, Cake, FileText, MoreHorizontal, Inbox, Gift, Hand, Search, Bell, Settings, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { Input } from '@/components/ui/input';
 
 const celebrations = [
     { type: 'Birthday', icon: Cake, name: 'Ajay Jaleon Mas', avatar: `https://ui-avatars.com/api/?name=Ajay+Jaleon&background=random`, role: "Software Engineer" },
@@ -173,7 +174,7 @@ export default function DashboardPage() {
             <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-6 rounded-2xl shadow-lg">
                 <div className="flex justify-between items-start">
                     <h2 className="text-xl font-semibold">Welcome!</h2>
-                    <WavingHand/>
+                    <Hand/>
                 </div>
                 <p className="mt-2 text-blue-100">Welcome to OptiTalent. We're thrilled to have you with us and look forward to your success and growth.</p>
                 <div className="mt-4 flex items-center space-x-2 text-sm">
@@ -230,3 +231,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
