@@ -121,15 +121,15 @@ export default function AttendancePage() {
     <div className="space-y-6">
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Attendance</h1>
-          <p class="text-gray-500">Track your work hours and attendance.</p>
+          <h1 className="text-2xl font-bold text-gray-800">Attendance</h1>
+          <p className="text-gray-500">Track your work hours and attendance.</p>
         </div>
-        <div class="flex items-center space-x-4">
-            <div class="relative">
+        <div className="flex items-center space-x-4">
+            <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input class="w-full sm:w-64 pl-10" placeholder="Search..." type="text"/>
+                <Input className="w-full sm:w-64 pl-10" placeholder="Search..." type="text"/>
             </div>
-            <Button class="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition">
+            <Button className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition">
                 <Plus className="mr-2 h-4 w-4"/>
                 Attendance Regularization
             </Button>
@@ -138,23 +138,23 @@ export default function AttendancePage() {
 
       <Card className="shadow-lg border-gray-100">
         <CardHeader>
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center space-x-2">
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-2">
                     <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
                         <ChevronLeft className="h-5 w-5 text-gray-600" />
                     </Button>
-                    <h2 class="text-xl font-semibold text-gray-700">{format(currentDate, 'MMMM yyyy')}</h2>
+                    <h2 className="text-xl font-semibold text-gray-700">{format(currentDate, 'MMMM yyyy')}</h2>
                     <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
                         <ChevronRight className="h-5 w-5 text-gray-600" />
                     </Button>
                 </div>
-                <div class="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
-                    <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div><span>Present</span></div>
-                    <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div><span>Absent</span></div>
-                    <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div><span>Week off</span></div>
-                    <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div><span>Leave</span></div>
-                    <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-purple-500 mr-2"></div><span>Holiday</span></div>
-                    <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div><span>Office</span></div>
+                <div className="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div><span>Present</span></div>
+                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div><span>Absent</span></div>
+                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div><span>Week off</span></div>
+                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div><span>Leave</span></div>
+                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div><span>Holiday</span></div>
+                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div><span>Office</span></div>
                 </div>
             </div>
         </CardHeader>
