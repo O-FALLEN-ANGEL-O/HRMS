@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,7 +19,7 @@ import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart,
 import { getTicketSummaryAction } from './actions';
 import type { TicketData } from '@/ai/flows/get-ticket-summary-flow.types';
 
-type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback' | 'individual';
+type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback' | 'individual' | 'management' | 'hr' | 'recruitment' | 'finance' | 'it-manager' | 'operations-manager' | 'account-manager' | 'trainer' | 'trainee';
 
 const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: AnalyticsView, setActiveView: (view: AnalyticsView) => void }) => {
     const { user } = useAuth();
@@ -30,9 +30,9 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: Analytics
         { id: 'performance', label: 'Performance Metrics', icon: TrendingUpIcon },
         { id: 'individual', label: 'Individual Performance', icon: Target },
         { id: 'demographics', label: 'Employee Demographics', icon: Users },
-        { id: 'recruitment', label: 'Recruitment Statistics', icon: Briefcase },
+        { id: 'recruitment', label: 'Recruitment Statistics', icon: UserPlus },
         { id: 'retention', label: 'Retention & Attrition', icon: Flag },
-        { id: 'training', label: 'Training & Development', icon: BrainCircuit },
+        { id: 'training', label: 'Training & Development', icon: GraduationCap },
     ];
 
     return (
@@ -390,7 +390,11 @@ const PerformanceMetricsView = () => {
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="name" />
                                         <YAxis domain={[0, 5]}/>
-                                        <Tooltip />
+                                        <Tooltip contentStyle={{
+                                            backgroundColor: "hsl(var(--card))",
+                                            border: "1px solid hsl(var(--border))",
+                                            borderRadius: "var(--radius)",
+                                        }}/>
                                         <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
                                     </LineChart>
                                 </ResponsiveContainer>
@@ -409,7 +413,11 @@ const PerformanceMetricsView = () => {
                                     <Pie data={goalData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5}>
                                         {goalData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                                     </Pie>
-                                    <Tooltip />
+                                    <Tooltip contentStyle={{
+                                            backgroundColor: "hsl(var(--card))",
+                                            border: "1px solid hsl(var(--border))",
+                                            borderRadius: "var(--radius)",
+                                        }}/>
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
@@ -476,6 +484,15 @@ const DemographicsView = () => {
                     <p className="text-xs text-muted-foreground">Years</p>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Average Tenure</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">4.2</div>
+                    <p className="text-xs text-muted-foreground">Years</p>
+                </CardContent>
+            </Card>
         </div>
         <div className="grid gap-8 md:grid-cols-2">
             <Card>
@@ -489,7 +506,7 @@ const DemographicsView = () => {
                            <CartesianGrid strokeDasharray="3 3" />
                            <XAxis type="number" />
                            <YAxis dataKey="name" type="category" width={80} />
-                           <Tooltip />
+                           <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                            <RechartsBar dataKey="value" name="Headcount" fill="hsl(var(--primary))" />
                         </RechartsBarChart>
                     </ResponsiveContainer>
@@ -507,7 +524,7 @@ const DemographicsView = () => {
                             <Pie data={demographicsData.byAge} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
                                {demographicsData.byAge.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                             </Pie>
-                            <Tooltip />
+                            <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                         </PieChart>
                     </ResponsiveContainer>
                      )}
@@ -591,7 +608,7 @@ const RetentionView = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                     <Legend />
                     <Line type="monotone" dataKey="Hires" stroke="hsl(var(--primary))" />
                     <Line type="monotone" dataKey="Departures" stroke="hsl(var(--destructive))" />
@@ -665,7 +682,7 @@ const TrainingView = () => {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
-                        <Tooltip />
+                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                         <RechartsBar dataKey="rate" name="Completion Rate" fill="hsl(var(--primary))" />
                     </RechartsBarChart>
                 </ResponsiveContainer>
@@ -712,7 +729,7 @@ const RecruitmentView = () => (
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Cost Per Hire</CardTitle>
-                    <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">$4,150</div>
@@ -739,9 +756,9 @@ const RecruitmentView = () => (
                 <CardContent className="h-[350px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <FunnelChart>
-                            <Tooltip />
+                            <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                             <Funnel dataKey="value" data={funnelData} isAnimationActive>
-                                <LabelList position="right" fill="#000" stroke="none" dataKey="name" />
+                                <LabelList position="right" fill="hsl(var(--foreground))" stroke="none" dataKey="name" />
                             </Funnel>
                         </FunnelChart>
                     </ResponsiveContainer>
@@ -758,7 +775,7 @@ const RecruitmentView = () => (
                             <Pie data={sourceOfHireData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                {sourceOfHireData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                             </Pie>
-                            <Tooltip />
+                            <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                         </PieChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -896,7 +913,7 @@ const IndividualPerformanceView = () => {
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis type="number" domain={[0, 5]} />
                                         <YAxis type="category" dataKey="name" width={100} />
-                                        <Tooltip />
+                                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                                         <RechartsBar dataKey="value" fill="hsl(var(--primary))" />
                                     </RechartsBarChart>
                                 </ResponsiveContainer>
@@ -1030,10 +1047,10 @@ const ProcessManagerDashboard = () => {
         fetchData();
     }, []);
 
-    const chartData = data?.ticketSummary.map(item => ({
+    const chartData = data?.ticketSummary.map((item, index) => ({
         name: item.category,
         value: item.count,
-        fill: `hsl(var(--chart-${Math.floor(Math.random() * 5) + 1}))`
+        fill: `hsl(var(--chart-${index + 1}))`
     })) || [];
     
     return (
@@ -1069,6 +1086,16 @@ const ProcessManagerDashboard = () => {
                         <p className="text-xs text-muted-foreground">This month</p>
                     </CardContent>
                 </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">High Priority</CardTitle>
+                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">12</div>
+                        <p className="text-xs text-muted-foreground">Open high-priority tickets</p>
+                    </CardContent>
+                </Card>
             </div>
             <Card>
                 <CardHeader>
@@ -1081,7 +1108,7 @@ const ProcessManagerDashboard = () => {
                            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                            </Pie>
-                           <Tooltip />
+                           <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                         </PieChart>
                     </ResponsiveContainer>
                    ) : <Skeleton className="w-full h-full" />}
@@ -1110,7 +1137,7 @@ const DefaultDashboard = ({ role }: { role: string }) => {
         <Card>
             <CardHeader>
                 <CardTitle>Analytics Dashboard</CardTitle>
-                <CardDescription>Default dashboard for the <span className="font-bold capitalize">{role}</span> role.</CardDescription>
+                <CardDescription>Default dashboard for the <span className="font-bold capitalize">{role.replace(/-/g, ' ')}</span> role.</CardDescription>
             </CardHeader>
              <CardContent>
                 <p>Key metrics and visualizations for your role will be displayed here.</p>
@@ -1184,8 +1211,10 @@ export default function AnalyticsPage() {
         case 'it-manager':
         case 'operations-manager':
         case 'account-manager':
-        case 'marketing':
+        case 'trainer':
              return <DefaultDashboard role={role} />
+        case 'employee':
+        case 'trainee':
         default:
             return (
                 <Card>
