@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -141,7 +142,7 @@ const BenchmarkingView = () => {
                     {loading ? <Skeleton className="h-96" /> : (
                          <div className="mt-6 h-96">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData}>
+                                <RechartsBar data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
@@ -153,7 +154,7 @@ const BenchmarkingView = () => {
                                 <Legend />
                                 <RechartsBar dataKey="company" fill="hsl(var(--primary))" name="OptiTalent" />
                                 <RechartsBar dataKey="benchmark" fill="hsl(var(--muted-foreground))" name="Benchmark" />
-                                </BarChart>
+                                </RechartsBar>
                             </ResponsiveContainer>
                         </div>
                     )}
@@ -481,13 +482,13 @@ const DemographicsView = () => {
                 <CardContent className="h-80">
                     {loading ? <Skeleton className="h-full w-full" /> : (
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={demographicsData.byDept} layout="vertical">
+                        <RechartsBar data={demographicsData.byDept} layout="vertical">
                            <CartesianGrid strokeDasharray="3 3" />
                            <XAxis type="number" />
                            <YAxis dataKey="name" type="category" width={80} />
                            <Tooltip />
                            <RechartsBar dataKey="value" name="Headcount" fill="hsl(var(--primary))" />
-                        </BarChart>
+                        </RechartsBar>
                     </ResponsiveContainer>
                     )}
                 </CardContent>
@@ -657,13 +658,13 @@ const TrainingView = () => {
             <CardContent className="h-96">
                 {loading ? <Skeleton className="h-full w-full" /> : (
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trainingData}>
+                    <RechartsBar data={trainingData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
                         <Tooltip />
                         <RechartsBar dataKey="rate" name="Completion Rate" fill="hsl(var(--primary))" />
-                    </BarChart>
+                    </RechartsBar>
                 </ResponsiveContainer>
                 )}
             </CardContent>
@@ -956,4 +957,5 @@ export default function AnalyticsPage() {
     </React.Suspense>
   );
 }
+
 
