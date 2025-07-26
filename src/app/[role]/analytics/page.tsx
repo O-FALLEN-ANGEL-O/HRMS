@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -382,7 +382,7 @@ function ComingSoonView({ title }: { title: string }) {
 export default function AnalyticsPage() {
   const params = useParams();
   const role = params.role as string || 'employee';
-  const [activeView, setActiveView] = React.useState('benchmarking');
+  const [activeView, setActiveView] = useState('benchmarking');
 
   const renderContent = () => {
     switch(activeView) {
