@@ -3,10 +3,11 @@
 
 import React, { useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase, Inbox, Gift, Bot, Sparkles, MessageSquare, Heart } from 'lucide-react';
+import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase, Inbox, Gift, MessageSquare, Heart, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +15,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AnimatedBot } from '@/components/ui/animated-bot';
 
 const RecruiterKpis = dynamic(() => import('@/components/dashboards/kpi-cards/recruiter-kpis').then(mod => mod.RecruiterKpis), { ssr: false });
 const ManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/manager-kpis').then(mod => mod.ManagerKpis), { ssr: false });
@@ -23,6 +27,7 @@ const ItManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/it
 const OperationsManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/operations-manager-kpis').then(mod => mod.OperationsManagerKpis), { ssr: false });
 const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa-analyst-kpis').then(mod => mod.QaAnalystKpis), { ssr: false });
 const ProcessManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/process-manager-kpis').then(mod => mod.ProcessManagerKpis), { ssr: false });
+
 
 const celebrations = [
     { type: 'Birthday', icon: Cake, name: 'Ajay Jaleon Mas', avatar: `https://ui-avatars.com/api/?name=Ajay+Jaleon&background=random`, role: "Software Engineer" },
@@ -207,10 +212,12 @@ export default function DashboardPage() {
                        </div>
                     </CardContent>
                 </Card>
-                <Card>
+                 <Card>
                     <CardHeader className="flex justify-between items-center">
                         <CardTitle className="text-base">My Calendar</CardTitle>
-                        <Button variant="link" size="sm" className="p-0 h-auto">Go to calendar</Button>
+                        <Button variant="link" size="sm" className="p-0 h-auto" asChild>
+                           <Link href={`/${role}/attendance`}>Go to calendar</Link>
+                        </Button>
                     </CardHeader>
                     <CardContent>
                         <Calendar
@@ -226,15 +233,14 @@ export default function DashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-accent/50 border-accent">
-                    <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2">
-                           <Sparkles className="h-5 w-5 text-primary"/> Do you know?
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">Our AI assistant can help you mark attendance, apply for leave, and more. Just ask!</p>
-                        <Button variant="outline" size="sm" className="mt-3 w-full">Ask OneAI</Button>
+                 <Card className="bg-accent/50 border-accent text-center">
+                    <CardContent className="p-4">
+                        <AnimatedBot className="mx-auto" />
+                        <h3 className="font-semibold mt-2">Need help?</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Our AI assistant can help you mark attendance, apply for leave, and more.</p>
+                        <Button variant="outline" size="sm" className="mt-3 w-full" asChild>
+                           <Link href={`/${role}/ai-tools/chatbot`}>Ask OneAI</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
