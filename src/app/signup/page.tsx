@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function SignupPage() {
     const { toast } = useToast();
@@ -29,6 +30,7 @@ export default function SignupPage() {
         email: '',
         password: ''
     });
+    const { signUp } = useAuth();
 
     const [passwordCriteria, setPasswordCriteria] = useState({
       length: false,
@@ -59,15 +61,21 @@ export default function SignupPage() {
         e.preventDefault();
         setLoading(true);
 
-        // This is a mock signup
-        setTimeout(() => {
-            toast({
-                title: "Account Created! (Mock)",
-                description: "This is a frontend prototype. No account was actually created.",
+        const { error } = await signUp(formData);
+
+        if (error) {
+             toast({
+                title: "Signup Failed",
+                description: error.message,
+                variant: "destructive",
             });
-            router.push(`/`);
-            setLoading(false);
-        }, 1000);
+        } else {
+             toast({
+                title: "Account Created!",
+                description: "Welcome to OptiTalent! Redirecting you to the dashboard...",
+            });
+        }
+        setLoading(false);
     };
     
     const CriteriaItem = ({ met, text }: { met: boolean; text: string }) => (

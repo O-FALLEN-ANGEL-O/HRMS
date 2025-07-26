@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock attendance data
 const detailedAttendanceLog: Record<
@@ -47,6 +48,14 @@ const detailedAttendanceLog: Record<
 
 export default function AttendancePage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
+  const { toast } = useToast();
+
+  const handleRegularization = () => {
+    toast({
+        title: "Action Triggered",
+        description: "This would open a dialog to regularize attendance.",
+    })
+  }
 
   const DayCellContent = ({ date }: { date: Date }) => {
     if (!isValid(date)) return null;
@@ -116,7 +125,7 @@ export default function AttendancePage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input className="w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search..." type="text"/>
                 </div>
-                <Button className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition">
+                <Button className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition" onClick={handleRegularization}>
                     <Plus className="mr-2 h-4 w-4"/>
                     Attendance Regularization
                 </Button>

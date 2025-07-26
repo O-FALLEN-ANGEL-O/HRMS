@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, MoreHorizontal } from "lucide-react"
@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from '@/hooks/use-toast';
-import { mockEmployees } from '@/lib/mock-data/employees';
+import { mockUsers } from '@/lib/mock-data/employees';
 import { TeamCard } from '@/components/team-card';
 import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -35,12 +35,21 @@ const AddEmployeeButton = dynamic(() => import('@/components/employees/add-emplo
     ssr: false
 });
 
+type EmployeeProfile = typeof mockUsers[0]['profile'];
 
 function AdminView() {
     const { toast } = useToast();
     const params = useParams();
     const router = useRouter();
     const role = params.role as string;
+    const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+
+    useEffect(() => {
+        // Since mockUsers is imported, we can treat it as a "database"
+        // and any additions from AddEmployeeDialog will be reflected
+        // if we re-fetch from the source.
+        setEmployees(mockUsers.map(u => u.profile));
+    }, []);
     
     const handleAction = (action: string) => {
         toast({
@@ -71,17 +80,17 @@ function AdminView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockEmployees.map((employee) => (
+                {employees.map((employee) => (
                   <TableRow key={employee.employee_id} className="cursor-pointer" onClick={() => router.push(`/${role}/employees/${employee.employee_id}`)}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="hidden h-9 w-9 sm:flex">
-                          <AvatarImage src={employee.profile_picture_url} alt="Avatar" data-ai-hint="person avatar" />
+                          <AvatarImage src={employee.profile_picture_url || ''} alt="Avatar" data-ai-hint="person avatar" />
                           <AvatarFallback>{employee.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <div className="grid gap-0.5">
                           <p className="font-medium">{employee.full_name}</p>
-                          <p className="text-sm text-muted-foreground hidden md:inline">{employee.email}</p>
+                          <p className="text-sm text-muted-foreground hidden md:inline">{mockUsers.find(u => u.profile.id === employee.id)?.email}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -117,11 +126,11 @@ function AdminView() {
 }
 
 function TeamView() {
-    const teamMembers = mockEmployees.filter(e => e.department.name === 'Engineering' && e.role !== 'manager');
+    const teamMembers = mockUsers.filter(e => e.profile.department.name === 'Engineering' && e.profile.role !== 'manager');
     return (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {teamMembers.map((member) => (
-                <TeamCard key={member.employee_id} member={member} />
+                <TeamCard key={member.profile.employee_id} member={member.profile} />
             ))}
         </div>
     );

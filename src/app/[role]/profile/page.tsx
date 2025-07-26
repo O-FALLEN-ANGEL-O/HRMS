@@ -12,9 +12,8 @@ import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { mockEmployees } from "@/lib/mock-data/employees";
-
-const MOCK_USER = mockEmployees[4]; // Defaulting to Anika Sharma (employee)
+import { mockUsers } from "@/lib/mock-data/employees";
+import { useAuth } from "@/hooks/use-auth";
 
 // --- MOCK DATA FOR PROFILE TABS ---
 const professionalInfo = {
@@ -85,14 +84,17 @@ function InfoRow({ label, value }: { label: string, value: React.ReactNode }) {
 }
 
 function AboutTab() {
+    const { user } = useAuth();
     const { toast } = useToast();
     const handleEdit = (section: string) => toast({title: `Edit ${section}`, description: "This would open an edit dialog."});
+
+    if(!user) return null;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-1 space-y-6">
                  <InfoCard title="Basic Information" icon={User} onEdit={() => handleEdit('Basic Info')}>
-                    <InfoRow label="Employee ID" value={MOCK_USER.employee_id} />
+                    <InfoRow label="Employee ID" value={user.profile.employee_id} />
                     <InfoRow label="Date of Birth" value={"July 20, 1995"} />
                     <InfoRow label="Gender" value={"Female"} />
                     <InfoRow label="Marital Status" value={"Married"} />
@@ -100,16 +102,16 @@ function AboutTab() {
                 </InfoCard>
 
                 <InfoCard title="Contact Information" icon={Mail} onEdit={() => handleEdit('Contact Info')}>
-                    <InfoRow label="Work Email" value={MOCK_USER.email} />
+                    <InfoRow label="Work Email" value={user.email} />
                     <InfoRow label="Personal Email" value={"anika.sharma@email.com"} />
-                    <InfoRow label="Phone Number" value={MOCK_USER.phone_number} />
+                    <InfoRow label="Phone Number" value={user.profile.phone_number} />
                 </InfoCard>
             </div>
              <div className="lg:col-span-2 space-y-6">
                  <InfoCard title="Position Details" icon={Briefcase} onEdit={() => handleEdit('Position Details')}>
                     <InfoRow label="Company" value={"OptiTalent Inc."} />
-                    <InfoRow label="Department" value={MOCK_USER.department.name} />
-                    <InfoRow label="Job Title" value={MOCK_USER.job_title} />
+                    <InfoRow label="Department" value={user.profile.department.name} />
+                    <InfoRow label="Job Title" value={user.profile.job_title} />
                     <InfoRow label="Reporting Manager" value={"Isabella Nguyen"} />
                      <InfoRow label="Date of Joining" value={"July 25, 2022"} />
                     <InfoRow label="Employment Type" value={"Permanent"} />
@@ -304,8 +306,9 @@ function DocumentsTab() {
 
 export default function ProfilePage() {
     const { toast } = useToast();
+    const { user } = useAuth();
 
-    if (!MOCK_USER) {
+    if (!user) {
         return <div>Loading profile...</div>;
     }
 
@@ -315,12 +318,12 @@ export default function ProfilePage() {
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-start gap-6">
                         <Avatar className="w-24 h-24 border-4 border-background ring-2 ring-primary">
-                            <AvatarImage src={MOCK_USER.profile_picture_url} data-ai-hint="person portrait" alt={MOCK_USER.full_name} />
-                            <AvatarFallback>{MOCK_USER.full_name.substring(0, 2)}</AvatarFallback>
+                            <AvatarImage src={user.profile.profile_picture_url || ''} data-ai-hint="person portrait" alt={user.profile.full_name} />
+                            <AvatarFallback>{user.profile.full_name.substring(0, 2)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold font-headline">{MOCK_USER.full_name}</h1>
-                            <p className="text-muted-foreground">{MOCK_USER.job_title}</p>
+                            <h1 className="text-3xl font-bold font-headline">{user.profile.full_name}</h1>
+                            <p className="text-muted-foreground">{user.profile.job_title}</p>
                         </div>
                          <Button variant="outline" onClick={() => toast({title: "Edit Action", description: "This would open an edit dialog."})}><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
                     </div>
@@ -350,5 +353,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    

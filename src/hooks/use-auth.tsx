@@ -56,13 +56,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const signUp = async (data: any) => {
     setLoading(true);
-    // This is a mock function and needs to be connected to Supabase auth signup
-    console.log("Mock sign up with:", data);
-    // Simulate a network delay
-    await new Promise(res => setTimeout(res, 1000));
+    await new Promise(res => setTimeout(res, 500)); // Simulate network delay
+    const { email, password, firstName, lastName } = data;
+
+    // Check if user already exists in our mock data
+    if (mockUsers.some(u => u.email === email)) {
+        setLoading(false);
+        return { error: { message: "An account with this email already exists." } };
+    }
     
-    // For now, just log in as a default employee for demo purposes
-    await login('PEP0012');
+    const newUser: User = {
+        id: `user-${Date.now()}`,
+        email,
+        role: 'employee', // Default role for new signups
+        profile: {
+            id: `profile-${Date.now()}`,
+            full_name: `${firstName} ${lastName}`,
+            job_title: 'New Hire',
+            employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
+            status: 'Active',
+            role: 'employee',
+            department_id: "d-001",
+            department: { name: "Engineering" },
+            profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
+            phone_number: '123-456-7890'
+        }
+    };
+    
+    // Add to our mock "database"
+    mockUsers.push(newUser);
+    
+    // Log the user in
+    setUser(newUser);
+    sessionStorage.setItem('authUser', JSON.stringify(newUser));
+    router.push(`/${newUser.role}/dashboard`);
     setLoading(false);
     return { error: null };
   }
