@@ -129,7 +129,7 @@ export default function AttendancePage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input className="w-full sm:w-64 pl-10" placeholder="Search..." type="text"/>
             </div>
-            <Button className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition">
+            <Button>
                 <Plus className="mr-2 h-4 w-4"/>
                 Attendance Regularization
             </Button>
@@ -137,8 +137,8 @@ export default function AttendancePage() {
       </header>
 
       <Card className="shadow-lg border-gray-100">
-        <CardHeader>
-            <div className="flex justify-between items-center mb-6">
+        <CardHeader className="p-6">
+            <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                     <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
                         <ChevronLeft className="h-5 w-5 text-gray-600" />
@@ -168,11 +168,11 @@ export default function AttendancePage() {
             }}
             className="detailed-calendar"
             classNames={{
-              table: "w-full border-t border-l border-gray-200",
-              head_row: "flex w-full mt-2",
-              head_cell: "text-center py-3 bg-gray-100 font-semibold text-gray-600 text-sm",
-              row: "flex w-full mt-2 divide-x divide-gray-200",
-              cell: "relative h-28 sm:h-32 text-left align-top p-2 bg-white",
+              table: "w-full border-collapse",
+              head_row: "flex",
+              head_cell: "text-center w-[14.28%] py-3 bg-gray-100 font-semibold text-gray-600 text-sm",
+              row: "flex w-full mt-2",
+              cell: "relative h-32 w-[14.28%] p-2 bg-white border border-gray-200",
               day: "absolute top-2 left-2 text-sm",
               day_today: "text-indigo-600 font-bold",
               day_disabled: "text-gray-400",
