@@ -47,7 +47,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   hr: [
@@ -63,7 +62,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   manager: [
@@ -76,12 +74,10 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   employee: [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'Payroll', href: '/payroll', icon: DollarSign },
@@ -97,14 +93,12 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   trainee: [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'My Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'qa-analyst': [
@@ -112,7 +106,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Quality', href: '/qa-analyst/quality', icon: ShieldCheck },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'process-manager': [
@@ -121,7 +114,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Reports', href: '/reports', icon: FileText },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'team-leader': [
@@ -131,7 +123,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
    marketing: [
@@ -139,7 +130,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   finance: [
@@ -148,7 +138,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Payroll', href: '/payroll', icon: DollarSign },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'it-manager': [
@@ -157,7 +146,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'operations-manager': [
@@ -165,7 +153,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   'account-manager': [
@@ -173,7 +160,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   trainer: [
@@ -182,7 +168,6 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },
-    { label: 'My Profile', href: '/profile', icon: FileText },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   guest: [
