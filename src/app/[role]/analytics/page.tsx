@@ -3,12 +3,40 @@
 
 import React, { Suspense } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingDown, TrendingUp, Construction } from 'lucide-react';
+import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
+
+const AnalyticsSidebar = () => (
+    <aside className="hidden lg:flex lg:flex-col space-y-2">
+         <Link href="#" className="flex items-center gap-3 rounded-md bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
+            <BarChart className="h-5 w-5" />
+            Benchmarking
+        </Link>
+        <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Users className="h-5 w-5" />
+            Employee Management
+        </Link>
+        <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+            <FileText className="h-5 w-5" />
+            Recruitment
+        </Link>
+         <div className="pt-4 mt-auto space-y-2">
+            <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+                <HelpCircle className="h-5 w-5" />
+                Glossary & FAQ
+            </Link>
+             <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+                <MessageSquare className="h-5 w-5" />
+                Give Feedback
+            </Link>
+        </div>
+    </aside>
+);
 
 
 function LoadingState() {
@@ -193,16 +221,17 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
-       <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight">Analytics Dashboard</h1>
-          <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
-       </div>
-       <Suspense fallback={<LoadingState />}>
-        {renderDashboard()}
-       </Suspense>
+    <div className="grid lg:grid-cols-[250px_1fr] gap-8 items-start">
+        <AnalyticsSidebar />
+        <div className="space-y-6">
+           <div>
+              <h1 className="text-3xl font-bold font-headline tracking-tight">Analytics Dashboard</h1>
+              <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
+           </div>
+           <Suspense fallback={<LoadingState />}>
+            {renderDashboard()}
+           </Suspense>
+        </div>
     </div>
   );
 }
-
-    
