@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const ApplyLeaveDialog = dynamic(() => import('@/components/leaves/apply-leave-dialog'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Apply for Leave</Button>,
