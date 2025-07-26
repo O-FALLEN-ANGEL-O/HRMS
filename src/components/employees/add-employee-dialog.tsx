@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Bot, Loader2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addEmployeeAction, suggestRoleAction } from '@/app/[role]/employees/actions';
-import { mockUsers, type UserProfile } from '@/lib/mock-data/employees';
+import { mockUsers, type User, type UserProfile } from '@/lib/mock-data/employees';
 
 
-export default function AddEmployeeDialog({ onEmployeeAdded }: { onEmployeeAdded: (employee: UserProfile) => void }) {
+export default function AddEmployeeDialog({ onEmployeeAdded }: { onEmployeeAdded: (employee: User) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ export default function AddEmployeeDialog({ onEmployeeAdded }: { onEmployeeAdded
     const result = await addEmployeeAction(formData);
     
     if(result.success) {
-      const newEmployee: UserProfile = {
+      const newProfile: UserProfile = {
         id: `profile-${Date.now()}`,
         full_name: name,
         department: { name: formData.get('department') as string },
@@ -67,14 +67,14 @@ export default function AddEmployeeDialog({ onEmployeeAdded }: { onEmployeeAdded
         status: 'Active',
       };
       
-      const newUser = {
+      const newUser: User = {
         id: `user-${Date.now()}`,
         email: email,
-        role: newEmployee.role,
-        profile: newEmployee
+        role: newProfile.role,
+        profile: newProfile
       }
       mockUsers.push(newUser);
-      onEmployeeAdded(newEmployee);
+      onEmployeeAdded(newUser);
       
       toast({ title: "Employee Added", description: `The new employee has been added successfully.` });
       setIsOpen(false);

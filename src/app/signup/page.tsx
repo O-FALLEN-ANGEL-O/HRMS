@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -69,13 +68,14 @@ export default function SignupPage() {
                 description: error.message,
                 variant: "destructive",
             });
+            setLoading(false);
         } else {
              toast({
                 title: "Account Created!",
                 description: "Welcome to OptiTalent! Redirecting you to the dashboard...",
             });
+             // No need to setLoading(false) as we are navigating away
         }
-        setLoading(false);
     };
     
     const CriteriaItem = ({ met, text }: { met: boolean; text: string }) => (

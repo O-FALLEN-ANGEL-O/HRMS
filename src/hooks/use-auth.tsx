@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: `profile-${Date.now()}`,
             full_name: `${firstName} ${lastName}`,
             job_title: 'New Hire',
-            employee_id: `PEP${String(Math.floor(Math.random() * 9000) + 1000).padStart(4,'0')}`,
+            employee_id: `PEP${String(mockUsers.length + 1).padStart(4,'0')}`,
             status: 'Active',
             role: 'employee',
             department_id: "d-001",

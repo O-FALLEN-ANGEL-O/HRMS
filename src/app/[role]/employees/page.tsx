@@ -29,27 +29,29 @@ import { mockUsers } from '@/lib/mock-data/employees';
 import { TeamCard } from '@/components/team-card';
 import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import type { User, UserProfile } from '@/lib/mock-data/employees';
 
 const AddEmployeeButton = dynamic(() => import('@/components/employees/add-employee-button'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Add Employee</Button>,
     ssr: false
 });
 
-type EmployeeProfile = typeof mockUsers[0]['profile'];
 
 function AdminView() {
     const { toast } = useToast();
     const params = useParams();
     const router = useRouter();
     const role = params.role as string;
-    const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+    const [employees, setEmployees] = useState<UserProfile[]>([]);
 
     useEffect(() => {
         setEmployees(mockUsers.map(u => u.profile));
     }, []);
 
-    const handleAddEmployee = (newEmployee: EmployeeProfile) => {
-      setEmployees(prev => [newEmployee, ...prev]);
+    const handleAddEmployee = (newEmployee: User) => {
+      // In a real app, this would likely re-fetch the list or get the new item from an API response.
+      // For the mock, we add directly to the state.
+      setEmployees(prev => [newEmployee.profile, ...prev]);
     }
     
     const handleAction = (action: string) => {
