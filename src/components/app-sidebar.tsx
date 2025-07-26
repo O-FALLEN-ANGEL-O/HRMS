@@ -55,16 +55,18 @@ export default function AppSidebar() {
         </SidebarContent>
          <SidebarFooter>
             {user && (
-                <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person avatar"/>
-                        <AvatarFallback>{user.profile.full_name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
-                    </Avatar>
-                     <div className="overflow-hidden group-hover/sidebar:inline hidden">
-                        <p className="text-sm font-medium truncate">{user.profile.full_name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                <Link href={`/${role}/profile`} className="block w-full">
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent">
+                        <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.profile.profile_picture_url} data-ai-hint="person avatar"/>
+                            <AvatarFallback>{user.profile.full_name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                        </Avatar>
+                        <div className="overflow-hidden group-hover/sidebar:inline hidden">
+                            <p className="text-sm font-medium truncate">{user.profile.full_name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
                     </div>
-                </div>
+                </Link>
             )}
              <SidebarMenu>
                 <SidebarMenuItem>
