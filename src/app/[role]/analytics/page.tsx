@@ -12,22 +12,55 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from '@/lib/utils';
+import { TrendingUpIcon } from 'lucide-react';
 
-const AnalyticsSidebar = () => (
+const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: string, setActiveView: (view: string) => void }) => (
     <aside className="hidden lg:flex lg:flex-col space-y-2">
-         <Link href="#" className="flex items-center gap-3 rounded-md bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
+         <button 
+            onClick={() => setActiveView('benchmarking')} 
+            className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
+                activeView === 'benchmarking' 
+                    ? "bg-primary/10 text-primary font-semibold" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}>
             <BarChart className="h-5 w-5" />
             Benchmarking
-        </Link>
-        <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+        </button>
+        <button 
+            onClick={() => setActiveView('performance')} 
+            className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
+                activeView === 'performance' 
+                    ? "bg-primary/10 text-primary font-semibold" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}>
+            <TrendingUpIcon className="h-5 w-5" />
+            Performance Metrics
+        </button>
+        <button 
+            onClick={() => setActiveView('employee-management')} 
+            className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
+                activeView === 'employee-management' 
+                    ? "bg-primary/10 text-primary font-semibold" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}>
             <Users className="h-5 w-5" />
             Employee Management
-        </Link>
-        <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+        </button>
+        <button 
+            onClick={() => setActiveView('recruitment')} 
+            className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
+                activeView === 'recruitment' 
+                    ? "bg-primary/10 text-primary font-semibold" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}>
             <FileText className="h-5 w-5" />
             Recruitment
-        </Link>
+        </button>
          <div className="pt-4 mt-auto space-y-2">
             <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
                 <HelpCircle className="h-5 w-5" />
@@ -366,6 +399,30 @@ function EmployeeDashboard() {
 export default function AnalyticsPage() {
   const params = useParams();
   const role = params.role as string || 'employee';
+  const [activeView, setActiveView] = useState('benchmarking');
+
+  const renderContent = () => {
+    switch(activeView) {
+      case 'benchmarking':
+        return <BenchmarkingView />;
+      case 'performance':
+        return <PerformanceMetricsView />;
+      default:
+        return <BenchmarkingView />;
+    }
+  };
+
+  const getPageTitle = () => {
+     switch(activeView) {
+      case 'benchmarking':
+        return 'Benchmarking';
+      case 'performance':
+        return 'Performance Metrics';
+      default:
+        return 'Analytics Dashboard';
+    }
+  }
+
 
   const renderDashboard = () => {
     switch (role) {
@@ -376,18 +433,18 @@ export default function AnalyticsPage() {
       case 'process-manager':
       case 'team-leader':
         return (
-            <Tabs defaultValue="benchmarking" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="benchmarking">Benchmarking</TabsTrigger>
-                    <TabsTrigger value="performance">Performance Metrics</TabsTrigger>
-                </TabsList>
-                <TabsContent value="benchmarking" className="mt-6">
-                    <BenchmarkingView />
-                </TabsContent>
-                <TabsContent value="performance" className="mt-6">
-                    <PerformanceMetricsView />
-                </TabsContent>
-            </Tabs>
+            <div className="grid lg:grid-cols-[250px_1fr] gap-8 items-start">
+                <AnalyticsSidebar activeView={activeView} setActiveView={setActiveView} />
+                <div className="space-y-6">
+                   <div>
+                      <h1 className="text-3xl font-bold font-headline tracking-tight">{getPageTitle()}</h1>
+                      <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
+                   </div>
+                   <Suspense fallback={<LoadingState />}>
+                    {renderContent()}
+                   </Suspense>
+                </div>
+            </div>
         )
       default:
         return <EmployeeDashboard />;
@@ -395,17 +452,8 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="grid lg:grid-cols-[250px_1fr] gap-8 items-start">
-        <AnalyticsSidebar />
-        <div className="space-y-6">
-           <div>
-              <h1 className="text-3xl font-bold font-headline tracking-tight">Analytics Dashboard</h1>
-              <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
-           </div>
-           <Suspense fallback={<LoadingState />}>
-            {renderDashboard()}
-           </Suspense>
-        </div>
-    </div>
+    <Suspense fallback={<LoadingState />}>
+        {renderDashboard()}
+    </Suspense>
   );
 }
