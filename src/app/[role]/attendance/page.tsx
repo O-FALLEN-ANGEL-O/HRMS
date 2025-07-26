@@ -10,7 +10,7 @@ import { format, getMonth, getYear, setMonth, setYear, subDays, isValid } from '
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Check, X, Loader2, Calendar as CalendarIcon, Briefcase, Clock, Home } from 'lucide-react';
+import { Plus, Check, X, Loader2, Calendar as CalendarIcon, Briefcase, Clock, Home, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -99,28 +99,27 @@ export default function AttendancePage() {
 
         const getStatusClass = (status: string) => {
             switch (status) {
-                case 'Present': return 'bg-green-500';
-                case 'Absent': return 'bg-red-500';
-                case 'Leave': return 'bg-yellow-500';
-                case 'Week Off': return 'bg-gray-400';
-                case 'Holiday': return 'bg-purple-500';
+                case 'Present': return 'bg-green-100 border-green-200 text-green-800';
+                case 'Absent': return 'bg-red-100 border-red-200 text-red-800';
+                case 'Leave': return 'bg-yellow-100 border-yellow-200 text-yellow-800';
+                case 'Week Off': return 'bg-gray-100 border-gray-200 text-gray-800';
+                case 'Holiday': return 'bg-purple-100 border-purple-200 text-purple-800';
                 default: return '';
             }
         }
         
         return (
-            <div className='absolute inset-0 p-1.5 text-xs text-left overflow-hidden flex flex-col justify-between'>
-                <div className='flex justify-end'>
-                    <span className={`h-2 w-2 rounded-full ${getStatusClass(dayData.status)}`} title={dayData.status}></span>
-                </div>
-                {dayData.status === 'Present' && (
-                    <div className='space-y-0.5'>
-                        <p className='text-[10px] text-muted-foreground'>{dayData.checkIn} - {dayData.checkOut}</p>
-                        <div className="flex items-center gap-1 text-[11px] font-semibold">
-                            {dayData.location === 'Home' ? <Home className="h-3 w-3" /> : <Briefcase className="h-3 w-3" />}
-                            <span>{dayData.totalHours}</span>
-                        </div>
+            <div className={`absolute bottom-1 left-1 right-1 ${getStatusClass(dayData.status)} rounded-md p-1 text-xs`}>
+                {dayData.status === 'Present' ? (
+                     <div className='space-y-0.5 text-left'>
+                        <p className='text-[10px]'>{dayData.checkIn} - {dayData.checkOut}</p>
+                        <p className="font-semibold text-[11px] flex items-center gap-1">
+                           {dayData.location === 'Home' ? <Home className="h-3 w-3" /> : <Briefcase className="h-3 w-3" />}
+                           {dayData.totalHours}
+                        </p>
                     </div>
+                ) : (
+                    <p className="font-semibold text-center text-[11px]">{dayData.status}</p>
                 )}
             </div>
         )
@@ -131,29 +130,16 @@ export default function AttendancePage() {
             <Card>
                 <CardHeader>
                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                     <div>
-                        <CardTitle>My Attendance</CardTitle>
-                        <CardDescription>Review your monthly attendance, leaves, and holidays.</CardDescription>
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" onClick={() => setMonth(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
+                            <ChevronLeft className="h-4 w-4"/>
+                        </Button>
+                         <h2 className="text-xl font-semibold text-gray-700">{format(month, 'MMMM yyyy')}</h2>
+                        <Button variant="outline" size="icon" onClick={() => setMonth(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
+                            <ChevronRight className="h-4 w-4"/>
+                        </Button>
                      </div>
-                      <div className="flex items-center gap-2">
-                            <Select value={getYear(month).toString()} onValueChange={handleYearChange}>
-                                <SelectTrigger className="w-[120px]">
-                                    <SelectValue placeholder="Year"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {years.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                            <Select value={getMonth(month).toString()} onValueChange={handleMonthChange}>
-                                <SelectTrigger className="w-[150px]">
-                                    <SelectValue placeholder="Month"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {months.map(m => <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                             <Button><Plus className="mr-2 h-4 w-4"/> Regularization</Button>
-                      </div>
+                     <Button><Plus className="mr-2 h-4 w-4"/> Attendance Regularization</Button>
                    </div>
                 </CardHeader>
                 <CardContent>
@@ -264,3 +250,5 @@ export default function AttendancePage() {
         </div>
     );
 }
+
+    
