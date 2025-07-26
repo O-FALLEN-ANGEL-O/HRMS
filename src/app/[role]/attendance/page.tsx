@@ -139,7 +139,7 @@ export default function AttendancePage() {
                            day_disabled: "text-gray-400",
                            day_outside: "text-gray-400",
                            row: 'divide-x divide-gray-200',
-                           table: 'border-t border-l border-gray-200',
+                           table: 'w-full border-t border-l border-gray-200',
                            head_cell: 'py-3 bg-gray-50 font-semibold text-gray-600 text-sm',
                         }}
                          modifiers={{
