@@ -10,13 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap } from 'lucide-react';
+import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell } from 'recharts';
 
 type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback';
 
@@ -28,7 +29,7 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: Analytics
         { id: 'benchmarking', label: 'Benchmarking', icon: BarChart },
         { id: 'performance', label: 'Performance Metrics', icon: TrendingUpIcon },
         { id: 'demographics', label: 'Employee Demographics', icon: Users },
-        { id: 'recruitment', label: 'Recruitment Statistics', icon: FileText },
+        { id: 'recruitment', label: 'Recruitment Statistics', icon: Briefcase },
         { id: 'retention', label: 'Retention & Attrition', icon: Flag },
         { id: 'training', label: 'Training & Development', icon: BrainCircuit },
     ];
@@ -513,6 +514,124 @@ const TrainingView = () => (
     </div>
 );
 
+const funnelData = [
+  { value: 1250, name: 'Applied', fill: 'hsl(var(--chart-1))' },
+  { value: 680, name: 'Screening', fill: 'hsl(var(--chart-2))' },
+  { value: 320, name: 'Interview', fill: 'hsl(var(--chart-3))' },
+  { value: 150, name: 'Offer', fill: 'hsl(var(--chart-4))' },
+  { value: 95, name: 'Hired', fill: 'hsl(var(--chart-5))' },
+];
+
+const sourceOfHireData = [
+  { name: 'Referrals', value: 45, fill: 'hsl(var(--chart-1))'},
+  { name: 'LinkedIn', value: 30, fill: 'hsl(var(--chart-2))'},
+  { name: 'Job Portals', value: 15, fill: 'hsl(var(--chart-3))'},
+  { name: 'Career Site', value: 10, fill: 'hsl(var(--chart-4))'},
+];
+
+const topRoles = [
+    { title: 'Senior Backend Engineer', department: 'Engineering', applicants: 45 },
+    { title: 'Product Designer', department: 'Design', applicants: 32 },
+    { title: 'Marketing Manager', department: 'Marketing', applicants: 28 },
+];
+
+const RecruitmentView = () => (
+    <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Time to Fill</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">32 Days</div>
+                    <p className="text-xs text-muted-foreground">Average across all roles</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Cost Per Hire</CardTitle>
+                    <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">$4,150</div>
+                    <p className="text-xs text-muted-foreground">-5% from last quarter</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Offer Acceptance Rate</CardTitle>
+                    <Percent className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">88%</div>
+                    <p className="text-xs text-muted-foreground">+3% from last quarter</p>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="grid gap-8 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Hiring Funnel</CardTitle>
+                    <CardDescription>Conversion rates through the hiring pipeline.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <FunnelChart>
+                            <Tooltip />
+                            <Funnel dataKey="value" data={funnelData} isAnimationActive>
+                                <LabelList position="right" fill="#000" stroke="none" dataKey="name" />
+                            </Funnel>
+                        </FunnelChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Source of Hire</CardTitle>
+                    <CardDescription>Where our new hires are coming from.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[350px]">
+                     <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie data={sourceOfHireData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                               {sourceOfHireData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Top Open Roles</CardTitle>
+                <CardDescription>Roles with the highest number of active applicants.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Job Title</TableHead>
+                            <TableHead>Department</TableHead>
+                            <TableHead className="text-right">Applicants</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {topRoles.map(role => (
+                            <TableRow key={role.title}>
+                                <TableCell className="font-medium">{role.title}</TableCell>
+                                <TableCell>{role.department}</TableCell>
+                                <TableCell className="text-right">{role.applicants}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    </div>
+);
+
 
 function ComingSoonView({ title, icon: Icon }: { title: string, icon: React.ElementType }) {
     return (
@@ -627,7 +746,7 @@ export default function AnalyticsPage() {
       case 'benchmarking': return <BenchmarkingView />;
       case 'performance': return <PerformanceMetricsView />;
       case 'demographics': return <DemographicsView />;
-      case 'recruitment': return <ComingSoonView title="Recruitment Statistics" icon={FileText} />;
+      case 'recruitment': return <RecruitmentView />;
       case 'retention': return <RetentionView />;
       case 'training': return <TrainingView />;
       case 'glossary': return <GlossaryView />;
