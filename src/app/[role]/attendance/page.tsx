@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, getDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,40 +13,45 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
-// Mock attendance data
-const detailedAttendanceLog: Record<
-  string,
-  {
-    status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday';
-    checkIn?: string;
-    checkOut?: string;
-    totalHours?: string;
-    location: 'Office' | 'Home';
-  }
-> = Array.from({ length: 31 }, (_, i) => i + 1).reduce((acc, day) => {
-    const date = new Date(2025, 6, day); // July 2025
-    const dateKey = format(date, 'yyyy-MM-dd');
-    const dayOfWeek = date.getDay();
+// Function to generate mock attendance data for a given month and year
+const generateAttendanceLog = (year: number, month: number) => {
+    const log: Record<string, {
+        status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday';
+        checkIn?: string;
+        checkOut?: string;
+        totalHours?: string;
+        location: 'Office' | 'Home';
+    }> = {};
 
-    if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekends
-        acc[dateKey] = { status: 'Week Off', location: 'Office' };
-    } else if (day === 15) {
-        acc[dateKey] = { status: 'Holiday', location: 'Office' };
-    } else if (day === 10) {
-        acc[dateKey] = { status: 'Leave', location: 'Office' };
-    } else if (day === 18) {
-        acc[dateKey] = { status: 'Absent', location: 'Office' };
-    } else if (day > 5 && day < 28) {
-        acc[dateKey] = {
-            status: 'Present',
-            checkIn: '09:01',
-            checkOut: '18:05',
-            totalHours: '9h 4m',
-            location: 'Office',
-        };
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        const dayOfWeek = getDay(date); // Sunday is 0, Saturday is 6
+
+        // Simulate a standard shift: Saturday and Sunday are off
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            log[dateKey] = { status: 'Week Off', location: 'Office' };
+        } else if (day === 15) { // Mock Holiday
+            log[dateKey] = { status: 'Holiday', location: 'Office' };
+        } else if (day === 10) { // Mock Leave
+            log[dateKey] = { status: 'Leave', location: 'Office' };
+        } else if (day === 18) { // Mock Absent
+            log[dateKey] = { status: 'Absent', location: 'Office' };
+        } else { // Mock Present
+             log[dateKey] = {
+                status: 'Present',
+                checkIn: '09:01',
+                checkOut: '18:05',
+                totalHours: '9h 4m',
+                location: 'Office',
+            };
+        }
     }
-    return acc;
-}, {} as Record<string, { status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday'; checkIn?: string; checkOut?: string; totalHours?: string; location: 'Office' | 'Home';}>);
+    return log;
+};
+
 
 function RegularizationDialog() {
     const { toast } = useToast();
@@ -108,7 +113,8 @@ function RegularizationDialog() {
 
 export default function AttendancePage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
-  const { toast } = useToast();
+  
+  const detailedAttendanceLog = generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth());
 
   const DayCellContent = ({ date }: { date: Date }) => {
     if (!date || !date.getDate()) return null;
