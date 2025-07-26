@@ -73,8 +73,8 @@ export default function AttendancePage() {
     
     const [month, setMonth] = useState(new Date());
 
-    const years = Array.from({ length: 10 }, (_, i) => getYear(new Date()) - 5 + i);
-    const months = Array.from({ length: 12 }, (_, i) => ({ value: i, label: format(setMonth(new Date(), i), 'MMMM') }));
+    const years = useMemo(() => Array.from({ length: 10 }, (_, i) => getYear(new Date()) - 5 + i), []);
+    const months = useMemo(() => Array.from({ length: 12 }, (_, i) => ({ value: i, label: format(new Date(2000, i, 1), 'MMMM') })), []);
 
     const handleYearChange = (year: string) => {
         setMonth(prev => setYear(prev, parseInt(year)));
