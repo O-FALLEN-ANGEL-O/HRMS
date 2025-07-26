@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit } from 'lucide-react';
+import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -29,7 +29,7 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: Analytics
         { id: 'performance', label: 'Performance Metrics', icon: TrendingUpIcon },
         { id: 'demographics', label: 'Employee Demographics', icon: Users },
         { id: 'recruitment', label: 'Recruitment Statistics', icon: FileText },
-        { id: 'retention', label: 'Retention Analysis', icon: Flag },
+        { id: 'retention', label: 'Retention & Attrition', icon: Flag },
         { id: 'training', label: 'Training & Development', icon: BrainCircuit },
     ];
 
@@ -359,6 +359,161 @@ const PerformanceMetricsView = () => (
     </div>
 );
 
+const DemographicsView = () => (
+    <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">1,254</div>
+                    <p className="text-xs text-muted-foreground">+2.5% from last month</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Gender Ratio (M/F)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">60 / 40</div>
+                    <p className="text-xs text-muted-foreground">60% Male, 40% Female</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Average Age</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">32.4</div>
+                    <p className="text-xs text-muted-foreground">Years</p>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="grid gap-8 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Headcount by Department</CardTitle>
+                </CardHeader>
+                <CardContent className="h-80">
+                    <Image src="https://placehold.co/600x400.png" alt="Bar chart of headcount by department" width={600} height={400} className="w-full h-full object-contain" data-ai-hint="bar chart"/>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Age Distribution</CardTitle>
+                </CardHeader>
+                <CardContent className="h-80">
+                     <Image src="https://placehold.co/600x400.png" alt="Pie chart of age distribution" width={600} height={400} className="w-full h-full object-contain" data-ai-hint="pie chart"/>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+);
+
+const RetentionView = () => (
+  <div className="space-y-8">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Turnover Rate</CardTitle>
+          <UserMinus className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">8.1%</div>
+          <p className="text-xs text-muted-foreground">-1.2% from last quarter</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Average Tenure</CardTitle>
+          <Clock className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">4.2 Years</div>
+          <p className="text-xs text-muted-foreground">+0.3 years from last year</p>
+        </CardContent>
+      </Card>
+       <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">New Hires</CardTitle>
+          <UserPlus className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">45</div>
+          <p className="text-xs text-muted-foreground">This quarter</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Departures</CardTitle>
+          <UserMinus className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">21</div>
+          <p className="text-xs text-muted-foreground">This quarter</p>
+        </CardContent>
+      </Card>
+    </div>
+    <Card>
+        <CardHeader>
+            <CardTitle>Turnover Trend</CardTitle>
+            <CardDescription>Monthly new hires vs. departures over the last year.</CardDescription>
+        </CardHeader>
+        <CardContent className="h-96">
+            <Image src="https://placehold.co/800x400.png" alt="Line chart showing turnover trend" width={800} height={400} className="w-full h-full object-contain" data-ai-hint="line chart"/>
+        </CardContent>
+    </Card>
+  </div>
+);
+
+const TrainingView = () => (
+     <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Training Programs Active</CardTitle>
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">24</div>
+                    <p className="text-xs text-muted-foreground">Across all departments</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Employee Participation</CardTitle>
+                     <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">78%</div>
+                    <p className="text-xs text-muted-foreground">Of eligible employees enrolled</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg. Performance Increase</CardTitle>
+                    <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">+12%</div>
+                    <p className="text-xs text-muted-foreground">Post-training assessment scores</p>
+                </CardContent>
+            </Card>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Training Completion Rate by Department</CardTitle>
+            </CardHeader>
+            <CardContent className="h-96">
+                <Image src="https://placehold.co/800x400.png" alt="Bar chart of training completion rates" width={800} height={400} className="w-full h-full object-contain" data-ai-hint="bar chart"/>
+            </CardContent>
+        </Card>
+    </div>
+);
+
+
 function ComingSoonView({ title, icon: Icon }: { title: string, icon: React.ElementType }) {
     return (
       <Card>
@@ -471,10 +626,10 @@ export default function AnalyticsPage() {
     switch(activeView) {
       case 'benchmarking': return <BenchmarkingView />;
       case 'performance': return <PerformanceMetricsView />;
-      case 'demographics': return <ComingSoonView title="Employee Demographics" icon={Users} />;
+      case 'demographics': return <DemographicsView />;
       case 'recruitment': return <ComingSoonView title="Recruitment Statistics" icon={FileText} />;
-      case 'retention': return <ComingSoonView title="Retention Analysis" icon={Flag} />;
-      case 'training': return <ComingSoonView title="Training & Development" icon={BrainCircuit} />;
+      case 'retention': return <RetentionView />;
+      case 'training': return <TrainingView />;
       case 'glossary': return <GlossaryView />;
       case 'feedback': return <FeedbackView />;
       default: return <BenchmarkingView />;
@@ -487,7 +642,7 @@ export default function AnalyticsPage() {
       case 'performance': return 'Performance Metrics';
       case 'demographics': return 'Employee Demographics';
       case 'recruitment': return 'Recruitment Statistics';
-      case 'retention': return 'Retention Analysis';
+      case 'retention': return 'Retention & Attrition';
       case 'training': return 'Training & Development';
       case 'glossary': return 'Glossary & FAQ';
       case 'feedback': return 'Give Feedback';
@@ -529,5 +684,3 @@ export default function AnalyticsPage() {
     </React.Suspense>
   );
 }
-
-    
