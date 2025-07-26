@@ -136,64 +136,62 @@ export default function AttendancePage() {
         </div>
       </header>
 
-      <Card className="shadow-lg border-gray-100">
-        <CardHeader className="p-6">
-            <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
-                        <ChevronLeft className="h-5 w-5 text-gray-600" />
-                    </Button>
-                    <h2 className="text-xl font-semibold text-gray-700">{format(currentDate, 'MMMM yyyy')}</h2>
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
-                        <ChevronRight className="h-5 w-5 text-gray-600" />
-                    </Button>
-                </div>
-                <div className="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div><span>Present</span></div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div><span>Absent</span></div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div><span>Week off</span></div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div><span>Leave</span></div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div><span>Holiday</span></div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div><span>Office</span></div>
-                </div>
+      <Card className="shadow-lg border-gray-100 p-6">
+        <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
+                    <ChevronLeft className="h-5 w-5 text-gray-600" />
+                </Button>
+                <h2 className="text-xl font-semibold text-gray-700">{format(currentDate, 'MMMM yyyy')}</h2>
+                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
+                    <ChevronRight className="h-5 w-5 text-gray-600" />
+                </Button>
             </div>
-        </CardHeader>
+            <div className="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
+                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div><span>Present</span></div>
+                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div><span>Absent</span></div>
+                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div><span>Week off</span></div>
+                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div><span>Leave</span></div>
+                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div><span>Holiday</span></div>
+                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div><span>Office</span></div>
+            </div>
+        </div>
 
-        <CardContent className="p-2 sm:p-4 min-w-full overflow-x-auto">
-          <Calendar
-            month={currentDate}
-            onMonthChange={setCurrentDate}
-            components={{
-              DayContent: DayCellContent,
-            }}
-            className="detailed-calendar"
-            classNames={{
-              table: "w-full border-collapse",
-              head_row: "flex",
-              head_cell: "text-center w-[14.28%] py-3 bg-gray-100 font-semibold text-gray-600 text-sm",
-              row: "flex w-full mt-2",
-              cell: "relative h-32 w-[14.28%] p-2 bg-white border border-gray-200",
-              day: "absolute top-2 left-2 text-sm",
-              day_today: "text-indigo-600 font-bold",
-              day_disabled: "text-gray-400",
-              day_outside: "text-gray-400 bg-gray-50",
-            }}
-            modifiers={{
-                weekOff: date => {
-                    const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
-                    return dayInfo?.status === 'Week Off';
-                },
-                 holiday: date => {
-                    const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
-                    return dayInfo?.status === 'Holiday';
-                }
-            }}
-            modifiersClassNames={{
-              weekOff: '!bg-red-50 text-red-700',
-              holiday: '!bg-purple-50 text-purple-700'
-            }}
-          />
-        </CardContent>
+        <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-200">
+            <Calendar
+                month={currentDate}
+                onMonthChange={setCurrentDate}
+                components={{
+                DayContent: DayCellContent,
+                }}
+                className="detailed-calendar"
+                classNames={{
+                    table: "w-full",
+                    head_row: "grid grid-cols-7",
+                    head_cell: "text-center py-3 bg-gray-100 font-semibold text-gray-600 text-sm",
+                    row: "grid grid-cols-7",
+                    cell: "bg-white p-3 h-32 text-gray-900",
+                    day: "text-gray-900",
+                    day_today: "text-indigo-600 font-bold",
+                    day_disabled: "text-gray-400",
+                    day_outside: "text-gray-400 bg-gray-50",
+                }}
+                modifiers={{
+                    weekOff: date => {
+                        const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+                        return dayInfo?.status === 'Week Off';
+                    },
+                    holiday: date => {
+                        const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+                        return dayInfo?.status === 'Holiday';
+                    }
+                }}
+                modifiersClassNames={{
+                weekOff: '!bg-red-50 text-red-700',
+                holiday: '!bg-purple-50 text-purple-700'
+                }}
+            />
+        </div>
       </Card>
     </div>
   );

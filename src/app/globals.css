@@ -101,6 +101,25 @@
     @apply bg-transparent;
   }
 
+  .detailed-calendar .rdp-months {
+    @apply block;
+  }
+  .detailed-calendar .rdp-month {
+    @apply w-full;
+  }
+  .detailed-calendar .rdp-table {
+    @apply w-full;
+  }
+  .detailed-calendar .rdp-head {
+    @apply hidden;
+  }
+  .detailed-calendar .rdp-body,
+  .detailed-calendar .rdp-row {
+    @apply contents;
+  }
+  .detailed-calendar .rdp-cell {
+    @apply relative;
+  }
 }
 
 @layer components {
@@ -130,5 +149,3 @@
     75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0    100%,0    100%)}
     100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0    100%,0    0   )}
 }
-
-    
