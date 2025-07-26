@@ -6,11 +6,14 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Award, Cake, FileText, MoreHorizontal, Inbox, Gift, Hand, Search, Bell, Settings, Users, MessageSquare, ThumbsUp, Share2, Lightbulb, CalendarDays } from 'lucide-react';
+import { Award, Cake, FileText, MoreHorizontal, Inbox, Gift, Hand, Search, Bell, Settings, Users, MessageSquare, ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Image from 'next/image';
 
 const wallOfFame = [
     { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
@@ -24,19 +27,33 @@ const leaderboardList = [
     { rank: 6, name: 'Praisy S Shetty', badges: 1, avatar: 'https://ui-avatars.com/api/?name=Praisy+S&background=random' },
 ]
 
-const feedPost = {
-    author: 'Divyashree',
-    authorRole: 'Specialist',
-    timestamp: '1 month ago',
-    avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
-};
+const feedPosts = [
+    {
+        author: 'Divyashree',
+        authorRole: 'Specialist',
+        timestamp: '1 month ago',
+        avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
+        title: 'Employee Referral Program is Active!',
+        image: 'https://placehold.co/800x400/A893E0/FFFFFF?text=Referrals',
+        imageHint: 'employee referral program'
+    },
+    {
+        author: 'Jackson Lee',
+        authorRole: 'Head of HR',
+        timestamp: '2 months ago',
+        avatar: 'https://ui-avatars.com/api/?name=Jackson+Lee&background=random',
+        title: 'Annual Company Retreat Location Announced!',
+        image: 'https://placehold.co/800x400/E6E6FA/333333?text=Retreat',
+        imageHint: 'company retreat beach'
+    }
+];
 
-export default function DashboardPage() {
-  const { user } = useAuth();
-  const [date, setDate] = useState<Date | undefined>(new Date(2025, 6, 25));
-
-  return (
-    <div className="space-y-6">
+const DesktopDashboard = () => {
+    const { user } = useAuth();
+    const [date, setDate] = useState<Date | undefined>(new Date(2025, 6, 25));
+    
+    return (
+        <div className="space-y-6">
        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
           <p className="text-gray-500 dark:text-gray-400">You are having a great day.</p>
@@ -101,22 +118,22 @@ export default function DashboardPage() {
                 <CardHeader>
                     <div className="flex items-start space-x-4">
                         <Avatar className="w-14 h-14">
-                            <AvatarImage src={feedPost.avatar} alt={feedPost.author} data-ai-hint="person portrait" />
-                            <AvatarFallback>{feedPost.author.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={feedPosts[0].avatar} alt={feedPosts[0].author} data-ai-hint="person portrait" />
+                            <AvatarFallback>{feedPosts[0].author.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
                             <div className="flex justify-between items-center w-full">
-                                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">{feedPost.author}</h3>
+                                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">{feedPosts[0].author}</h3>
                             </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">People Operations</p>
-                            <p className="text-xs text-gray-400 mt-1">{feedPost.timestamp}</p>
+                            <p className="text-xs text-gray-400 mt-1">{feedPosts[0].timestamp}</p>
                         </div>
                          <span className="ml-auto bg-purple-100 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Featured</span>
                     </div>
                 </CardHeader>
                 <CardContent className="border-t pt-4">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-lg">Employee Referral Program is Active!</p>
-                    <img alt="Employee Referral Program" data-ai-hint="employee referral" className="w-full rounded-lg" src="https://placehold.co/800x400.png" />
+                    <p className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-lg">{feedPosts[0].title}</p>
+                    <Image alt={feedPosts[0].title} data-ai-hint={feedPosts[0].imageHint} className="w-full rounded-lg aspect-video object-cover" width={800} height={400} src={feedPosts[0].image} />
                      <div className="mt-6 flex justify-between items-center text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-6">
                             <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
@@ -217,5 +234,106 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    )
+};
+
+
+const MobileDashboard = () => {
+    const { user } = useAuth();
+    if (!user) return null;
+
+    return (
+        <div className="space-y-6">
+            <header className="flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                    <Avatar className="h-12 w-12">
+                        <AvatarImage src={user.profile.profile_picture_url} />
+                        <AvatarFallback>{user.profile.full_name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="font-semibold text-lg">Hello, {user.profile.full_name.split(' ')[0]}!</p>
+                        <p className="text-sm text-muted-foreground">Welcome back</p>
+                    </div>
+                </div>
+                 <div className="flex items-center space-x-1">
+                    <Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button>
+                    <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5"/>
+                        <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-background"></span>
+                    </Button>
+                </div>
+            </header>
+            
+            <Card>
+                <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-sm">Profile Completion</span>
+                        <span className="text-sm font-bold text-primary">12.5%</span>
+                    </div>
+                    <Progress value={12.5} className="h-2" />
+                    <Link href={`/${user.role}/profile`} className="text-sm text-primary font-medium mt-3 inline-flex items-center">
+                        Complete your profile <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                </CardContent>
+            </Card>
+            
+            <Tabs defaultValue="feed" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="feed">Feed</TabsTrigger>
+                    <TabsTrigger value="highlights">Highlights</TabsTrigger>
+                    <TabsTrigger value="fame">Wall of Fame</TabsTrigger>
+                </TabsList>
+                <TabsContent value="feed" className="space-y-4">
+                    {feedPosts.map((post, index) => (
+                        <Card key={index}>
+                            <CardHeader className="flex flex-row justify-between items-start p-4">
+                                <div className="flex items-center space-x-3">
+                                    <Avatar className="w-10 h-10">
+                                        <AvatarImage src={post.avatar} data-ai-hint="person avatar"/>
+                                        <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold text-sm">{post.author}</p>
+                                        <p className="text-xs text-muted-foreground">{post.authorRole} • {post.timestamp}</p>
+                                    </div>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4"/>
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 space-y-3">
+                                <p className="font-semibold leading-snug">{post.title}</p>
+                                <Image 
+                                    alt={post.title} 
+                                    data-ai-hint={post.imageHint} 
+                                    className="w-full rounded-lg aspect-video object-cover" 
+                                    width={800} height={400} 
+                                    src={post.image} />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </TabsContent>
+                 <TabsContent value="highlights">
+                    <Card><CardContent className="p-4 text-center text-muted-foreground">Highlights coming soon.</CardContent></Card>
+                 </TabsContent>
+                <TabsContent value="fame">
+                    <Card><CardContent className="p-4 text-center text-muted-foreground">Wall of Fame coming soon.</CardContent></Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    )
+}
+
+
+export default function DashboardPage() {
+  return (
+    <>
+        <div className="hidden md:block">
+            <DesktopDashboard />
+        </div>
+        <div className="md:hidden">
+            <MobileDashboard />
+        </div>
+    </>
   );
 }
