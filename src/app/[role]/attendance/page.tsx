@@ -133,7 +133,7 @@ function AttendanceDetailPanel({ date, onClose }: { date: Date, onClose: () => v
         <aside className="absolute top-0 right-0 h-full w-full max-w-md bg-card shadow-2xl p-6 flex flex-col z-20 transform transition-transform duration-300 ease-in-out">
             <div className="flex justify-between items-center pb-4 border-b">
                 <div className="flex items-center space-x-2">
-                    <Input className="p-1 border rounded-md" type="date" value={format(date, 'yyyy-MM-dd')}/>
+                    <Input className="p-1 border rounded-md" type="date" defaultValue={format(date, 'yyyy-MM-dd')}/>
                 </div>
                 <Button variant="ghost" size="icon" className="p-2 rounded-full hover:bg-muted" onClick={onClose}>
                     <X className="h-5 w-5" />
