@@ -1,23 +1,20 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase } from 'lucide-react';
-import Image from 'next/image';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, Bar as RechartsBar } from 'recharts';
 
 type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback';
 
@@ -69,7 +66,24 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: Analytics
 };
 
 
-const BenchmarkingView = () => (
+const BenchmarkingView = () => {
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Simulate data fetching
+        setTimeout(() => {
+            setChartData([
+                { name: 'Turnover', company: 8.2, benchmark: 10.5 },
+                { name: 'Engagement', company: 85, benchmark: 78 },
+                { name: 'Diversity', company: 65, benchmark: 70 },
+                { name: 'Time to Hire', company: 45, benchmark: 40 },
+            ]);
+            setLoading(false);
+        }, 1000);
+    }, []);
+
+    return (
     <div className="space-y-8">
         <Card>
             <CardHeader>
@@ -124,9 +138,25 @@ const BenchmarkingView = () => (
                     <CardTitle>Performance Overview vs. Benchmark</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <div className="mt-6 h-96">
-                        <Image alt="Bar chart comparing performance against benchmark" className="h-full w-full object-contain" src="https://placehold.co/800x400.png" width={800} height={400} data-ai-hint="bar chart"/>
-                    </div>
+                    {loading ? <Skeleton className="h-96" /> : (
+                         <div className="mt-6 h-96">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip contentStyle={{
+                                    backgroundColor: "hsl(var(--card))",
+                                    border: "1px solid hsl(var(--border))",
+                                    borderRadius: "var(--radius)",
+                                  }}/>
+                                <Legend />
+                                <RechartsBar dataKey="company" fill="hsl(var(--primary))" name="OptiTalent" />
+                                <RechartsBar dataKey="benchmark" fill="hsl(var(--muted-foreground))" name="Benchmark" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -198,7 +228,7 @@ const BenchmarkingView = () => (
             </div>
         </div>
     </div>
-);
+)};
 
 const performanceData = [
   {
@@ -228,7 +258,25 @@ const performanceData = [
 ];
 
 
-const PerformanceMetricsView = () => (
+const PerformanceMetricsView = () => {
+    const [trendsData, setTrendsData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setTimeout(() => {
+            setTrendsData([
+                { name: 'Q1', score: 4.1 },
+                { name: 'Q2', score: 4.3 },
+                { name: 'Q3', score: 4.2 },
+                { name: 'Q4', score: 4.5 },
+            ]);
+            setLoading(false);
+        }, 1000);
+    }, []);
+
+    const goalData = [{ name: 'Achieved', value: 85, fill: 'hsl(var(--primary))' }, { name: 'Pending', value: 15, fill: 'hsl(var(--muted))' }];
+
+    return (
     <div className="space-y-8">
         <Card>
             <CardHeader>
@@ -331,9 +379,19 @@ const PerformanceMetricsView = () => (
                         <CardTitle>Performance Trends</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-48">
-                            <Image src="https://placehold.co/400x200.png" alt="Line chart showing performance trends" width={400} height={200} className="w-full h-full object-contain" data-ai-hint="line chart"/>
-                        </div>
+                        {loading ? <Skeleton className="h-48" /> : (
+                            <div className="h-48">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={trendsData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" />
+                                        <YAxis domain={[0, 5]}/>
+                                        <Tooltip />
+                                        <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 <Card>
@@ -342,25 +400,48 @@ const PerformanceMetricsView = () => (
                     </CardHeader>
                     <CardContent>
                         <div className="flex h-40 items-center justify-center">
-                             <div className="relative h-32 w-32">
-                                <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                                    <circle className="text-muted/20" cx="18" cy="18" r="15.9155" fill="none" strokeWidth="3"></circle>
-                                    <circle className="text-primary" cx="18" cy="18" r="15.9155" fill="none" strokeWidth="3" strokeDasharray="85, 100" strokeLinecap="round"></circle>
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-2xl font-bold">85%</span>
-                                    <span className="text-sm text-muted-foreground">Achieved</span>
-                                </div>
-                            </div>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={goalData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5}>
+                                        {goalData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
                         </div>
                     </CardContent>
                 </Card>
             </div>
         </div>
     </div>
-);
+)};
 
-const DemographicsView = () => (
+const DemographicsView = () => {
+    const [demographicsData, setDemographicsData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setTimeout(() => {
+            setDemographicsData({
+                byDept: [
+                    { name: 'Engineering', value: 450, fill: 'hsl(var(--chart-1))' },
+                    { name: 'Sales', value: 280, fill: 'hsl(var(--chart-2))' },
+                    { name: 'Marketing', value: 180, fill: 'hsl(var(--chart-3))' },
+                    { name: 'HR', value: 120, fill: 'hsl(var(--chart-4))' },
+                    { name: 'Support', value: 224, fill: 'hsl(var(--chart-5))' },
+                ],
+                byAge: [
+                    { name: '18-24', value: 250, fill: 'hsl(var(--chart-1))' },
+                    { name: '25-34', value: 600, fill: 'hsl(var(--chart-2))' },
+                    { name: '35-44', value: 300, fill: 'hsl(var(--chart-3))' },
+                    { name: '45+', value: 104, fill: 'hsl(var(--chart-4))' },
+                ]
+            });
+            setLoading(false);
+        }, 1000);
+    }, []);
+
+    return (
     <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -398,7 +479,17 @@ const DemographicsView = () => (
                     <CardTitle>Headcount by Department</CardTitle>
                 </CardHeader>
                 <CardContent className="h-80">
-                    <Image src="https://placehold.co/600x400.png" alt="Bar chart of headcount by department" width={600} height={400} className="w-full h-full object-contain" data-ai-hint="bar chart"/>
+                    {loading ? <Skeleton className="h-full w-full" /> : (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={demographicsData.byDept} layout="vertical">
+                           <CartesianGrid strokeDasharray="3 3" />
+                           <XAxis type="number" />
+                           <YAxis dataKey="name" type="category" width={80} />
+                           <Tooltip />
+                           <RechartsBar dataKey="value" name="Headcount" fill="hsl(var(--primary))" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                    )}
                 </CardContent>
             </Card>
             <Card>
@@ -406,14 +497,41 @@ const DemographicsView = () => (
                     <CardTitle>Age Distribution</CardTitle>
                 </CardHeader>
                 <CardContent className="h-80">
-                     <Image src="https://placehold.co/600x400.png" alt="Pie chart of age distribution" width={600} height={400} className="w-full h-full object-contain" data-ai-hint="pie chart"/>
+                     {loading ? <Skeleton className="h-full w-full" /> : (
+                     <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie data={demographicsData.byAge} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                               {demographicsData.byAge.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                     )}
                 </CardContent>
             </Card>
         </div>
     </div>
-);
+)};
 
-const RetentionView = () => (
+const RetentionView = () => {
+    const [retentionData, setRetentionData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setTimeout(() => {
+            setRetentionData([
+                { name: 'Jan', Hires: 15, Departures: 5 },
+                { name: 'Feb', Hires: 20, Departures: 7 },
+                { name: 'Mar', Hires: 18, Departures: 4 },
+                { name: 'Apr', Hires: 25, Departures: 8 },
+                { name: 'May', Hires: 22, Departures: 6 },
+                { name: 'Jun', Hires: 30, Departures: 10 },
+            ]);
+            setLoading(false);
+        }, 1000);
+    }, []);
+
+    return (
   <div className="space-y-8">
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -463,13 +581,42 @@ const RetentionView = () => (
             <CardDescription>Monthly new hires vs. departures over the last year.</CardDescription>
         </CardHeader>
         <CardContent className="h-96">
-            <Image src="https://placehold.co/800x400.png" alt="Line chart showing turnover trend" width={800} height={400} className="w-full h-full object-contain" data-ai-hint="line chart"/>
+            {loading ? <Skeleton className="h-full w-full" /> : (
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={retentionData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="Hires" stroke="hsl(var(--primary))" />
+                    <Line type="monotone" dataKey="Departures" stroke="hsl(var(--destructive))" />
+                </LineChart>
+            </ResponsiveContainer>
+            )}
         </CardContent>
     </Card>
   </div>
-);
+)};
 
-const TrainingView = () => (
+const TrainingView = () => {
+    const [trainingData, setTrainingData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setTimeout(() => {
+            setTrainingData([
+                { name: 'Engineering', rate: 95 },
+                { name: 'Sales', rate: 80 },
+                { name: 'Marketing', rate: 88 },
+                { name: 'Support', rate: 92 },
+                { name: 'HR', rate: 98 },
+            ]);
+            setLoading(false);
+        }, 1000);
+    }, []);
+
+    return (
      <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
@@ -508,11 +655,21 @@ const TrainingView = () => (
                 <CardTitle>Training Completion Rate by Department</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-                <Image src="https://placehold.co/800x400.png" alt="Bar chart of training completion rates" width={800} height={400} className="w-full h-full object-contain" data-ai-hint="bar chart"/>
+                {loading ? <Skeleton className="h-full w-full" /> : (
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={trainingData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
+                        <Tooltip />
+                        <RechartsBar dataKey="rate" name="Completion Rate" fill="hsl(var(--primary))" />
+                    </BarChart>
+                </ResponsiveContainer>
+                )}
             </CardContent>
         </Card>
     </div>
-);
+)};
 
 const funnelData = [
   { value: 1250, name: 'Applied', fill: 'hsl(var(--chart-1))' },
@@ -632,20 +789,6 @@ const RecruitmentView = () => (
     </div>
 );
 
-
-function ComingSoonView({ title, icon: Icon }: { title: string, icon: React.ElementType }) {
-    return (
-      <Card>
-        <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="p-4 bg-primary/10 rounded-full">
-            <Icon className="h-12 w-12 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold">{title} Analytics</h3>
-          <p className="text-muted-foreground text-sm max-w-md">A dedicated analytics dashboard for this section is under construction. Key metrics and visualizations for {title.toLowerCase()} will be available here soon.</p>
-        </CardContent>
-      </Card>
-    )
-}
 
 function GlossaryView() {
     const glossaryTerms = [
@@ -793,7 +936,17 @@ export default function AnalyticsPage() {
             </div>
         )
       default:
-        return <ComingSoonView title="Analytics" icon={BarChart} />;
+        return (
+            <Card>
+                <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="p-4 bg-primary/10 rounded-full">
+                    <BarChart className="h-12 w-12 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold">Analytics Unavailable</h3>
+                <p className="text-muted-foreground text-sm max-w-md">The analytics dashboard is not available for your current role.</p>
+                </CardContent>
+            </Card>
+        )
     }
   }
 
@@ -803,3 +956,4 @@ export default function AnalyticsPage() {
     </React.Suspense>
   );
 }
+
