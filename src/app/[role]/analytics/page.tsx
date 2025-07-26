@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,14 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart as RechartsBarChart, Bar as RechartsBar } from 'recharts';
 
-type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback';
+type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback' | 'individual';
 
 const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: AnalyticsView, setActiveView: (view: AnalyticsView) => void }) => {
     const { user } = useAuth();
@@ -25,6 +26,7 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: Analytics
     const navItems = [
         { id: 'benchmarking', label: 'Benchmarking', icon: BarChart },
         { id: 'performance', label: 'Performance Metrics', icon: TrendingUpIcon },
+        { id: 'individual', label: 'Individual Performance', icon: Target },
         { id: 'demographics', label: 'Employee Demographics', icon: Users },
         { id: 'recruitment', label: 'Recruitment Statistics', icon: Briefcase },
         { id: 'retention', label: 'Retention & Attrition', icon: Flag },
@@ -790,6 +792,125 @@ const RecruitmentView = () => (
 );
 
 
+const IndividualPerformanceView = () => {
+    const [employeeId, setEmployeeId] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [employeeData, setEmployeeData] = useState<any>(null);
+    const { toast } = useToast();
+
+    const handleFetchData = () => {
+        if (!employeeId) {
+            toast({ title: 'Please enter an Employee ID or Name', variant: 'destructive' });
+            return;
+        }
+        setLoading(true);
+        setEmployeeData(null);
+        setTimeout(() => {
+            // Mock data fetching
+            setEmployeeData({
+                name: "Anika Sharma",
+                id: "PEP0012",
+                avatar: "https://placehold.co/100x100?text=AS",
+                csat: 94,
+                qualityScore: 92,
+                resolutionTime: '15 mins',
+                ratings: [
+                    { name: 'Communication', value: 4.8 },
+                    { name: 'Problem Solving', value: 4.5 },
+                    { name: 'Product Knowledge', value: 4.7 },
+                    { name: 'Empathy', value: 4.6 },
+                ]
+            });
+            setLoading(false);
+        }, 1500);
+    };
+
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Individual Employee Performance</CardTitle>
+                    <CardDescription>Search for an employee to view their detailed performance metrics.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-3 gap-4">
+                    <Input
+                        placeholder="Enter Employee ID or Name"
+                        value={employeeId}
+                        onChange={(e) => setEmployeeId(e.target.value)}
+                    />
+                     <Select defaultValue="monthly">
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select Period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button onClick={handleFetchData} disabled={loading}>
+                        {loading && <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />}
+                        Fetch Data
+                    </Button>
+                </CardContent>
+            </Card>
+
+            {loading && <div className="text-center py-8"><div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>}
+            
+            {employeeData && (
+                 <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-4">
+                            <Avatar className="h-16 w-16">
+                                <AvatarImage src={employeeData.avatar} data-ai-hint="person avatar"/>
+                                <AvatarFallback>{employeeData.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <CardTitle className="text-xl">{employeeData.name}</CardTitle>
+                                <CardDescription>{employeeData.id}</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                         <div className="grid gap-4 md:grid-cols-3">
+                            <Card className="p-4">
+                                <p className="text-sm text-muted-foreground">CSAT Score</p>
+                                <p className="text-2xl font-bold">{employeeData.csat}%</p>
+                            </Card>
+                             <Card className="p-4">
+                                <p className="text-sm text-muted-foreground">Quality Score</p>
+                                <p className="text-2xl font-bold">{employeeData.qualityScore}%</p>
+                            </Card>
+                            <Card className="p-4">
+                                <p className="text-sm text-muted-foreground">Avg. Resolution</p>
+                                <p className="text-2xl font-bold">{employeeData.resolutionTime}</p>
+                            </Card>
+                        </div>
+                         <Card>
+                            <CardHeader><CardTitle className="text-base">Rating Breakdown</CardTitle></CardHeader>
+                            <CardContent className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsBarChart data={employeeData.ratings} layout="vertical" margin={{ left: 20 }}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis type="number" domain={[0, 5]} />
+                                        <YAxis type="category" dataKey="name" width={100} />
+                                        <Tooltip />
+                                        <RechartsBar dataKey="value" fill="hsl(var(--primary))" />
+                                    </RechartsBarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </CardContent>
+                    <CardFooter>
+                        <Button>Download Report</Button>
+                    </CardFooter>
+                </Card>
+            )}
+        </div>
+    );
+};
+
+
 function GlossaryView() {
     const glossaryTerms = [
         { term: 'Employee Turnover Rate', definition: 'The percentage of employees who leave an organization during a certain period. It is calculated by dividing the number of employees who left by the average number of employees.' },
@@ -894,6 +1015,7 @@ export default function AnalyticsPage() {
       case 'training': return <TrainingView />;
       case 'glossary': return <GlossaryView />;
       case 'feedback': return <FeedbackView />;
+      case 'individual': return <IndividualPerformanceView />;
       default: return <BenchmarkingView />;
     }
   };
@@ -902,6 +1024,7 @@ export default function AnalyticsPage() {
      switch(activeView) {
       case 'benchmarking': return 'Benchmarking';
       case 'performance': return 'Performance Metrics';
+      case 'individual': return 'Individual Performance';
       case 'demographics': return 'Employee Demographics';
       case 'recruitment': return 'Recruitment Statistics';
       case 'retention': return 'Retention & Attrition';
