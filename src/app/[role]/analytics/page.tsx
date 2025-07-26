@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
@@ -1027,7 +1027,7 @@ const ManagerDashboard = () => (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <DashboardCard title="Team Performance" value="92%" icon={TrendingUp} description="+3% from last month" />
             <DashboardCard title="Attrition Rate" value="4%" icon={UserMinus} description="This quarter" />
-            <DashboardCard title="Pending Approvals" value="5" icon={FileCheck} description="Leave & expense requests" />
+            <DashboardCard title="Pending Approvals" value="5" icon={ClipboardCheck} description="Leave & expense requests" />
             <DashboardCard title="Team Headcount" value="12" icon={Users} description="2 new hires" />
         </div>
         <Card>
@@ -1070,7 +1070,7 @@ const FinanceDashboard = () => (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <DashboardCard title="Monthly Burn" value="$125K" icon={DollarSign} description="Projected operational costs" />
             <DashboardCard title="Payroll Due" value="$250K" icon={Building} description="For this pay period" />
-            <DashboardCard title="Pending Approvals" value="12" icon={FileCheck} description="Expense reports & invoices" />
+            <DashboardCard title="Pending Approvals" value="12" icon={ClipboardCheck} description="Expense reports & invoices" />
             <DashboardCard title="Compliance Flags" value="1" icon={AlertCircle} description="Potential audit risks" />
         </div>
         <Card>
@@ -1330,4 +1330,3 @@ export default function AnalyticsPage() {
     </Suspense>
   );
 }
-

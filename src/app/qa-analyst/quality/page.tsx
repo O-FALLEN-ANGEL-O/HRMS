@@ -1,7 +1,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const completedEvaluations = [
     { id: 'EVAL-001', agent: 'Anika Sharma', interactionId: 'C-1230', score: 95, date: '2023-07-27', type: 'Chat' },
@@ -25,7 +27,8 @@ const auditFormSections = [
     { id: 's4', title: 'Closing', questions: [{ id: 'q7', text: 'Was the standard closing used?' }, { id: 'q8', text: 'Was further assistance offered?' }] },
 ];
 
-function ViewAuditDialog({ evaluation, children }: { evaluation: typeof completedEvaluations[0], children: React.ReactNode }) {
+
+const ViewAuditDialog = dynamic(() => Promise.resolve(({ evaluation, children }: { evaluation: typeof completedEvaluations[0], children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
     
@@ -89,7 +92,10 @@ function ViewAuditDialog({ evaluation, children }: { evaluation: typeof complete
             </DialogContent>
         </Dialog>
     );
-}
+}), {
+    loading: () => <Button variant="outline" size="sm" disabled>Loading...</Button>,
+    ssr: false,
+});
 
 export default function QualityPage() {
     return (
@@ -128,9 +134,11 @@ export default function QualityPage() {
                                     </TableCell>
                                     <TableCell>{evaluation.date}</TableCell>
                                     <TableCell className="text-right">
-                                        <ViewAuditDialog evaluation={evaluation}>
-                                            <Button variant="outline" size="sm">View Audit</Button>
-                                        </ViewAuditDialog>
+                                        <Suspense fallback={<Button variant="outline" size="sm" disabled>...</Button>}>
+                                            <ViewAuditDialog evaluation={evaluation}>
+                                                <Button variant="outline" size="sm">View Audit</Button>
+                                            </ViewAuditDialog>
+                                        </Suspense>
                                     </TableCell>
                                 </TableRow>
                             ))}

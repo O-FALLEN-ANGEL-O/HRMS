@@ -121,6 +121,7 @@ export const navConfig: Record<string, NavItem[]> = {
   'process-manager': [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
+    { label: 'Performance', href: '/process-manager/performance', icon: TrendingUp },
     { label: 'Reports', href: '/reports', icon: FileText },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },

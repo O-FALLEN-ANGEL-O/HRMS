@@ -143,7 +143,7 @@ export default function ManagerReportsPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid gap-6 md:grid-cols-3">
-                            <DashboardCard title="Team Members" value={reportData.length} icon={Users} />
+                            <DashboardCard title="Team Members" value={reportData.length.toString()} icon={Users} />
                             <DashboardCard title="Avg. Attendance" value={`${summaryStats.avgAttendance}%`} icon={Calendar} />
                             <DashboardCard title="Avg. Task Completion" value={`${summaryStats.avgTaskCompletion}%`} icon={CheckCircle} />
                         </div>
