@@ -84,44 +84,12 @@
   }
   body {
     @apply bg-gray-50 text-foreground;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
   
   h1 {
     @apply text-2xl md:text-3xl;
-  }
-  
-  .detailed-calendar .rdp-day_button {
-      @apply bg-transparent p-0;
-  }
-  .detailed-calendar .rdp-day_today:not(.rdp-day_outside) {
-    @apply bg-transparent;
-  }
-  .detailed-calendar .rdp-months {
-    @apply block;
-  }
-  .detailed-calendar .rdp-month {
-    @apply w-full;
-  }
-  .detailed-calendar .rdp-table {
-    @apply w-full;
-  }
-  .detailed-calendar .rdp-head {
-    @apply hidden;
-  }
-  .detailed-calendar .rdp-body,
-  .detailed-calendar .rdp-row {
-    @apply contents;
-  }
-  .detailed-calendar .rdp-cell {
-    @apply relative border-r border-b border-gray-200;
-  }
-  .detailed-calendar .rdp-cell:nth-child(7n) {
-    @apply border-r-0;
-  }
-   .detailed-calendar .rdp-row:last-child .rdp-cell {
-    @apply border-b-0;
   }
 }
 

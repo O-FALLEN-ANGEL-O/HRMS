@@ -2,16 +2,13 @@
 'use client';
 
 import { useState } from 'react';
-import { format, getMonth, getYear, setMonth, setYear, isValid, subDays } from 'date-fns';
+import { format, getMonth, getYear, setMonth, setYear, subDays, isValid, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
 import { useParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import { Plus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 // Mock attendance data
 const detailedAttendanceLog: Record<
@@ -23,79 +20,50 @@ const detailedAttendanceLog: Record<
     totalHours?: string;
     location: 'Office' | 'Home';
   }
-> = {
-  [format(subDays(new Date(), 0), 'yyyy-MM-dd')]: {
-    status: 'Present',
-    checkIn: '09:01',
-    checkOut: '18:05',
-    totalHours: '9h 4m',
-    location: 'Office',
-  },
-  [format(subDays(new Date(), 1), 'yyyy-MM-dd')]: {
-    status: 'Present',
-    checkIn: '08:58',
-    checkOut: '17:59',
-    totalHours: '9h 1m',
-    location: 'Office',
-  },
-  [format(subDays(new Date(), 2), 'yyyy-MM-dd')]: {
-    status: 'Present',
-    checkIn: '09:05',
-    checkOut: '18:00',
-    totalHours: '8h 55m',
-    location: 'Home',
-  },
-  [format(subDays(new Date(), 3), 'yyyy-MM-dd')]: {
-    status: 'Holiday',
-    location: 'Office',
-  },
-  [format(subDays(new Date(), 4), 'yyyy-MM-dd')]: {
-    status: 'Present',
-    checkIn: '09:10',
-    checkOut: '18:15',
-    totalHours: '9h 5m',
-    location: 'Home',
-  },
-  [format(subDays(new Date(), 5), 'yyyy-MM-dd')]: {
-    status: 'Leave',
-    location: 'Office',
-  },
-  [format(subDays(new Date(), 6), 'yyyy-MM-dd')]: {
-    status: 'Week Off',
-    location: 'Office',
-  },
-  [format(subDays(new Date(), 7), 'yyyy-MM-dd')]: {
-    status: 'Week Off',
-    location: 'Office',
-  },
-  [format(subDays(new Date(), 10), 'yyyy-MM-dd')]: {
-    status: 'Absent',
-    location: 'Office',
-  },
-};
+> = Array.from({ length: 31 }, (_, i) => i + 1).reduce((acc, day) => {
+    const date = new Date(2025, 6, day); // July 2025
+    const dateKey = format(date, 'yyyy-MM-dd');
+    const dayOfWeek = date.getDay();
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekends
+        acc[dateKey] = { status: 'Week Off', location: 'Office' };
+    } else if (day === 15) {
+        acc[dateKey] = { status: 'Holiday', location: 'Office' };
+    } else if (day === 10) {
+        acc[dateKey] = { status: 'Leave', location: 'Office' };
+    } else if (day === 18) {
+        acc[dateKey] = { status: 'Absent', location: 'Office' };
+    } else if (day > 5 && day < 28) {
+        acc[dateKey] = {
+            status: 'Present',
+            checkIn: '09:01',
+            checkOut: '18:05',
+            totalHours: '9h 4m',
+            location: 'Office',
+        };
+    }
+    return acc;
+}, {} as Record<string, { status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday'; checkIn?: string; checkOut?: string; totalHours?: string; location: 'Office' | 'Home';}>);
 
 export default function AttendancePage() {
-  const params = useParams();
-  const role = params.role as string;
-
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
 
   const DayCellContent = ({ date }: { date: Date }) => {
-    try {
-      if (!isValid(date)) return null;
+    if (!isValid(date)) return null;
 
-      const dateKey = format(date, 'yyyy-MM-dd');
-      const dayData = detailedAttendanceLog[dateKey];
-      if (!dayData) return null;
-
+    const dateKey = format(date, 'yyyy-MM-dd');
+    const dayData = detailedAttendanceLog[dateKey];
+    if (!dayData) return null;
+    
+    if (dayData.status === 'Present' || dayData.status === 'Week Off' || dayData.status === 'Holiday' || dayData.status === 'Leave' || dayData.status === 'Absent') {
       const getStatusClass = () => {
         switch (dayData.status) {
-          case 'Present': return 'bg-green-100 text-green-800 border-green-200';
-          case 'Leave': return 'bg-blue-100 text-blue-800 border-blue-200';
-          case 'Week Off': return 'bg-red-100 text-red-800 border-red-200';
-          case 'Holiday': return 'bg-purple-100 text-purple-800 border-purple-200';
-          case 'Absent': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-          default: return 'bg-gray-100';
+          case 'Present': return 'bg-green-100 border-green-200 text-green-800';
+          case 'Leave': return 'bg-blue-100 border-blue-200 text-blue-800';
+          case 'Week Off': return 'bg-red-100 border-red-200 text-red-800';
+          case 'Holiday': return 'bg-purple-100 border-purple-200 text-purple-800';
+          case 'Absent': return 'bg-yellow-100 border-yellow-200 text-yellow-800';
+          default: return '';
         }
       };
 
@@ -111,39 +79,58 @@ export default function AttendancePage() {
             )}
         </div>
       );
-    } catch (error) {
-        console.error("Error formatting date in DayCellContent", error);
-        return null; // Return null on error to prevent crashing
     }
+    return null;
   };
+
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(currentDate),
+    end: endOfMonth(currentDate),
+  });
+  
+  const firstDayOfMonth = startOfMonth(currentDate).getDay();
+
+  const getDayBgClass = (date: Date) => {
+    const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+    if (!dayInfo) return 'bg-white';
+    switch (dayInfo.status) {
+        case 'Present': return 'bg-green-50';
+        case 'Week Off': return 'bg-red-50';
+        case 'Holiday': return 'bg-purple-50';
+        case 'Leave': return 'bg-blue-50';
+        case 'Absent': return 'bg-yellow-50';
+        default: return 'bg-white';
+    }
+  }
+
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Attendance</h1>
-          <p className="text-gray-500">Track your work hours and attendance.</p>
-        </div>
-        <div className="flex items-center space-x-4">
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input className="w-full sm:w-64 pl-10" placeholder="Search..." type="text"/>
+       <header className="flex justify-between items-center mb-8">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-800">Attendance</h1>
+                <p className="text-gray-500">Track your work hours and attendance.</p>
             </div>
-            <Button>
-                <Plus className="mr-2 h-4 w-4"/>
-                Attendance Regularization
-            </Button>
-        </div>
-      </header>
+            <div className="flex items-center space-x-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input className="w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search..." type="text"/>
+                </div>
+                <Button className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition">
+                    <Plus className="mr-2 h-4 w-4"/>
+                    Attendance Regularization
+                </Button>
+            </div>
+        </header>
 
       <div className="bg-white p-6 rounded-xl shadow-md">
         <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
+                <Button variant="ghost" className="p-2 rounded-full hover:bg-gray-100" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
                     <ChevronLeft className="h-5 w-5 text-gray-600" />
                 </Button>
                 <h2 className="text-xl font-semibold text-gray-700">{format(currentDate, 'MMMM yyyy')}</h2>
-                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
+                <Button variant="ghost" className="p-2 rounded-full hover:bg-gray-100" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
                     <ChevronRight className="h-5 w-5 text-gray-600" />
                 </Button>
             </div>
@@ -156,40 +143,23 @@ export default function AttendancePage() {
             </div>
         </div>
 
-        <div className="grid grid-cols-7">
-            <Calendar
-                month={currentDate}
-                onMonthChange={setCurrentDate}
-                components={{
-                    DayContent: DayCellContent,
-                }}
-                className="detailed-calendar"
-                classNames={{
-                    table: 'w-full',
-                    head_row: "grid grid-cols-7",
-                    head_cell: "text-center py-3 bg-gray-100 font-semibold text-gray-600 text-sm",
-                    row: "grid grid-cols-7",
-                    cell: "bg-white p-3 h-32 text-gray-900",
-                    day: "text-gray-900",
-                    day_today: "text-indigo-600 font-bold",
-                    day_disabled: "text-gray-400",
-                    day_outside: "text-gray-400 bg-gray-50",
-                }}
-                modifiers={{
-                    weekOff: date => {
-                        const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
-                        return dayInfo?.status === 'Week Off';
-                    },
-                    holiday: date => {
-                        const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
-                        return dayInfo?.status === 'Holiday';
-                    }
-                }}
-                modifiersClassNames={{
-                    weekOff: '!bg-red-50 text-red-700',
-                    holiday: '!bg-purple-50 text-purple-700'
-                }}
-            />
+        <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-200">
+             {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                <div key={day} className="text-center py-3 bg-gray-100 font-semibold text-gray-600 text-sm">{day}</div>
+             ))}
+
+             {/* Blank cells for days before start of month */}
+             {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                <div key={`blank-${i}`} className="bg-white p-3 h-32"></div>
+             ))}
+
+             {/* Month day cells */}
+             {daysInMonth.map(day => (
+                <div key={day.toString()} className={cn("relative p-3 h-32 text-gray-900", getDayBgClass(day))}>
+                    <span className={cn(isSameDay(day, new Date()) ? 'text-indigo-600 font-bold' : '')}>{format(day, 'd')}</span>
+                    <DayCellContent date={day} />
+                </div>
+             ))}
         </div>
       </div>
     </div>
