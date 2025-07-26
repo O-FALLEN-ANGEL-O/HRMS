@@ -1,24 +1,24 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { subDays, addDays } from 'date-fns';
+import { format, getMonth, getYear, setMonth, setYear, subDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Check, X, Loader2 } from 'lucide-react';
+import { Plus, Check, X, Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ApplyLeaveDialog = dynamic(() => import('@/components/leaves/apply-leave-dialog'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Apply for Leave</Button>,
     ssr: false
 });
-
 
 const mockLeaveRequests = [
     { id: 'LR-001', employee: 'Anika Sharma', type: 'Sick Leave', dates: '15/07/24 - 16/07/24', days: 2, reason: 'Flu', status: 'Approved' },
@@ -53,21 +53,17 @@ function LeaveActionButtons({ requestId }: { requestId: string }) {
     );
 }
 
-const attendanceData = {
-    present: [new Date(), subDays(new Date(), 1), subDays(new Date(), 4)],
-    absent: [subDays(new Date(), 2)],
-    leave: [subDays(new Date(), 8), subDays(new Date(), 9), subDays(new Date(), 10)],
-    dayOff: [subDays(new Date(), 6), subDays(new Date(), 7)],
-    holidays: [subDays(new Date(), 3)],
-    halfDay: [subDays(new Date(), 5)],
+// Enhanced attendance data for detailed calendar view
+const detailedAttendanceLog: Record<string, { status: 'P' | 'A' | 'L' | 'WO' | 'H', checkIn?: string, checkOut?: string, totalHours?: string }> = {
+    [format(new Date(), 'yyyy-MM-dd')]: { status: 'P', checkIn: '09:01', checkOut: '18:05', totalHours: '9h 4m' },
+    [format(subDays(new Date(), 1), 'yyyy-MM-dd')]: { status: 'P', checkIn: '08:58', checkOut: '17:59', totalHours: '9h 1m' },
+    [format(subDays(new Date(), 2), 'yyyy-MM-dd')]: { status: 'A' },
+    [format(subDays(new Date(), 3), 'yyyy-MM-dd')]: { status: 'H' },
+    [format(subDays(new Date(), 4), 'yyyy-MM-dd')]: { status: 'P', checkIn: '09:10', checkOut: '18:15', totalHours: '9h 5m' },
+    [format(subDays(new Date(), 5), 'yyyy-MM-dd')]: { status: 'L' },
+    [format(subDays(new Date(), 6), 'yyyy-MM-dd')]: { status: 'WO' },
+    [format(subDays(new Date(), 7), 'yyyy-MM-dd')]: { status: 'WO' },
 };
-
-const attendanceLog = [
-    { date: '2024-07-29', checkIn: '09:01 AM', checkOut: '06:05 PM', hours: '9h 4m' },
-    { date: '2024-07-28', checkIn: '09:05 AM', checkOut: '06:00 PM', hours: '8h 55m' },
-    { date: '2024-07-27', checkIn: '-', checkOut: '-', hours: 'Absent' },
-    { date: '2024-07-26', checkIn: '09:15 AM', checkOut: '06:10 PM', hours: '8h 55m' },
-];
 
 
 export default function AttendancePage() {
@@ -75,54 +71,113 @@ export default function AttendancePage() {
     const role = params.role as string;
     const isManager = role === 'manager' || role === 'hr' || role === 'admin';
     
+    const [month, setMonth] = useState(new Date());
+
+    const years = Array.from({ length: 10 }, (_, i) => getYear(new Date()) - 5 + i);
+    const months = Array.from({ length: 12 }, (_, i) => ({ value: i, label: format(setMonth(new Date(), i), 'MMMM') }));
+
+    const handleYearChange = (year: string) => {
+        setMonth(prev => setYear(prev, parseInt(year)));
+    }
+    const handleMonthChange = (monthIndex: string) => {
+        setMonth(prev => setMonth(prev, parseInt(monthIndex)));
+    }
+
     const applyForLeaveAction = async (formData: FormData) => {
         console.log("Mock Action: Applying for leave with data:", Object.fromEntries(formData));
         return { success: true };
     };
 
+    const DayCellContent = ({ date }: { date: Date }) => {
+        const dayData = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+        if (!dayData) return null;
+
+        const getStatusClass = (status: string) => {
+            switch (status) {
+                case 'P': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+                case 'A': return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+                case 'L': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+                case 'WO': return 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300';
+                case 'H': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300';
+                default: return '';
+            }
+        }
+        
+        return (
+            <div className='absolute inset-0 p-1 text-xs text-left overflow-hidden flex flex-col justify-between'>
+                <div>
+                  <div className='flex justify-end'>
+                     <Badge variant="secondary" className={`h-5 w-5 p-0 justify-center font-bold ${getStatusClass(dayData.status)}`}>{dayData.status}</Badge>
+                  </div>
+                </div>
+                {dayData.status === 'P' && (
+                    <div className='space-y-0.5'>
+                        <p className='text-muted-foreground'>{dayData.checkIn} - {dayData.checkOut}</p>
+                        <p>Total: <span className='font-semibold'>{dayData.totalHours}</span></p>
+                    </div>
+                )}
+            </div>
+        )
+    };
+    
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Attendance Calendar</CardTitle>
-                    <CardDescription>View your monthly attendance, leaves, and holidays.</CardDescription>
+                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                     <div>
+                        <CardTitle>My Attendance</CardTitle>
+                        <CardDescription>Review your monthly attendance, leaves, and holidays.</CardDescription>
+                     </div>
+                      <div className="flex items-center gap-2">
+                            <Select value={getYear(month).toString()} onValueChange={handleYearChange}>
+                                <SelectTrigger className="w-[120px]">
+                                    <SelectValue placeholder="Year"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {years.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Select value={getMonth(month).toString()} onValueChange={handleMonthChange}>
+                                <SelectTrigger className="w-[150px]">
+                                    <SelectValue placeholder="Month"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {months.map(m => <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                             <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Regularization</Button>
+                      </div>
+                   </div>
                 </CardHeader>
                 <CardContent>
                      <Calendar
-                        mode="multiple"
-                        modifiers={attendanceData}
-                        modifiersClassNames={{
-                            present: 'rdp-day_present',
-                            absent: 'rdp-day_absent',
-                            leave: 'rdp-day_leave',
-                            dayOff: 'rdp-day_dayOff',
-                            holidays: 'rdp-day_holiday',
-                            halfDay: 'rdp-day_half-day',
+                        month={month}
+                        onMonthChange={setMonth}
+                        components={{
+                            DayContent: DayCellContent
                         }}
+                        className="detailed-calendar"
                     />
                     <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center p-4 border-t mt-4 text-sm">
                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500"></span>Present</div>
                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500"></span>Absent</div>
                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-yellow-500"></span>Leave</div>
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
+                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-muted-foreground/30"></span>Week Off</div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="log">
+            <Tabs defaultValue="requests">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="log">Attendance Log</TabsTrigger>
                     <TabsTrigger value="requests">Leave Requests</TabsTrigger>
                 </TabsList>
                 <TabsContent value="log">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Attendance Log</CardTitle>
-                                <CardDescription>Your check-in and check-out history.</CardDescription>
-                            </div>
-                            <Button><Plus className="mr-2 h-4 w-4"/> Request Regularization</Button>
+                        <CardHeader>
+                            <CardTitle>Your check-in and check-out history.</CardTitle>
                         </CardHeader>
                         <CardContent>
                              <Table>
@@ -132,16 +187,18 @@ export default function AttendancePage() {
                                         <TableHead>Check-in</TableHead>
                                         <TableHead>Check-out</TableHead>
                                         <TableHead>Working Hours</TableHead>
+                                        <TableHead>Status</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {attendanceLog.map((log) => (
-                                        <TableRow key={log.date}>
-                                            <TableCell>{log.date}</TableCell>
-                                            <TableCell>{log.checkIn}</TableCell>
-                                            <TableCell>{log.checkOut}</TableCell>
+                                    {Object.entries(detailedAttendanceLog).map(([date, log]) => (
+                                        <TableRow key={date}>
+                                            <TableCell>{format(new Date(date), 'dd MMM, yyyy')}</TableCell>
+                                            <TableCell>{log.checkIn || '-'}</TableCell>
+                                            <TableCell>{log.checkOut || '-'}</TableCell>
+                                            <TableCell>{log.totalHours || '-'}</TableCell>
                                             <TableCell>
-                                                <Badge variant={log.hours === 'Absent' ? 'destructive' : 'outline'}>{log.hours}</Badge>
+                                                <Badge variant={log.status === 'A' ? 'destructive' : 'outline'}>{log.status}</Badge>
                                             </TableCell>
                                         </TableRow>
                                     ))}
