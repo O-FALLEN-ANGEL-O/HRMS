@@ -1,10 +1,9 @@
 
 'use client';
 
-import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Inter, Poppins, Space_Grotesk } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -25,10 +24,11 @@ const AppHeader = dynamic(() => import('@/components/app-header'), {
 });
 
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-poppins',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900']
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -88,10 +88,10 @@ export default function RootLayout({
       <head>
         <title>OptiTalent HRMS</title>
         <meta name="description" content="A Next-Generation HRMS for modern businesses." />
-        <link rel="icon" href="/animated-favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} font-body antialiased overflow-x-hidden`}
+        className={`${poppins.variable} ${spaceGrotesk.variable} font-body antialiased overflow-x-hidden`}
         suppressHydrationWarning
       >
         <ThemeProvider

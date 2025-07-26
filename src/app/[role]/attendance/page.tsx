@@ -2,14 +2,16 @@
 'use client';
 
 import { useState } from 'react';
-import { format, getMonth, getYear, setMonth, setYear, subDays, isValid, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
-import { useParams } from 'next/navigation';
-
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 // Mock attendance data
 const detailedAttendanceLog: Record<
@@ -46,19 +48,70 @@ const detailedAttendanceLog: Record<
     return acc;
 }, {} as Record<string, { status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday'; checkIn?: string; checkOut?: string; totalHours?: string; location: 'Office' | 'Home';}>);
 
+function RegularizationDialog() {
+    const { toast } = useToast();
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        toast({
+            title: "Regularization Submitted",
+            description: "Your request has been sent to your manager for approval.",
+        });
+    }
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button className="flex items-center bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition">
+                    <Plus className="mr-2 h-4 w-4"/>
+                    Attendance Regularization
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Attendance Regularization</DialogTitle>
+                    <DialogDescription>
+                        Request a correction for a past date if you forgot to check in/out or were marked absent incorrectly.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="date">Date</Label>
+                            <Input id="date" type="date" required/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="type">Request Type</Label>
+                            <Select name="type" required>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select request type"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="missed-check-in">Missed Check-in/out</SelectItem>
+                                    <SelectItem value="wrongly-marked-absent">Wrongly Marked Absent</SelectItem>
+                                    <SelectItem value="permission">Permission/On-Duty</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="reason">Reason</Label>
+                            <Textarea id="reason" name="reason" placeholder="Please explain the reason for this request..." required/>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Submit Request</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 export default function AttendancePage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
   const { toast } = useToast();
 
-  const handleRegularization = () => {
-    toast({
-        title: "Action Triggered",
-        description: "This would open a dialog to regularize attendance.",
-    })
-  }
-
   const DayCellContent = ({ date }: { date: Date }) => {
-    if (!isValid(date)) return null;
+    if (!date || !date.getDate()) return null;
 
     const dateKey = format(date, 'yyyy-MM-dd');
     const dayData = detailedAttendanceLog[dateKey];
@@ -91,81 +144,74 @@ export default function AttendancePage() {
     }
     return null;
   };
-
-  const daysInMonth = eachDayOfInterval({
-    start: startOfMonth(currentDate),
-    end: endOfMonth(currentDate),
-  });
   
-  const firstDayOfMonth = startOfMonth(currentDate).getDay();
+  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+  const daysInMonth = Array.from({ length: endOfMonth.getDate() }, (_, i) => new Date(currentDate.getFullYear(), currentDate.getMonth(), i + 1));
+  
+  const firstDayOfMonth = startOfMonth.getDay();
 
   const getDayBgClass = (date: Date) => {
     const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
-    if (!dayInfo) return 'bg-white';
+    if (!dayInfo) return 'bg-card';
     switch (dayInfo.status) {
-        case 'Present': return 'bg-green-50';
-        case 'Week Off': return 'bg-red-50';
-        case 'Holiday': return 'bg-purple-50';
-        case 'Leave': return 'bg-blue-50';
-        case 'Absent': return 'bg-yellow-50';
-        default: return 'bg-white';
+        case 'Present': return 'bg-green-50 dark:bg-green-900/20';
+        case 'Week Off': return 'bg-red-50 dark:bg-red-900/20';
+        case 'Holiday': return 'bg-purple-50 dark:bg-purple-900/20';
+        case 'Leave': return 'bg-blue-50 dark:bg-blue-900/20';
+        case 'Absent': return 'bg-yellow-50 dark:bg-yellow-900/20';
+        default: return 'bg-card';
     }
   }
 
 
   return (
     <div className="space-y-6">
-       <header className="flex justify-between items-center mb-8">
+       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
-                <h1 className="text-2xl font-bold text-gray-800">Attendance</h1>
-                <p className="text-gray-500">Track your work hours and attendance.</p>
+                <h1 className="text-3xl font-bold font-headline">My Attendance</h1>
+                <p className="text-muted-foreground">Track your work hours and request corrections.</p>
             </div>
-            <div className="flex items-center space-x-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input className="w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search..." type="text"/>
-                </div>
-                <Button className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition" onClick={handleRegularization}>
-                    <Plus className="mr-2 h-4 w-4"/>
-                    Attendance Regularization
-                </Button>
+            <div className="flex items-center space-x-2">
+                <RegularizationDialog />
             </div>
         </header>
 
-      <div className="bg-white p-6 rounded-xl shadow-md">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div className="flex items-center space-x-2">
-                <Button variant="ghost" className="p-2 rounded-full hover:bg-gray-100" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
-                    <ChevronLeft className="h-5 w-5 text-gray-600" />
+                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}>
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                 </Button>
-                <h2 className="text-xl font-semibold text-gray-700">{format(currentDate, 'MMMM yyyy')}</h2>
-                <Button variant="ghost" className="p-2 rounded-full hover:bg-gray-100" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>
-                    <ChevronRight className="h-5 w-5 text-gray-600" />
+                <h2 className="text-xl font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
+                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </Button>
             </div>
-            <div className="hidden md:flex flex-wrap items-center space-x-4 text-sm text-gray-600">
-                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div><span>Present</span></div>
-                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div><span>Absent</span></div>
-                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div><span>Week off</span></div>
-                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div><span>Leave</span></div>
-                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div><span>Holiday</span></div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-1.5"></div><span>Present</span></div>
+                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1.5"></div><span>Absent</span></div>
+                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5"></div><span>Week off</span></div>
+                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></div><span>Leave</span></div>
+                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-purple-500 mr-1.5"></div><span>Holiday</span></div>
             </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-200">
+        <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden border">
              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                <div key={day} className="text-center py-3 bg-gray-100 font-semibold text-gray-600 text-sm">{day}</div>
+                <div key={day} className="text-center py-2 bg-muted/50 font-semibold text-muted-foreground text-xs">{day}</div>
              ))}
 
-             {/* Blank cells for days before start of month */}
              {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                <div key={`blank-${i}`} className="bg-white p-3 h-32"></div>
+                <div key={`blank-${i}`} className="bg-card p-2 h-24 sm:h-32"></div>
              ))}
 
-             {/* Month day cells */}
              {daysInMonth.map(day => (
-                <div key={day.toString()} className={cn("relative p-3 h-32 text-gray-900", getDayBgClass(day))}>
-                    <span className={cn(isSameDay(day, new Date()) ? 'text-indigo-600 font-bold' : '')}>{format(day, 'd')}</span>
+                <div key={day.toString()} className={cn("relative p-2 h-24 sm:h-32", getDayBgClass(day))}>
+                    <span className={cn("text-sm", format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') ? 'bg-primary text-primary-foreground rounded-full flex items-center justify-center h-6 w-6' : '')}>
+                        {format(day, 'd')}
+                    </span>
                     <DayCellContent date={day} />
                 </div>
              ))}
