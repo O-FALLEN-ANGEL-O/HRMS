@@ -37,20 +37,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <div>
+       <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
           <p className="text-gray-500 dark:text-gray-400">You are having a great day.</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary w-64" placeholder="Search..." type="text"/>
-          </div>
-          <Button variant="outline" size="icon" className="rounded-full"><Bell/></Button>
-          <Button variant="outline" size="icon" className="rounded-full"><Settings/></Button>
-        </div>
-      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
         {/* Left Column */}
