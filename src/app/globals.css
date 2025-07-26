@@ -92,15 +92,12 @@
     @apply text-2xl md:text-3xl;
   }
   
-  /* Remove default button styling from react-day-picker */
   .detailed-calendar .rdp-day_button {
       @apply bg-transparent p-0;
   }
-  /* Remove today's default background but keep text color */
   .detailed-calendar .rdp-day_today:not(.rdp-day_outside) {
     @apply bg-transparent;
   }
-
   .detailed-calendar .rdp-months {
     @apply block;
   }
@@ -118,7 +115,13 @@
     @apply contents;
   }
   .detailed-calendar .rdp-cell {
-    @apply relative;
+    @apply relative border-r border-b border-gray-200;
+  }
+  .detailed-calendar .rdp-cell:nth-child(7n) {
+    @apply border-r-0;
+  }
+   .detailed-calendar .rdp-row:last-child .rdp-cell {
+    @apply border-b-0;
   }
 }
 

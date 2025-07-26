@@ -136,7 +136,7 @@ export default function AttendancePage() {
         </div>
       </header>
 
-      <Card className="shadow-lg border-gray-100 p-6">
+      <div className="bg-white p-6 rounded-xl shadow-md">
         <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>
@@ -147,26 +147,25 @@ export default function AttendancePage() {
                     <ChevronRight className="h-5 w-5 text-gray-600" />
                 </Button>
             </div>
-            <div className="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
+            <div className="hidden md:flex flex-wrap items-center space-x-4 text-sm text-gray-600">
                 <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div><span>Present</span></div>
                 <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div><span>Absent</span></div>
                 <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div><span>Week off</span></div>
                 <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div><span>Leave</span></div>
                 <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div><span>Holiday</span></div>
-                <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div><span>Office</span></div>
             </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-200">
+        <div className="grid grid-cols-7">
             <Calendar
                 month={currentDate}
                 onMonthChange={setCurrentDate}
                 components={{
-                DayContent: DayCellContent,
+                    DayContent: DayCellContent,
                 }}
                 className="detailed-calendar"
                 classNames={{
-                    table: "w-full",
+                    table: 'w-full',
                     head_row: "grid grid-cols-7",
                     head_cell: "text-center py-3 bg-gray-100 font-semibold text-gray-600 text-sm",
                     row: "grid grid-cols-7",
@@ -187,12 +186,12 @@ export default function AttendancePage() {
                     }
                 }}
                 modifiersClassNames={{
-                weekOff: '!bg-red-50 text-red-700',
-                holiday: '!bg-purple-50 text-purple-700'
+                    weekOff: '!bg-red-50 text-red-700',
+                    holiday: '!bg-purple-50 text-purple-700'
                 }}
             />
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
