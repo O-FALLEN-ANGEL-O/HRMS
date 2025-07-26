@@ -1,10 +1,10 @@
 
 "use client"
 
-import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, MoreHorizontal } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Loader2, Search } from "lucide-react"
 import Link from 'next/link';
 import {
   Table,
@@ -27,9 +27,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from '@/hooks/use-toast';
 import { mockUsers } from '@/lib/mock-data/employees';
 import { TeamCard } from '@/components/team-card';
-import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import type { User, UserProfile } from '@/lib/mock-data/employees';
+import { useAuth } from '@/hooks/use-auth';
+import { Input } from '@/components/ui/input';
 
 const AddEmployeeButton = dynamic(() => import('@/components/employees/add-employee-button'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Add Employee</Button>,
@@ -41,6 +42,7 @@ function AdminView() {
     const { toast } = useToast();
     const params = useParams();
     const router = useRouter();
+    const { searchTerm } = useAuth();
     const role = params.role as string;
     const [employees, setEmployees] = useState<UserProfile[]>([]);
 
@@ -48,10 +50,17 @@ function AdminView() {
         setEmployees(mockUsers.map(u => u.profile));
     }, []);
 
+    const filteredEmployees = useMemo(() => {
+        if (!searchTerm) return employees;
+        return employees.filter(e => 
+            e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.department.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [employees, searchTerm]);
+
     const handleAddEmployee = (newEmployee: User) => {
-      // In a real app, this would likely re-fetch the list or get the new item from an API response.
-      // For the mock, we add directly to the state.
-      setEmployees(prev => [newEmployee.profile, ...prev]);
+      setEmployees(prev => [newEmployee.profile, ...prev].sort((a,b) => a.full_name.localeCompare(b.full_name)));
     }
     
     const handleAction = (action: string) => {
@@ -86,7 +95,7 @@ function AdminView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {employees.map((employee) => (
+                {filteredEmployees.map((employee) => (
                   <TableRow key={employee.employee_id} className="cursor-pointer" onClick={() => router.push(`/${role}/employees/${employee.employee_id}`)}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
@@ -147,6 +156,7 @@ export default function EmployeesPage() {
   const params = useParams();
   const role = params.role as string;
   const isTeamView = role === 'manager' || role === 'team-leader' || role === 'trainer';
+  const { searchTerm, setSearchTerm } = useAuth();
 
   return (
     <div>
@@ -155,6 +165,18 @@ export default function EmployeesPage() {
           <h1 className="text-3xl font-bold font-headline">{isTeamView ? "My Team" : "Employees"}</h1>
           <p className="text-muted-foreground">{isTeamView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
         </div>
+        {!isTeamView && (
+             <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                    className="w-full pl-10" 
+                    placeholder="Search employees..." 
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+        )}
       </div>
       <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
         {isTeamView ? <TeamView /> : <AdminView />}

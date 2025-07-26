@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers, type User } from '@/lib/mock-data/employees';
+import { mockUsers, type User, type UserProfile } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
   user: User | null;
@@ -65,22 +65,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: { message: "An account with this email already exists." } };
     }
     
+    const newProfile: UserProfile = {
+        id: `profile-${Date.now()}`,
+        full_name: `${firstName} ${lastName}`,
+        department: { name: "Engineering" },
+        department_id: "d-001",
+        job_title: 'New Hire',
+        role: 'employee', // Default role for new signups
+        employee_id: `PEP${String(mockUsers.length + 1).padStart(4,'0')}`,
+        profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
+        phone_number: '123-456-7890',
+        status: 'Active',
+    };
+    
     const newUser: User = {
         id: `user-${Date.now()}`,
-        email,
-        role: 'employee', // Default role for new signups
-        profile: {
-            id: `profile-${Date.now()}`,
-            full_name: `${firstName} ${lastName}`,
-            job_title: 'New Hire',
-            employee_id: `PEP${String(mockUsers.length + 1).padStart(4,'0')}`,
-            status: 'Active',
-            role: 'employee',
-            department_id: "d-001",
-            department: { name: "Engineering" },
-            profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
-            phone_number: '123-456-7890'
-        }
+        email: email,
+        role: newProfile.role,
+        profile: newProfile
     };
     
     // Add to our mock "database"
@@ -96,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     setUser(null);
+    setSearchTerm('');
     sessionStorage.removeItem('authUser');
     router.push('/');
   };

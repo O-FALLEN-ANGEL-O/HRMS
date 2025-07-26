@@ -23,7 +23,8 @@ import {
   BookOpen,
   TrendingUp,
   Handshake,
-  GraduationCap
+  GraduationCap,
+  CalendarOff
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { AnimatedBot } from '@/components/ui/animated-bot';
@@ -43,6 +44,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Onboarding', href: '/onboarding', icon: UserPlus },
     { label: 'Performance', href: '/performance', icon: Award },
     { label: 'Learning', href: '/learning', icon: GraduationCap },
+    { label: 'Leaves', href: '/leaves', icon: CalendarOff },
     { label: 'Payroll', href: '/payroll', icon: DollarSign },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
@@ -58,6 +60,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Onboarding', href: '/onboarding', icon: UserPlus },
     { label: 'Performance', href: '/performance', icon: Award },
     { label: 'Learning', href: '/learning', icon: GraduationCap },
+    { label: 'Leaves', href: '/leaves', icon: CalendarOff },
     { label: 'Payroll', href: '/payroll', icon: DollarSign },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
@@ -72,6 +75,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'My Team', href: '/employees', icon: Users },
     { label: 'Performance', href: '/performance', icon: Award },
     { label: 'Learning', href: '/learning', icon: GraduationCap },
+    { label: 'Leaves', href: '/leaves', icon: CalendarOff },
     { label: 'Reports', href: '/reports', icon: FileText },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
@@ -83,6 +87,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Learning', href: '/learning', icon: GraduationCap },
+    { label: 'Leaves', href: '/leaves', icon: CalendarOff },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'Payroll', href: '/payroll', icon: DollarSign },
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
@@ -126,6 +131,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { label: 'Analytics', href: '/analytics', icon: BarChart2 },
     { label: 'My Team', href: '/employees', icon: Users },
     { label: 'Learning', href: '/learning', icon: GraduationCap },
+    { label: 'Leaves', href: '/leaves', icon: CalendarOff },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
     { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Company Feed', href: '/company-feed', icon: BookOpen },

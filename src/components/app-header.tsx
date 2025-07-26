@@ -18,7 +18,13 @@ export default function AppHeader() {
         <SidebarTrigger className="md:hidden"/>
          <div className="hidden md:flex relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary w-64" placeholder="Search..." type="text"/>
+            <Input 
+              className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary w-64" 
+              placeholder="Search..." 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
       </div>
       <div className="flex items-center gap-2">
