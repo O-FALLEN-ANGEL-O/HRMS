@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,8 +19,9 @@ import { useToast } from '@/hooks/use-toast';
 import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart as RechartsBarChart, Bar as RechartsBar } from 'recharts';
 import { getTicketSummaryAction } from './actions';
 import type { TicketData } from '@/ai/flows/get-ticket-summary-flow.types';
+import { DashboardCard } from '@/components/ui/dashboard-card';
 
-type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback' | 'individual' | 'management' | 'hr' | 'recruitment' | 'finance' | 'it-manager' | 'operations-manager' | 'account-manager' | 'trainer' | 'trainee';
+type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback' | 'individual';
 
 const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: AnalyticsView, setActiveView: (view: AnalyticsView) => void }) => {
     const { user } = useAuth();
@@ -75,7 +77,6 @@ const BenchmarkingView = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate data fetching
         setTimeout(() => {
             setChartData([
                 { name: 'Turnover', company: 8.2, benchmark: 10.5 },
@@ -825,7 +826,6 @@ const IndividualPerformanceView = () => {
         setLoading(true);
         setEmployeeData(null);
         setTimeout(() => {
-            // Mock data fetching
             setEmployeeData({
                 name: "Anika Sharma",
                 id: "PEP0012",
@@ -1022,19 +1022,120 @@ function LoadingState() {
 // BPO Role Specific Dashboards
 // =================================================================
 
-const ManagerPerformanceView = () => {
-    return (
+const ManagerDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Team Performance" value="92%" icon={TrendingUp} description="+3% from last month" />
+            <DashboardCard title="Attrition Rate" value="4%" icon={UserMinus} description="This quarter" />
+            <DashboardCard title="Pending Approvals" value="5" icon={FileCheck} description="Leave & expense requests" />
+            <DashboardCard title="Team Headcount" value="12" icon={Users} description="2 new hires" />
+        </div>
         <Card>
-            <CardHeader>
-                <CardTitle>Manager's Team Performance</CardTitle>
-                <CardDescription>This is a placeholder for the manager-specific performance view.</CardDescription>
-            </CardHeader>
-             <CardContent>
-                <p>Content for manager's performance dashboard will go here.</p>
-            </CardContent>
+            <CardHeader><CardTitle>Further manager-specific analytics would be displayed here...</CardTitle></CardHeader>
         </Card>
-    )
-}
+    </div>
+);
+
+const TeamLeadDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Shift Adherence" value="98%" icon={Clock} description="Real-time adherence" />
+            <DashboardCard title="Avg. Handle Time" value="4m 15s" icon={Ticket} description="-5s from yesterday" />
+            <DashboardCard title="Team QA Score" value="94.5%" icon={CheckCircle} description="This week's average" />
+            <DashboardCard title="Escalations" value="2" icon={AlertCircle} description="Today" />
+        </div>
+         <Card>
+            <CardHeader><CardTitle>A live team roster and daily attendance heatmap would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+
+const RecruiterDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Active Openings" value="15" icon={Briefcase} description="Across all departments" />
+            <DashboardCard title="Time to Hire" value="32 Days" icon={Clock} description="Average for last quarter" />
+            <DashboardCard title="Offer Acceptance" value="88%" icon={Handshake} description="+3% from last quarter" />
+            <DashboardCard title="New Applicants" value="+18" icon={UserPlus} description="This week" />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>A detailed application funnel and source of hire chart would go here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+const FinanceDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Monthly Burn" value="$125K" icon={DollarSign} description="Projected operational costs" />
+            <DashboardCard title="Payroll Due" value="$250K" icon={Building} description="For this pay period" />
+            <DashboardCard title="Pending Approvals" value="12" icon={FileCheck} description="Expense reports & invoices" />
+            <DashboardCard title="Compliance Flags" value="1" icon={AlertCircle} description="Potential audit risks" />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>Salary disbursement trends and overtime analysis would be shown here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+const TrainerDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Completion Rate" value="89%" icon={CheckCircle} description="For active training modules" />
+            <DashboardCard title="Avg. Test Score" value="82%" icon={GraduationCap} description="Post-training assessments" />
+            <DashboardCard title="Active Trainees" value="24" icon={Users} description="Across 3 batches" />
+            <DashboardCard title="Pending Feedback" value="7" icon={MessageSquare} description="From recent sessions" />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>Improvement tracking and certification status would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+
+const ItManagerDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="System Uptime" value="99.9%" icon={Server} description="Last 24 hours" />
+            <DashboardCard title="Open Tickets" value="24" icon={Ticket} description="3 high priority" />
+            <DashboardCard title="Security Alerts" value="7" icon={ShieldCheck} description="Last 7 days" />
+            <DashboardCard title="Asset Inventory" value="512" icon={ClipboardList} description="Managed devices" />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>Downtime logs and common issue breakdowns would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+const OperationsManagerDashboard = () => (
+     <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Production Output" value="7,842 Units" icon={Package} description="Today's total" />
+            <DashboardCard title="On-Time Delivery" value="96.2%" icon={TrendingUp} description="This week" />
+            <DashboardCard title="Equipment Uptime" value="92.8%" icon={Factory} description="Across all lines" />
+            <DashboardCard title="Safety Incidents" value="0" icon={AlertCircle} description="This month" />
+        </div>
+         <Card>
+            <CardHeader><CardTitle>Department-wise AHT, CSAT, QA scores would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+const QaDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Pending Evaluations" value="14" icon={ClipboardList} description="In your queue" />
+            <DashboardCard title="Avg. Team Score" value="92.1%" icon={ShieldCheck} description="This month" />
+            <DashboardCard title="Score Trend" value="+1.5%" icon={TrendingUp} description="Since last month" />
+            <DashboardCard title="Coaching Sessions" value="5" icon={UserCheck} description="Completed this week" />
+        </div>
+         <Card>
+            <CardHeader><CardTitle>Detailed score distribution and error type breakdowns would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
 
 const ProcessManagerDashboard = () => {
     const [data, setData] = useState<TicketData | null>(null);
@@ -1118,20 +1219,6 @@ const ProcessManagerDashboard = () => {
     )
 }
 
-const QaDashboard = () => {
-     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>QA Analyst Dashboard</CardTitle>
-                <CardDescription>High-level quality metrics.</CardDescription>
-            </CardHeader>
-             <CardContent>
-                <p>Content for QA dashboard will go here.</p>
-            </CardContent>
-        </Card>
-    )
-}
-
 const DefaultDashboard = ({ role }: { role: string }) => {
      return (
         <Card>
@@ -1200,19 +1287,25 @@ export default function AnalyticsPage() {
                 </div>
             )
         case 'manager':
+            return <ManagerDashboard />;
         case 'team-leader':
-            return <ManagerPerformanceView />;
+            return <TeamLeadDashboard />;
         case 'process-manager':
             return <ProcessManagerDashboard />;
         case 'qa-analyst':
             return <QaDashboard />;
         case 'recruiter':
+            return <RecruiterDashboard />;
         case 'finance':
+            return <FinanceDashboard />;
         case 'it-manager':
+            return <ItManagerDashboard />;
         case 'operations-manager':
+            return <OperationsManagerDashboard />;
         case 'account-manager':
-        case 'trainer':
              return <DefaultDashboard role={role} />
+        case 'trainer':
+            return <TrainerDashboard />;
         case 'employee':
         case 'trainee':
         default:
@@ -1237,3 +1330,4 @@ export default function AnalyticsPage() {
     </Suspense>
   );
 }
+
