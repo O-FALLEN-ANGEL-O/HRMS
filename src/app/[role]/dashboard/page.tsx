@@ -6,23 +6,14 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase } from 'lucide-react';
+import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase, Inbox, Gift } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { mockEmployees } from '@/lib/mock-data/employees';
-import { subDays } from 'date-fns';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
-
-const EmployeeDetailsCard = dynamic(() => import('@/components/employee-details-card').then(mod => mod.EmployeeDetailsCard), {
-  loading: () => <Skeleton className="h-48" />,
-  ssr: false,
-});
+import { Progress } from '@/components/ui/progress';
 
 const RecruiterKpis = dynamic(() => import('@/components/dashboards/kpi-cards/recruiter-kpis').then(mod => mod.RecruiterKpis), { ssr: false });
 const ManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/manager-kpis').then(mod => mod.ManagerKpis), { ssr: false });
@@ -34,27 +25,28 @@ const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa
 const ProcessManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/process-manager-kpis').then(mod => mod.ProcessManagerKpis), { ssr: false });
 
 const celebrations = [
-    { type: 'Birthday', name: 'Anika Sharma', avatar: `https://ui-avatars.com/api/?name=Anika+Sharma&background=random`, role: "Software Engineer" },
-    { type: 'Work Anniversary', name: 'Rohan Verma', avatar: `https://ui-avatars.com/api/?name=Rohan+Verma&background=random`, role: "3 years as QA Engineer" },
-    { type: 'Birthday', name: 'Priya Mehta', avatar: `https://ui-avatars.com/api/?name=Priya+Mehta&background=random`, role: "Senior Designer" },
+    { type: 'Birthday', icon: Cake, name: 'Ajay Jaleon Mas', avatar: `https://ui-avatars.com/api/?name=Ajay+Jaleon&background=random`, role: "Software Engineer" },
+    { type: 'Birthday', icon: Cake, name: 'Kevin Fernandes', avatar: `https://ui-avatars.com/api/?name=Kevin+Fernandes&background=random`, role: "QA Engineer" },
+    { type: 'Work Anniversary', icon: Award, name: 'Santhosh S M', avatar: `https://ui-avatars.com/api/?name=Santhosh+SM&background=random`, role: "3 years as Senior Designer" },
 ];
 
-const initialPosts = [
-  {
+const wallOfFame = [
+    { name: 'Ramyashree', badges: 3, avatar: 'https://ui-avatars.com/api/?name=Ramyashree&background=random' },
+    { name: 'Rajesh thamayya a...', badges: 13, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random' },
+    { name: 'Thrupthi', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Thrupthi&background=random' },
+];
+
+const feedPost = {
     id: '1',
     author: 'Divyashree',
-    authorRole: 'HR Manager',
+    authorRole: 'People Operations Specialist',
     avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
     content: 'The employee referral program is now active! Refer candidates for open positions in Mangalore & Mysore and earn exciting bonuses. Check the hiring details in the image and refer now!',
-    image: 'https://placehold.co/1200x630/6366f1/ffffff',
+    image: 'https://placehold.co/1200x800',
     imageHint: 'hiring team employee referral',
-    timestamp: 'Jun 20, 2025',
-    likes: 152,
-    comments: 18,
+    timestamp: '1 month ago',
     featured: true,
-  },
-];
-
+};
 
 const RoleSpecificKpis = ({ role }: { role: string }) => {
     switch (role) {
@@ -79,172 +71,137 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const params = useParams();
   const role = (params.role as string) || 'employee';
+  const { toast } = useToast();
 
-  const [posts, setPosts] = useState(initialPosts);
-
-  const handleLike = (postId: string) => {
-    setPosts(prevPosts =>
-      prevPosts.map(p => (p.id === postId ? { ...p, likes: p.likes + 1 } : p))
-    );
-  };
+  const handleWish = (name: string) => {
+    toast({
+        title: "Wish Sent!",
+        description: `Your good wishes have been sent to ${name}.`
+    })
+  }
   
-  const handleComment = (postId: string) => {
-    setPosts(prevPosts =>
-      prevPosts.map(p => (p.id === postId ? { ...p, comments: p.comments + 1 } : p))
-    );
-  };
-
+  const [welcomeVisible, setWelcomeVisible] = useState(true);
 
   return (
-    <div className="space-y-4 md:space-y-6">
-        <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-bold font-headline leading-tight">Hi {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
-            <p className="text-muted-foreground hidden md:block">Here's a snapshot of what's happening in your workspace today.</p>
-        </div>
+    <div className="space-y-6">
+        <Card className="bg-card">
+            <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl font-bold font-headline">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
+                        <p className="text-muted-foreground text-sm">Hope you are having a great day</p>
+                    </div>
+                    <div className="w-1/3">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-medium text-muted-foreground">Profile</span>
+                          <span className="text-xs font-bold text-primary">12.5%</span>
+                        </div>
+                        <Progress value={12.5} className="h-2" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
         
-        {/* Mobile View with Tabs */}
-        <div className="md:hidden">
-            <Tabs defaultValue="feed">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="feed">Feed</TabsTrigger>
-                    <TabsTrigger value="widgets">Widgets</TabsTrigger>
-                </TabsList>
-                <TabsContent value="feed" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Celebrations</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                           <Carousel>
-                             <CarouselContent>
-                                {celebrations.map((cel, index) => (
-                                    <CarouselItem key={index} className="basis-1/2">
-                                        <Card className="p-4">
-                                            <div className="flex flex-col items-center text-center gap-2">
-                                                <Avatar className="w-16 h-16">
-                                                    <AvatarImage src={cel.avatar} alt={cel.name} data-ai-hint="person portrait"/>
-                                                    <AvatarFallback>{cel.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-semibold text-sm">{cel.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{cel.role}</p>
-                                                </div>
-                                                <Badge variant="secondary">{cel.type}</Badge>
-                                            </div>
-                                        </Card>
-                                    </CarouselItem>
-                                ))}
-                             </CarouselContent>
-                           </Carousel>
-                        </CardContent>
-                    </Card>
-
-                     {posts.map(post => (
-                        <Card key={post.id} className="overflow-hidden">
-                            <CardHeader>
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="w-11 h-11">
-                                        <AvatarImage src={post.avatar} data-ai-hint="person portrait"/>
-                                        <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-semibold">{post.author}</p>
-                                        <p className="text-xs text-muted-foreground">{post.timestamp}</p>
-                                    </div>
-                                    {post.featured && <Badge className="ml-auto">★ Featured</Badge>}
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <p className="text-sm font-semibold">Employee Referral Program is Active!</p>
-                                {post.image && <img src={post.image} alt="Post image" className="rounded-lg aspect-video object-cover" data-ai-hint={post.imageHint} />}
-                                <p className="text-sm text-muted-foreground">{post.content}</p>
-                            </CardContent>
-                            <CardFooter className="flex justify-between bg-muted/50 p-3">
-                                <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)}>
-                                    <ThumbsUp className="mr-2 h-4 w-4" /> Like ({post.likes})
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleComment(post.id)}>
-                                    Comment ({post.comments})
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </TabsContent>
-                <TabsContent value="widgets" className="space-y-4">
-                     <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-                        <RoleSpecificKpis role={role} />
-                     </Suspense>
-                     <Card>
-                        <CardHeader><CardTitle>My Calendar</CardTitle></CardHeader>
-                        <CardContent><Calendar mode="today" selected={new Date()} className="p-0" /></CardContent>
-                     </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
-        
-        {/* Desktop View */}
-        <div className="hidden md:grid md:grid-cols-12 gap-6 items-start">
-            <div className="md:col-span-8 lg:col-span-9 space-y-6">
-                <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-                    <RoleSpecificKpis role={role} />
-                </Suspense>
-                 {posts.map(post => (
-                    <Card key={post.id}>
-                        <CardHeader>
-                            <div className="flex items-center gap-3">
-                                <Avatar>
-                                    <AvatarImage src={post.avatar} data-ai-hint="person portrait"/>
-                                    <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-semibold">{post.author}</p>
-                                    <p className="text-xs text-muted-foreground">{post.authorRole}</p>
-                                </div>
-                                <div className="ml-auto flex items-center gap-2">
-                                     {post.featured && <Badge>★ Featured</Badge>}
-                                    <Button variant="ghost" size="icon"><MoreHorizontal/></Button>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-lg font-semibold mb-4">Employee Referral Program is Active!</p>
-                            {post.image && <img src={post.image} alt="Post image" className="rounded-lg mb-4" data-ai-hint={post.imageHint} />}
-                             <p className="text-sm text-muted-foreground">{post.content}</p>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Button variant="ghost" onClick={() => handleLike(post.id)}>
-                                <ThumbsUp className="mr-2 h-4 w-4" /> Like ({post.likes})
-                            </Button>
-                            <Button variant="ghost" onClick={() => handleComment(post.id)}>
-                                Comment ({post.comments})
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
-            <div className="md:col-span-4 lg:col-span-3 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column */}
+            <div className="lg:col-span-3 space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Celebrations</CardTitle>
+                        <CardTitle className="text-base">Highlights</CardTitle>
+                        <CardDescription>Today's celebrations</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {celebrations.map((cel, index) => (
                         <div key={index} className="flex items-center gap-3 text-sm">
-                            <Avatar className="h-10 w-10">
+                            <Avatar className="h-9 w-9">
                                 <AvatarImage src={cel.avatar} alt={cel.name} data-ai-hint="person portrait"/>
                                 <AvatarFallback>{cel.name.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div>
-                                <p className="font-semibold">{cel.name}</p>
-                                <Badge variant="secondary" className="mt-1">{cel.type}</Badge>
+                            <div className="flex-1">
+                                <p className="font-medium">{cel.name}'s {cel.type === 'Birthday' ? 'birthday is' : 'anniversary is'} today</p>
                             </div>
+                            <Button variant="ghost" size="sm" className="text-primary" onClick={() => handleWish(cel.name)}>Wish</Button>
                         </div>
                         ))}
                     </CardContent>
                 </Card>
+                <Card>
+                    <CardHeader><CardTitle className="text-base">Wall of Fame</CardTitle></CardHeader>
+                    <CardContent className="flex justify-around items-end">
+                        {wallOfFame.map((fame, index) => (
+                             <div key={index} className="flex flex-col items-center gap-2">
+                                <Avatar className="w-12 h-12">
+                                    <AvatarImage src={fame.avatar} alt={fame.name} data-ai-hint="person avatar"/>
+                                    <AvatarFallback>{fame.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <p className="text-xs font-medium text-center max-w-16 truncate">{fame.name}</p>
+                                <Badge variant="secondary">{fame.badges} Badges</Badge>
+                             </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Center Column */}
+            <div className="lg:col-span-6 space-y-6">
                  <Card>
                     <CardHeader>
-                        <CardTitle>My Calendar</CardTitle>
+                        <div className="flex items-center gap-3">
+                            <Avatar>
+                                <AvatarImage src={feedPost.avatar} data-ai-hint="person portrait"/>
+                                <AvatarFallback>{feedPost.author.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold">{feedPost.author}</p>
+                                <p className="text-xs text-muted-foreground">{feedPost.authorRole} • {feedPost.timestamp}</p>
+                            </div>
+                            <div className="ml-auto flex items-center gap-2">
+                                 {feedPost.featured && <Badge>★ Featured</Badge>}
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="font-semibold mb-2">Employee Referral Program is Active!</p>
+                        <div className="relative">
+                            <img src={feedPost.image} alt="Post image" className="rounded-lg aspect-video object-cover" data-ai-hint={feedPost.imageHint} />
+                             <Button className="absolute bottom-4 right-4">Refer Now!</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Right Column */}
+            <div className="lg:col-span-3 space-y-6">
+               {welcomeVisible && (
+                    <Card className="bg-primary/10 border-primary/20">
+                        <CardHeader className="flex flex-row items-start justify-between p-4">
+                            <div className="flex items-center gap-2">
+                                <Gift className="h-5 w-5 text-primary"/>
+                                <CardTitle className="text-base text-primary">Welcome!</CardTitle>
+                            </div>
+                            <button onClick={() => setWelcomeVisible(false)} className="text-muted-foreground hover:text-foreground">&times;</button>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <p className="text-sm">We're thrilled to have you with us and look forward to your success and growth.</p>
+                        </CardContent>
+                    </Card>
+               )}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Inbox</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex items-center gap-4">
+                       <Inbox className="h-8 w-8 text-primary"/>
+                       <div>
+                         <p className="font-bold text-lg">1</p>
+                         <p className="text-sm text-muted-foreground">Pending tasks</p>
+                       </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex justify-between items-center">
+                        <CardTitle className="text-base">My Calendar</CardTitle>
+                        <Button variant="link" size="sm" className="p-0 h-auto">Go to calendar</Button>
                     </CardHeader>
                     <CardContent>
                         <Calendar
@@ -252,6 +209,12 @@ export default function DashboardPage() {
                             selected={new Date()}
                             className="p-0"
                         />
+                         <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-4 border-t mt-4 text-xs">
+                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500"></span>Present</div>
+                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500"></span>Absent</div>
+                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-yellow-500"></span>Leave</div>
+                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
