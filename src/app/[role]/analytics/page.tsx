@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, Bar as RechartsBar } from 'recharts';
+import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart as RechartsBarChart, Bar as RechartsBar } from 'recharts';
 
 type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback';
 
@@ -142,7 +142,7 @@ const BenchmarkingView = () => {
                     {loading ? <Skeleton className="h-96" /> : (
                          <div className="mt-6 h-96">
                             <ResponsiveContainer width="100%" height="100%">
-                                <RechartsBar data={chartData}>
+                                <RechartsBarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
@@ -154,7 +154,7 @@ const BenchmarkingView = () => {
                                 <Legend />
                                 <RechartsBar dataKey="company" fill="hsl(var(--primary))" name="OptiTalent" />
                                 <RechartsBar dataKey="benchmark" fill="hsl(var(--muted-foreground))" name="Benchmark" />
-                                </RechartsBar>
+                                </RechartsBarChart>
                             </ResponsiveContainer>
                         </div>
                     )}
@@ -482,13 +482,13 @@ const DemographicsView = () => {
                 <CardContent className="h-80">
                     {loading ? <Skeleton className="h-full w-full" /> : (
                     <ResponsiveContainer width="100%" height="100%">
-                        <RechartsBar data={demographicsData.byDept} layout="vertical">
+                        <RechartsBarChart data={demographicsData.byDept} layout="vertical">
                            <CartesianGrid strokeDasharray="3 3" />
                            <XAxis type="number" />
                            <YAxis dataKey="name" type="category" width={80} />
                            <Tooltip />
                            <RechartsBar dataKey="value" name="Headcount" fill="hsl(var(--primary))" />
-                        </RechartsBar>
+                        </RechartsBarChart>
                     </ResponsiveContainer>
                     )}
                 </CardContent>
@@ -658,13 +658,13 @@ const TrainingView = () => {
             <CardContent className="h-96">
                 {loading ? <Skeleton className="h-full w-full" /> : (
                 <ResponsiveContainer width="100%" height="100%">
-                    <RechartsBar data={trainingData}>
+                    <RechartsBarChart data={trainingData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
                         <Tooltip />
                         <RechartsBar dataKey="rate" name="Completion Rate" fill="hsl(var(--primary))" />
-                    </RechartsBar>
+                    </RechartsBarChart>
                 </ResponsiveContainer>
                 )}
             </CardContent>
@@ -957,5 +957,6 @@ export default function AnalyticsPage() {
     </React.Suspense>
   );
 }
+
 
 
