@@ -1,18 +1,15 @@
-
 'use client';
 
 import { useState } from 'react';
 import { format, getDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, X, ChevronUp, ChevronDown, Clock, Briefcase, Award, Ticket, Building, User, BarChart } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 // Function to generate mock attendance data for a given month and year
 const generateAttendanceLog = (year: number, month: number) => {
@@ -54,64 +51,6 @@ const generateAttendanceLog = (year: number, month: number) => {
     return log;
 };
 
-
-function RegularizationDialog() {
-    const { toast } = useToast();
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        toast({
-            title: "Regularization Submitted",
-            description: "Your request has been sent to your manager for approval.",
-        });
-    }
-
-    return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button className="flex items-center bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition">
-                    <Plus className="mr-2 h-4 w-4"/>
-                    Attendance Regularization
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Attendance Regularization</DialogTitle>
-                    <DialogDescription>
-                        Request a correction for a past date if you forgot to check in/out or were marked absent incorrectly.
-                    </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit}>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="date">Date</Label>
-                            <Input id="date" type="date" required/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="type">Request Type</Label>
-                            <Select name="type" required>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select request type"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="missed-check-in">Missed Check-in/out</SelectItem>
-                                    <SelectItem value="wrongly-marked-absent">Wrongly Marked Absent</SelectItem>
-                                    <SelectItem value="permission">Permission/On-Duty</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="reason">Reason</Label>
-                            <Textarea id="reason" name="reason" placeholder="Please explain the reason for this request..." required/>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit">Submit Request</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
 function AttendanceDetailPanel({ date, onClose }: { date: Date, onClose: () => void }) {
     const detailedAttendanceLog = generateAttendanceLog(date.getFullYear(), date.getMonth());
@@ -203,6 +142,8 @@ function AttendanceDetailPanel({ date, onClose }: { date: Date, onClose: () => v
 export default function AttendancePage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const params = useParams();
+  const role = params.role as string;
   
   const detailedAttendanceLog = generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth());
 
@@ -270,7 +211,12 @@ export default function AttendancePage() {
                 <p className="text-muted-foreground">Track your work hours and request corrections.</p>
             </div>
             <div className="flex items-center space-x-2">
-                <RegularizationDialog />
+                 <Button asChild>
+                    <Link href={`/${role}/attendance/regularize`}>
+                         <Plus className="mr-2 h-4 w-4"/>
+                        Attendance Regularization
+                    </Link>
+                </Button>
             </div>
         </header>
 
