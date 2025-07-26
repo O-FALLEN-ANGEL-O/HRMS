@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,69 +10,52 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle } from 'lucide-react';
+import { TrendingDown, TrendingUp, Construction, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { TrendingUpIcon } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
-const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: string, setActiveView: (view: string) => void }) => (
-    <aside className="hidden lg:flex lg:flex-col space-y-2">
-         <button 
-            onClick={() => setActiveView('benchmarking')} 
-            className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
-                activeView === 'benchmarking' 
-                    ? "bg-primary/10 text-primary font-semibold" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}>
-            <BarChart className="h-5 w-5" />
-            Benchmarking
-        </button>
-        <button 
-            onClick={() => setActiveView('performance')} 
-            className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
-                activeView === 'performance' 
-                    ? "bg-primary/10 text-primary font-semibold" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}>
-            <TrendingUpIcon className="h-5 w-5" />
-            Performance Metrics
-        </button>
-        <button 
-            onClick={() => setActiveView('employee-management')} 
-            className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
-                activeView === 'employee-management' 
-                    ? "bg-primary/10 text-primary font-semibold" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}>
-            <Users className="h-5 w-5" />
-            Employee Management
-        </button>
-        <button 
-            onClick={() => setActiveView('recruitment')} 
-            className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
-                activeView === 'recruitment' 
-                    ? "bg-primary/10 text-primary font-semibold" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}>
-            <FileText className="h-5 w-5" />
-            Recruitment
-        </button>
-         <div className="pt-4 mt-auto space-y-2">
-            <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
-                <HelpCircle className="h-5 w-5" />
-                Glossary & FAQ
-            </Link>
-             <Link href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
-                <MessageSquare className="h-5 w-5" />
-                Give Feedback
-            </Link>
-        </div>
-    </aside>
-);
+const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: string, setActiveView: (view: string) => void }) => {
+    const { user } = useAuth();
+    if (!user) return null;
+
+    const navItems = [
+        { id: 'benchmarking', label: 'Benchmarking', icon: BarChart },
+        { id: 'performance', label: 'Performance Metrics', icon: TrendingUpIcon },
+        { id: 'employee-management', label: 'Employee Management', icon: Users },
+        { id: 'recruitment', label: 'Recruitment', icon: FileText },
+    ];
+
+    return (
+        <aside className="hidden lg:flex lg:flex-col space-y-2">
+            {navItems.map(item => (
+                <button
+                    key={item.id}
+                    onClick={() => setActiveView(item.id)}
+                    className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium w-full text-left",
+                        activeView === item.id
+                            ? "bg-primary/10 text-primary font-semibold"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}>
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                </button>
+            ))}
+            <div className="pt-4 mt-auto space-y-2">
+                <Link href={`/${user.role}/settings`} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <HelpCircle className="h-5 w-5" />
+                    Glossary & FAQ
+                </Link>
+                <Link href={`/${user.role}/helpdesk`} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <MessageSquare className="h-5 w-5" />
+                    Give Feedback
+                </Link>
+            </div>
+        </aside>
+    )
+};
+
 
 const BenchmarkingView = () => (
     <div className="space-y-8">
@@ -383,23 +366,23 @@ function LoadingState() {
   )
 }
 
-function EmployeeDashboard() {
-  return (
-    <Card>
-      <CardContent className="p-10 flex flex-col items-center justify-center text-center">
-        <Construction className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold">Analytics Not Available</h3>
-        <p className="text-muted-foreground text-sm">A dedicated analytics dashboard for your role is coming soon.</p>
-      </CardContent>
-    </Card>
-  )
-}
+function ComingSoonView({ title }: { title: string }) {
+    return (
+      <Card>
+        <CardContent className="p-10 flex flex-col items-center justify-center text-center">
+          <Construction className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">{title} Analytics Coming Soon</h3>
+          <p className="text-muted-foreground text-sm">A dedicated analytics dashboard for this section is under construction.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
 
 export default function AnalyticsPage() {
   const params = useParams();
   const role = params.role as string || 'employee';
-  const [activeView, setActiveView] = useState('benchmarking');
+  const [activeView, setActiveView] = React.useState('benchmarking');
 
   const renderContent = () => {
     switch(activeView) {
@@ -407,6 +390,10 @@ export default function AnalyticsPage() {
         return <BenchmarkingView />;
       case 'performance':
         return <PerformanceMetricsView />;
+      case 'employee-management':
+        return <ComingSoonView title="Employee Management" />;
+      case 'recruitment':
+        return <ComingSoonView title="Recruitment" />;
       default:
         return <BenchmarkingView />;
     }
@@ -414,12 +401,11 @@ export default function AnalyticsPage() {
 
   const getPageTitle = () => {
      switch(activeView) {
-      case 'benchmarking':
-        return 'Benchmarking';
-      case 'performance':
-        return 'Performance Metrics';
-      default:
-        return 'Analytics Dashboard';
+      case 'benchmarking': return 'Benchmarking';
+      case 'performance': return 'Performance Metrics';
+      case 'employee-management': return 'Employee Management';
+      case 'recruitment': return 'Recruitment Analytics';
+      default: return 'Analytics Dashboard';
     }
   }
 
@@ -440,20 +426,20 @@ export default function AnalyticsPage() {
                       <h1 className="text-3xl font-bold font-headline tracking-tight">{getPageTitle()}</h1>
                       <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
                    </div>
-                   <Suspense fallback={<LoadingState />}>
+                   <React.Suspense fallback={<LoadingState />}>
                     {renderContent()}
-                   </Suspense>
+                   </React.Suspense>
                 </div>
             </div>
         )
       default:
-        return <EmployeeDashboard />;
+        return <ComingSoonView title="Analytics" />;
     }
   }
 
   return (
-    <Suspense fallback={<LoadingState />}>
+    <React.Suspense fallback={<LoadingState />}>
         {renderDashboard()}
-    </Suspense>
+    </React.Suspense>
   );
 }
