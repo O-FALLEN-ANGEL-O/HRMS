@@ -12,7 +12,6 @@ import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { mockUsers } from "@/lib/mock-data/employees";
 import { useAuth } from "@/hooks/use-auth";
 
 // --- MOCK DATA FOR PROFILE TABS ---
@@ -324,6 +323,10 @@ export default function ProfilePage() {
                         <div className="flex-1">
                             <h1 className="text-3xl font-bold font-headline">{user.profile.full_name}</h1>
                             <p className="text-muted-foreground">{user.profile.job_title}</p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1.5"><Mail className="h-4 w-4" />{user.email}</span>
+                                <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" />{user.profile.phone_number}</span>
+                            </div>
                         </div>
                          <Button variant="outline" onClick={() => toast({title: "Edit Action", description: "This would open an edit dialog."})}><Edit className="mr-2 h-4 w-4" /> Edit Profile</Button>
                     </div>

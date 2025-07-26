@@ -14,3 +14,4 @@ import '@/ai/flows/categorize-ticket.ts';
 import '@/ai/flows/verify-face.ts';
 import '@/ai/flows/ai-chatbot.ts';
 import '@/ai/flows/get-ticket-summary-flow.ts';
+import '@/ai/flows/face-verification-flow.ts';

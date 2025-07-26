@@ -5,11 +5,11 @@ import { format, getDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { FaceVerificationDialog } from '@/components/attendance/face-verification-dialog';
 
 // Function to generate mock attendance data for a given month and year
 const generateAttendanceLog = (year: number, month: number) => {
@@ -211,6 +211,7 @@ export default function AttendancePage() {
                 <p className="text-muted-foreground">Track your work hours and request corrections.</p>
             </div>
             <div className="flex items-center space-x-2">
+                 <FaceVerificationDialog />
                  <Button asChild>
                     <Link href={`/${role}/attendance/regularize`}>
                          <Plus className="mr-2 h-4 w-4"/>
