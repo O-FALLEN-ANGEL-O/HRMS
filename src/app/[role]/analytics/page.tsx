@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart as RechartsBarChart, Bar as RechartsBar } from 'recharts';
+import { getTicketSummaryAction } from './actions';
+import type { TicketData } from '@/ai/flows/get-ticket-summary-flow.types';
 
 type AnalyticsView = 'benchmarking' | 'performance' | 'demographics' | 'recruitment' | 'retention' | 'training' | 'glossary' | 'feedback' | 'individual';
 
@@ -999,6 +1001,123 @@ function LoadingState() {
   )
 }
 
+// =================================================================
+// BPO Role Specific Dashboards
+// =================================================================
+
+const ManagerPerformanceView = () => {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Manager's Team Performance</CardTitle>
+                <CardDescription>This is a placeholder for the manager-specific performance view.</CardDescription>
+            </CardHeader>
+             <CardContent>
+                <p>Content for manager's performance dashboard will go here.</p>
+            </CardContent>
+        </Card>
+    )
+}
+
+const ProcessManagerDashboard = () => {
+    const [data, setData] = useState<TicketData | null>(null);
+
+    useEffect(() => {
+        async function fetchData() {
+            const result = await getTicketSummaryAction();
+            setData(result);
+        }
+        fetchData();
+    }, []);
+
+    const chartData = data?.ticketSummary.map(item => ({
+        name: item.category,
+        value: item.count,
+        fill: `hsl(var(--chart-${Math.floor(Math.random() * 5) + 1}))`
+    })) || [];
+    
+    return (
+        <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Open Tickets</CardTitle>
+                        <Ticket className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{data ? data.ticketSummary.reduce((a, b) => a + b.count, 0) : <Skeleton className="h-8 w-16" />}</div>
+                        <p className="text-xs text-muted-foreground">Across all departments</p>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Avg Resolution Time</CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">4.2h</div>
+                        <p className="text-xs text-muted-foreground">This week</p>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">SLA Compliance</CardTitle>
+                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">98.5%</div>
+                        <p className="text-xs text-muted-foreground">This month</p>
+                    </CardContent>
+                </Card>
+            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ticket Volume by Category</CardTitle>
+                </CardHeader>
+                <CardContent className="h-96">
+                   {data ? (
+                     <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                           <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                               {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                           </Pie>
+                           <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                   ) : <Skeleton className="w-full h-full" />}
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+const QaDashboard = () => {
+     return (
+        <Card>
+            <CardHeader>
+                <CardTitle>QA Analyst Dashboard</CardTitle>
+                <CardDescription>High-level quality metrics.</CardDescription>
+            </CardHeader>
+             <CardContent>
+                <p>Content for QA dashboard will go here.</p>
+            </CardContent>
+        </Card>
+    )
+}
+
+const DefaultDashboard = ({ role }: { role: string }) => {
+     return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Analytics Dashboard</CardTitle>
+                <CardDescription>Default dashboard for the <span className="font-bold capitalize">{role}</span> role.</CardDescription>
+            </CardHeader>
+             <CardContent>
+                <p>Key metrics and visualizations for your role will be displayed here.</p>
+            </CardContent>
+        </Card>
+    )
+}
 
 export default function AnalyticsPage() {
   const params = useParams();
@@ -1035,49 +1154,57 @@ export default function AnalyticsPage() {
     }
   }
 
-
-  const renderDashboard = () => {
+  const renderRoleSpecificDashboard = () => {
     switch (role) {
-      case 'admin':
-      case 'hr':
-      case 'manager':
-      case 'recruiter':
-      case 'process-manager':
-      case 'team-leader':
-        return (
-            <div className="grid lg:grid-cols-[250px_1fr] gap-8 items-start">
-                <AnalyticsSidebar activeView={activeView} setActiveView={setActiveView} />
-                <div className="space-y-6">
-                   <div>
-                      <h1 className="text-3xl font-bold font-headline tracking-tight">{getPageTitle()}</h1>
-                      <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
-                   </div>
-                   <React.Suspense fallback={<LoadingState />}>
-                    {renderContent()}
-                   </React.Suspense>
+        case 'admin':
+        case 'hr':
+            return (
+                <div className="grid lg:grid-cols-[250px_1fr] gap-8 items-start">
+                    <AnalyticsSidebar activeView={activeView} setActiveView={setActiveView} />
+                    <div className="space-y-6">
+                    <div>
+                        <h1 className="text-3xl font-bold font-headline tracking-tight">{getPageTitle()}</h1>
+                        <p className="text-muted-foreground">Key metrics and visualizations for your role.</p>
+                    </div>
+                    <Suspense fallback={<LoadingState />}>
+                        {renderContent()}
+                    </Suspense>
+                    </div>
                 </div>
-            </div>
-        )
-      default:
-        return (
-            <Card>
-                <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="p-4 bg-primary/10 rounded-full">
-                    <BarChart className="h-12 w-12 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold">Analytics Unavailable</h3>
-                <p className="text-muted-foreground text-sm max-w-md">The analytics dashboard is not available for your current role.</p>
-                </CardContent>
-            </Card>
-        )
+            )
+        case 'manager':
+        case 'team-leader':
+            return <ManagerPerformanceView />;
+        case 'process-manager':
+            return <ProcessManagerDashboard />;
+        case 'qa-analyst':
+            return <QaDashboard />;
+        case 'recruiter':
+        case 'finance':
+        case 'it-manager':
+        case 'operations-manager':
+        case 'account-manager':
+        case 'marketing':
+             return <DefaultDashboard role={role} />
+        default:
+            return (
+                <Card>
+                    <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <BarChart className="h-12 w-12 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Analytics Unavailable</h3>
+                    <p className="text-muted-foreground text-sm max-w-md">The analytics dashboard is not available for your current role.</p>
+                    </CardContent>
+                </Card>
+            )
     }
   }
 
+
   return (
-    <React.Suspense fallback={<LoadingState />}>
-        {renderDashboard()}
-    </React.Suspense>
+    <Suspense fallback={<LoadingState />}>
+        {renderRoleSpecificDashboard()}
+    </Suspense>
   );
 }
-
-    
