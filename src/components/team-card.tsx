@@ -20,6 +20,7 @@ type Member = {
   performance?: number;
   tasksCompleted?: number;
   tasksPending?: number;
+  employee_id: string;
 };
 
 const getStatusIndicator = (status: string) => {
@@ -31,7 +32,7 @@ const getStatusIndicator = (status: string) => {
     }
 };
 
-const TeamCardComponent = ({ member }: { member: any }) => {
+const TeamCardComponent = ({ member }: { member: Member }) => {
     const { toast } = useToast();
     const router = useRouter();
     const params = useParams();
@@ -52,7 +53,7 @@ const TeamCardComponent = ({ member }: { member: any }) => {
 
     const handleAction = (action: string) => {
         if(action === 'profile') {
-            router.push(`/${role}/profile`);
+            router.push(`/${role}/employees/${member.employee_id}`);
         } else if (action === 'message') {
             toast({
                 title: `Message Sent`,
@@ -62,7 +63,7 @@ const TeamCardComponent = ({ member }: { member: any }) => {
     }
 
     return (
-        <Card className="hover:bg-muted/50 transition-colors">
+        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => handleAction('profile')}>
             <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                     <div className="relative">
@@ -78,11 +79,11 @@ const TeamCardComponent = ({ member }: { member: any }) => {
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><MoreVertical className="h-4 w-4"/></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleAction('profile')}>View Profile</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAction('message')}>Send Message</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAction('profile'); }}>View Profile</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAction('message'); }}>Send Message</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

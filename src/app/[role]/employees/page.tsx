@@ -5,6 +5,7 @@ import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, MoreHorizontal } from "lucide-react"
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -27,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mockEmployees } from '@/lib/mock-data/employees';
 import { TeamCard } from '@/components/team-card';
 import { Loader2 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 const AddEmployeeButton = dynamic(() => import('@/components/employees/add-employee-button'), {
     loading: () => <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Add Employee</Button>,
@@ -37,6 +38,9 @@ const AddEmployeeButton = dynamic(() => import('@/components/employees/add-emplo
 
 function AdminView() {
     const { toast } = useToast();
+    const params = useParams();
+    const router = useRouter();
+    const role = params.role as string;
     
     const handleAction = (action: string) => {
         toast({
@@ -50,7 +54,7 @@ function AdminView() {
           <CardHeader>
             <CardTitle>All Employees</CardTitle>
             <CardDescription>
-              A list of all employees in the organization.
+              A list of all employees in the organization. Click a row to view details.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -68,7 +72,7 @@ function AdminView() {
               </TableHeader>
               <TableBody>
                 {mockEmployees.map((employee) => (
-                  <TableRow key={employee.employee_id}>
+                  <TableRow key={employee.employee_id} className="cursor-pointer" onClick={() => router.push(`/${role}/employees/${employee.employee_id}`)}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="hidden h-9 w-9 sm:flex">
@@ -91,16 +95,15 @@ function AdminView() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
                             <MoreHorizontal className="h-4 w-4" />
                             <span className="sr-only">Toggle menu</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleAction('View Profile')}>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleAction('Edit')}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Deactivate')}>Deactivate</DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleAction('Edit')}}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={(e) => {e.stopPropagation(); handleAction('Deactivate')}}>Deactivate</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
