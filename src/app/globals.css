@@ -39,6 +39,8 @@
     --chart-3: 340 84% 66%;
     --chart-4: 20 84% 66%;
     --chart-5: 220 84% 66%;
+
+    --brand-blue: #3b82f6;
   }
 
   .dark {
@@ -75,6 +77,8 @@
     --chart-3: 340 84% 76%;
     --chart-4: 20 84% 76%;
     --chart-5: 220 84% 76%;
+
+    --brand-blue: #3b82f6;
   }
 }
 
@@ -83,40 +87,47 @@
     @apply border-border;
   }
   body {
-    @apply bg-gray-50 text-foreground;
+    @apply bg-gray-50 dark:bg-background text-foreground;
     font-family: 'Poppins', sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
   
-  h1 {
-    @apply text-2xl md:text-3xl;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
   }
 }
 
-@layer components {
-    @tailwind components;
+.detailed-calendar .rdp-table {
+    background-color: #f7fafc; /* gray-100 */
+    border-radius: 0.5rem;
+    overflow: hidden;
+    gap: 1px;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
-.custom-loader {
-  width: 60px;
-  aspect-ratio: 1;
-  border: 15px solid hsl(var(--border));
-  border-radius: 50%;
-  position: relative;
-  transform: rotate(45deg);
+.dark .detailed-calendar .rdp-table {
+    background-color: #374151; /* gray-700 */
 }
-.custom-loader::before {
-  content: "";
-  position: absolute;
-  inset: -15px;
-  border-radius: 50%;
-  border: 15px solid hsl(var(--primary));
-  animation: l18 2s infinite linear;
+
+.detailed-calendar .rdp-head_cell {
+    text-align: center;
+    padding: 0.75rem 0; /* py-3 */
+    background-color: #ffffff; /* white */
+    font-weight: 600; /* semibold */
+    color: #4b5563; /* gray-600 */
+    font-size: 0.875rem; /* text-sm */
+    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
 }
-@keyframes l18 {
-    0%   {clip-path:polygon(50% 50%,0 0,0    0,0    0   ,0    0   ,0    0   )}
-    25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0   ,100% 0   ,100% 0   )}
-    50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
-    75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0    100%,0    100%)}
-    100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0    100%,0    0   )}
+.dark .detailed-calendar .rdp-head_cell {
+    background-color: hsl(var(--card));
+    color: hsl(var(--muted-foreground));
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.detailed-calendar .rdp-cell {
+    background-color: #ffffff; /* white */
+}
+.dark .detailed-calendar .rdp-cell {
+    background-color: hsl(var(--card));
 }

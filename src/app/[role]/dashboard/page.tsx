@@ -1,33 +1,15 @@
 
 'use client';
 
-import React, { useState, Suspense } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase, Inbox, Gift, MessageSquare, Heart, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Award, Cake, FileText, MoreHorizontal, Inbox, Gift, WavingHand, Search, Bell, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AnimatedBot } from '@/components/ui/animated-bot';
-
-const RecruiterKpis = dynamic(() => import('@/components/dashboards/kpi-cards/recruiter-kpis').then(mod => mod.RecruiterKpis), { ssr: false });
-const ManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/manager-kpis').then(mod => mod.ManagerKpis), { ssr: false });
-const EmployeeKpis = dynamic(() => import('@/components/dashboards/kpi-cards/employee-kpis').then(mod => mod.EmployeeKpis), { ssr: false });
-const FinanceKpis = dynamic(() => import('@/components/dashboards/kpi-cards/finance-kpis').then(mod => mod.FinanceKpis), { ssr: false });
-const ItManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/it-manager-kpis').then(mod => mod.ItManagerKpis), { ssr: false });
-const OperationsManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/operations-manager-kpis').then(mod => mod.OperationsManagerKpis), { ssr: false });
-const QaAnalystKpis = dynamic(() => import('@/components/dashboards/kpi-cards/qa-analyst-kpis').then(mod => mod.QaAnalystKpis), { ssr: false });
-const ProcessManagerKpis = dynamic(() => import('@/components/dashboards/kpi-cards/process-manager-kpis').then(mod => mod.ProcessManagerKpis), { ssr: false });
-
 
 const celebrations = [
     { type: 'Birthday', icon: Cake, name: 'Ajay Jaleon Mas', avatar: `https://ui-avatars.com/api/?name=Ajay+Jaleon&background=random`, role: "Software Engineer" },
@@ -36,47 +18,23 @@ const celebrations = [
 ];
 
 const wallOfFame = [
-    { name: 'Rajesh thamayya a...', badges: 13, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', rank: 1 },
-    { name: 'Ramyashree', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Ramyashree&background=random', rank: 2 },
-    { name: 'Thrupthi', badges: 3, avatar: 'https://ui-avatars.com/api/?name=Thrupthi&background=random', rank: 3 },
+    { name: 'Rajesh thamayya a...', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random' },
+    { name: 'Thiyagu B', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Thiyagu+B&background=random' },
+    { name: 'Prajwal', badges: 8, avatar: 'https://ui-avatars.com/api/?name=Prajwal&background=random' },
+    { name: 'Srehanth Kumar', badges: 4, avatar: 'https://ui-avatars.com/api/?name=Srehanth+K&background=random' },
 ];
 
 const feedPost = {
-    id: '1',
     author: 'Divyashree',
-    authorRole: 'People Operations Specialist',
+    authorRole: 'Specialist',
     avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
-    content: 'The employee referral program is now active! Refer candidates for open positions in Mangalore & Mysore and earn exciting bonuses. Check the hiring details in the image and refer now!',
-    image: 'https://placehold.co/1200x800',
-    imageHint: 'hiring team employee referral',
     timestamp: '1 month ago',
-    featured: true,
 };
-
-const RoleSpecificKpis = ({ role }: { role: string }) => {
-    switch (role) {
-        case 'recruiter': return <RecruiterKpis />;
-        case 'manager':
-        case 'hr':
-        case 'admin':
-        case 'team-leader': return <ManagerKpis />;
-        case 'finance': return <FinanceKpis />;
-        case 'it-manager': return <ItManagerKpis />;
-        case 'operations-manager': return <OperationsManagerKpis />;
-        case 'qa-analyst': return <QaAnalystKpis />;
-        case 'process-manager': return <ProcessManagerKpis />;
-        case 'employee':
-        case 'trainee':
-        default: return <EmployeeKpis />;
-    }
-}
-
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const params = useParams();
-  const role = (params.role as string) || 'employee';
   const { toast } = useToast();
+  const [date, setDate] = useState<Date | undefined>(new Date(2025, 6, 19));
 
   const handleWish = (name: string) => {
     toast({
@@ -84,167 +42,191 @@ export default function DashboardPage() {
         description: `Your good wishes have been sent to ${name}.`
     })
   }
-  
-  const [welcomeVisible, setWelcomeVisible] = useState(true);
 
   return (
     <div className="space-y-6">
-        <Card className="bg-card">
-            <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold font-headline">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
-                        <p className="text-muted-foreground text-sm">Hope you are having a great day</p>
-                    </div>
-                    <div className="w-1/3">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-medium text-muted-foreground">Profile</span>
-                          <span className="text-xs font-bold text-primary">12.5%</span>
-                        </div>
-                        <Progress value={12.5} className="h-2" />
-                    </div>
+      <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
+          <p className="text-gray-500 dark:text-gray-400">You are having a great day.</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary w-64" placeholder="Search..." type="text"/>
+          </div>
+          <Button variant="outline" size="icon" className="rounded-full"><Bell/></Button>
+          <Button variant="outline" size="icon" className="rounded-full"><Settings/></Button>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Main Content (2 columns) */}
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Highlights</h2>
+                    <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
                 </div>
-            </CardContent>
-        </Card>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column */}
-            <div className="lg:col-span-3 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Highlights</CardTitle>
-                        <CardDescription>Today's celebrations</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {celebrations.map((cel, index) => (
-                        <div key={index} className="flex items-center gap-3 text-sm">
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={cel.avatar} alt={cel.name} data-ai-hint="person portrait"/>
+            </CardHeader>
+            <CardContent className="space-y-2">
+                 <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-muted/50 rounded-xl">
+                    <div>
+                        <p className="font-medium text-gray-700 dark:text-gray-300">Today's celebration</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">10 celebrations</p>
+                    </div>
+                    <MoreHorizontal className="text-gray-400" />
+                </div>
+                {celebrations.slice(0, 2).map((cel, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-muted/50">
+                        <div className="flex items-center space-x-4">
+                            <Avatar className="w-10 h-10">
+                                <AvatarImage src={cel.avatar} alt={cel.name} data-ai-hint="person avatar"/>
                                 <AvatarFallback>{cel.name.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                                <p className="font-medium">{cel.name}'s {cel.type === 'Birthday' ? 'birthday is' : 'anniversary is'} today</p>
+                             <div>
+                                <p className="font-medium text-gray-800 dark:text-gray-200">{cel.name}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{cel.type} is today</p>
                             </div>
-                            <Button variant="ghost" size="sm" className="text-primary" onClick={() => handleWish(cel.name)}>Wish</Button>
                         </div>
-                        ))}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle className="text-base">Wall of Fame</CardTitle></CardHeader>
-                    <CardContent className="flex justify-around items-end pt-4">
-                        {wallOfFame.map((fame, index) => (
-                             <div key={index} className="flex flex-col items-center gap-2 text-center">
-                                <div className="relative">
-                                    <Avatar className={`w-12 h-12 ${fame.rank === 1 ? 'w-16 h-16' : ''}`}>
-                                        <AvatarImage src={fame.avatar} alt={fame.name} data-ai-hint="person avatar"/>
-                                        <AvatarFallback>{fame.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                     <Badge variant="secondary" className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs">{fame.rank === 1 ? '🥇' : fame.rank === 2 ? '🥈' : '🥉'}</Badge>
-                                </div>
-                                <p className="text-xs font-medium max-w-20 truncate mt-2">{fame.name}</p>
-                                <p className="text-xs text-muted-foreground">{fame.badges} Badges</p>
-                             </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </div>
+                        <Button variant="link" className="font-semibold" onClick={() => handleWish(cel.name)}>Wish</Button>
+                    </div>
+                ))}
+                 <div className="text-center pt-2">
+                    <Button variant="link" className="text-sm font-medium">See more</Button>
+                </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="rounded-2xl shadow-sm">
+             <CardHeader className="flex flex-row items-start space-x-4 border-b pb-4">
+                <Avatar className="w-12 h-12">
+                    <AvatarImage src={feedPost.avatar} alt={feedPost.author} data-ai-hint="person portrait" />
+                    <AvatarFallback>{feedPost.author.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                    <p className="font-semibold text-gray-800 dark:text-gray-200">{feedPost.author}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{feedPost.authorRole} • {feedPost.timestamp}</p>
+                </div>
+                <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Featured</span>
+             </CardHeader>
+             <CardContent className="p-4">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">Employee Referral Program is Active!</p>
+                <div className="bg-slate-800 text-white rounded-lg overflow-hidden">
+                    <div className="p-6">
+                        <h3 className="text-2xl font-bold">Employee Referral Program</h3>
+                        <p className="text-sm text-slate-300">1st July to 30th September</p>
+                    </div>
+                    <div className="bg-brand-blue p-4 text-center">
+                        <p className="font-bold">Refer Now!</p>
+                    </div>
+                    <div className="p-6 flex flex-col md:flex-row gap-6">
+                        <div className="flex-1">
+                            <h4 className="font-bold text-lg mb-2">Hiring for Mangalore & Mysore</h4>
+                            <ul className="text-sm space-y-2 text-slate-300 list-disc list-inside">
+                                <li>Operations Manager</li>
+                                <li>Team Leader</li>
+                                <li>Senior Customer Service Associate</li>
+                                <li>Junior Customer Service Associate</li>
+                            </ul>
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="font-bold text-lg mb-2">Top Referral Bonuses</h4>
+                            <ul className="text-sm space-y-2 text-slate-300 list-disc list-inside">
+                                <li>Earn a bonus of up to 10,000 INR on each successful referral.</li>
+                                <li>The referred candidate must be employed for a minimum of 3 months.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+             </CardContent>
+          </Card>
 
-            {/* Center Column */}
-            <div className="lg:col-span-6 space-y-6">
-                 <Card>
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarImage src={feedPost.avatar} data-ai-hint="person portrait"/>
-                                <AvatarFallback>{feedPost.author.charAt(0)}</AvatarFallback>
+           <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Badge received</h2>
+                    <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                    {wallOfFame.map((person, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                            <Avatar className="w-20 h-20 border-4 border-white dark:border-card shadow-md">
+                                <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
+                                <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div>
-                                <p className="font-semibold">{feedPost.author}</p>
-                                <p className="text-xs text-muted-foreground">{feedPost.authorRole} • {feedPost.timestamp}</p>
-                            </div>
-                            <div className="ml-auto flex items-center gap-2">
-                                 {feedPost.featured && <Badge>★ Featured</Badge>}
-                            </div>
+                            <p className="font-semibold text-gray-800 dark:text-gray-200 mt-2 truncate max-w-full">{person.name}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{person.badges} Badge</p>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="font-semibold mb-2">Employee Referral Program is Active!</p>
-                        <div className="relative mb-4">
-                            <img src={feedPost.image} alt="Post image" className="rounded-lg aspect-video object-cover" data-ai-hint={feedPost.imageHint} />
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-4">{feedPost.content}</p>
-                        <Button className="w-full">Refer Now!</Button>
-                    </CardContent>
-                    <CardFooter className="flex gap-2">
-                         <Button variant="outline" size="sm"><ThumbsUp className="h-4 w-4 mr-2"/>Clap (35)</Button>
-                         <Button variant="outline" size="sm"><MessageSquare className="h-4 w-4 mr-2"/>Comment</Button>
-                         <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-600"><Heart className="h-4 w-4"/></Button>
-                    </CardFooter>
-                </Card>
-            </div>
+                    ))}
+                </div>
+            </CardContent>
+           </Card>
 
-            {/* Right Column */}
-            <div className="lg:col-span-3 space-y-6">
-               {welcomeVisible && (
-                    <Card className="bg-primary/10 border-primary/20">
-                        <CardHeader className="flex flex-row items-start justify-between p-4">
-                            <div className="flex items-center gap-2">
-                                <Gift className="h-5 w-5 text-primary"/>
-                                <CardTitle className="text-base text-primary">Welcome!</CardTitle>
-                            </div>
-                            <button onClick={() => setWelcomeVisible(false)} className="text-muted-foreground hover:text-foreground">&times;</button>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-sm">We're thrilled to have you with us and look forward to your success and growth.</p>
-                        </CardContent>
-                    </Card>
-               )}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Inbox</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex items-center gap-4">
-                       <Inbox className="h-8 w-8 text-primary"/>
-                       <div>
-                         <p className="font-bold text-lg">1</p>
-                         <p className="text-sm text-muted-foreground">Pending tasks</p>
-                       </div>
-                    </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader className="flex justify-between items-center">
-                        <CardTitle className="text-base">My Calendar</CardTitle>
-                        <Button variant="link" size="sm" className="p-0 h-auto" asChild>
-                           <Link href={`/${role}/attendance`}>Go to calendar</Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <Calendar
-                            mode="today"
-                            selected={new Date()}
-                            className="p-0"
-                        />
-                         <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-4 border-t mt-4 text-xs">
-                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500"></span>Present</div>
-                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500"></span>Absent</div>
-                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-yellow-500"></span>Leave</div>
-                            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
-                        </div>
-                    </CardContent>
-                </Card>
-                 <Card className="bg-accent/50 border-accent text-center">
-                    <CardContent className="p-4">
-                        <AnimatedBot className="mx-auto" />
-                        <h3 className="font-semibold mt-2">Need help?</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Our AI assistant can help you mark attendance, apply for leave, and more.</p>
-                        <Button variant="outline" size="sm" className="mt-3 w-full" asChild>
-                           <Link href={`/${role}/ai-tools/chatbot`}>Ask OneAI</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-8">
+            <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-6 rounded-2xl shadow-lg">
+                <div className="flex justify-between items-start">
+                    <h2 className="text-xl font-semibold">Welcome!</h2>
+                    <WavingHand/>
+                </div>
+                <p className="mt-2 text-blue-100">Welcome to OptiTalent. We're thrilled to have you with us and look forward to your success and growth.</p>
+                <div className="mt-4 flex items-center space-x-2 text-sm">
+                    <Users className="h-4 w-4"/>
+                    <span>1 people wished you</span>
+                </div>
+            </Card>
+
+            <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Inbox</h2>
+                </CardHeader>
+                <CardContent>
+                     <div className="flex items-center space-x-4 p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
+                        <div className="p-3 bg-purple-100 dark:bg-purple-500/20 rounded-full">
+                            <Inbox className="text-purple-600 dark:text-purple-300"/>
+                        </div>
+                        <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">1</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Pending tasks</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Calendar</h2>
+                        <Button variant="link" className="text-sm font-medium">Go to calendar</Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <CalendarComponent
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        className="p-0"
+                        classNames={{
+                           day_selected: "bg-blue-600 text-white rounded-full focus:bg-blue-600 focus:text-white",
+                           day_today: "bg-blue-100 text-blue-600 rounded-full"
+                        }}
+                    />
+                    <div className="mt-4 flex flex-wrap items-center space-x-4 text-sm">
+                        <div className="flex items-center space-x-2"><span className="w-2 h-2 bg-orange-400 rounded-full"></span><span>Today</span></div>
+                        <div className="flex items-center space-x-2"><span className="w-2 h-2 bg-red-400 rounded-full"></span><span>Present</span></div>
+                        <div className="flex items-center space-x-2"><span className="w-2 h-2 bg-gray-400 rounded-full"></span><span>Absent</span></div>
+                        <div className="flex items-center space-x-2"><span className="w-2 h-2 bg-green-400 rounded-full"></span><span>Leave</span></div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
     </div>
   );
 }
