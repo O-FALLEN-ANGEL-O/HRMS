@@ -4,14 +4,14 @@
 import { useState } from 'react';
 import { format, getDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, X, ChevronUp, ChevronDown, Clock, Briefcase, Award, Ticket, Building, User, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Function to generate mock attendance data for a given month and year
 const generateAttendanceLog = (year: number, month: number) => {
@@ -20,6 +20,7 @@ const generateAttendanceLog = (year: number, month: number) => {
         checkIn?: string;
         checkOut?: string;
         totalHours?: string;
+        shiftDetails?: string;
         location: 'Office' | 'Home';
     }> = {};
 
@@ -30,21 +31,21 @@ const generateAttendanceLog = (year: number, month: number) => {
         const dateKey = format(date, 'yyyy-MM-dd');
         const dayOfWeek = getDay(date); // Sunday is 0, Saturday is 6
 
-        // Simulate a standard shift: Saturday and Sunday are off
         if (dayOfWeek === 0 || dayOfWeek === 6) {
             log[dateKey] = { status: 'Week Off', location: 'Office' };
-        } else if (day === 15) { // Mock Holiday
-            log[dateKey] = { status: 'Holiday', location: 'Office' };
-        } else if (day === 10) { // Mock Leave
-            log[dateKey] = { status: 'Leave', location: 'Office' };
-        } else if (day === 18) { // Mock Absent
-            log[dateKey] = { status: 'Absent', location: 'Office' };
-        } else { // Mock Present
+        } else if (day === 15) { 
+            log[dateKey] = { status: 'Holiday', location: 'Office', shiftDetails: 'General Holiday' };
+        } else if (day === 10) { 
+            log[dateKey] = { status: 'Leave', location: 'Office', shiftDetails: 'Sick Leave' };
+        } else if (day === 18) { 
+            log[dateKey] = { status: 'Absent', location: 'Office', shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00' };
+        } else { 
              log[dateKey] = {
                 status: 'Present',
-                checkIn: '09:01',
-                checkOut: '18:05',
-                totalHours: '9h 4m',
+                checkIn: '09:12',
+                checkOut: '19:00',
+                totalHours: '9h 48m',
+                shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00',
                 location: 'Office',
             };
         }
@@ -111,8 +112,96 @@ function RegularizationDialog() {
     )
 }
 
+function AttendanceDetailPanel({ date, onClose }: { date: Date, onClose: () => void }) {
+    const detailedAttendanceLog = generateAttendanceLog(date.getFullYear(), date.getMonth());
+    const dayData = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+    if (!dayData) return null;
+
+    const getStatusBadge = () => {
+        switch(dayData.status) {
+            case 'Present': return <span className="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">{dayData.status}</span>;
+            case 'Absent': return <span className="text-sm font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">{dayData.status}</span>;
+            case 'Leave': return <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">{dayData.status}</span>;
+            case 'Week Off': return <span className="text-sm font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">{dayData.status}</span>;
+            case 'Holiday': return <span className="text-sm font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">{dayData.status}</span>;
+            default: return null;
+        }
+    };
+
+    return (
+        <aside className="absolute top-0 right-0 h-full w-full max-w-md bg-card shadow-2xl p-6 flex flex-col z-20 transform transition-transform duration-300 ease-in-out">
+            <div className="flex justify-between items-center pb-4 border-b">
+                <div className="flex items-center space-x-2">
+                    <Input className="p-1 border rounded-md" type="date" value={format(date, 'yyyy-MM-dd')}/>
+                </div>
+                <Button variant="ghost" size="icon" className="p-2 rounded-full hover:bg-muted" onClick={onClose}>
+                    <X className="h-5 w-5" />
+                </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto mt-4 space-y-4">
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                {format(date, 'MMM dd, yyyy')} {getStatusBadge()}
+                            </h3>
+                            {dayData.status === 'Present' && <p className="text-sm text-muted-foreground">Working hours: {dayData.totalHours}</p>}
+                            <p className="text-sm text-muted-foreground">Shift Details: {dayData.shiftDetails}</p>
+                        </div>
+                    </div>
+                    {dayData.status === 'Present' && (
+                        <>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p className="text-muted-foreground">In-Time</p>
+                                    <p className="font-semibold">{dayData.checkIn} <span className="text-xs text-blue-500 bg-blue-100 px-1 py-0.5 rounded">Biometric</span></p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Out-Time</p>
+                                    <p className="font-semibold">{dayData.checkOut} <span className="text-xs text-blue-500 bg-blue-100 px-1 py-0.5 rounded">Biometric</span></p>
+                                </div>
+                                <div><p className="text-muted-foreground">Deduction</p><p className="font-semibold">00:00</p></div>
+                                <div><p className="text-muted-foreground">Comp-off</p><p className="font-semibold">0</p></div>
+                                <div><p className="text-muted-foreground">Overtime</p><p className="font-semibold">01:00</p></div>
+                            </div>
+                            <div className="border-t pt-4 mt-4">
+                                <h4 className="font-semibold mb-4">Clocking times</h4>
+                                <div className="pl-4 border-l-2 border-gray-300 space-y-6 relative">
+                                    <div className="relative pl-6">
+                                        <div className="absolute -left-[9px] top-1 w-4 h-4 bg-background border-2 border-primary rounded-full z-10"></div>
+                                        <p className="text-sm font-semibold">{dayData.checkIn} <span className="text-xs text-blue-500 bg-blue-100 px-1 py-0.5 rounded">Biometric</span></p>
+                                    </div>
+                                    <div className="relative pl-6">
+                                        <div className="absolute -left-[9px] top-1 w-4 h-4 bg-background border-2 border-primary rounded-full z-10"></div>
+                                        <p className="text-sm font-semibold">{dayData.checkOut} <span className="text-xs text-blue-500 bg-blue-100 px-1 py-0.5 rounded">Biometric</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+                 <Accordion type="multiple" className="w-full">
+                    <AccordionItem value="shift">
+                        <AccordionTrigger className="font-semibold">Shift</AccordionTrigger>
+                        <AccordionContent>Shift details will appear here.</AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="expense">
+                        <AccordionTrigger className="font-semibold">Expense</AccordionTrigger>
+                        <AccordionContent>Expense details will appear here.</AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="badges">
+                        <AccordionTrigger className="font-semibold">Badges</AccordionTrigger>
+                        <AccordionContent>Badges earned on this day will appear here.</AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </div>
+        </aside>
+    );
+}
+
 export default function AttendancePage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   const detailedAttendanceLog = generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth());
 
@@ -173,7 +262,7 @@ export default function AttendancePage() {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative overflow-hidden">
        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
                 <h1 className="text-3xl font-bold font-headline">My Attendance</h1>
@@ -214,7 +303,7 @@ export default function AttendancePage() {
              ))}
 
              {daysInMonth.map(day => (
-                <div key={day.toString()} className={cn("relative p-2 h-24 sm:h-32", getDayBgClass(day))}>
+                <div key={day.toString()} className={cn("relative p-2 h-24 sm:h-32 cursor-pointer transition-colors hover:bg-accent", getDayBgClass(day))} onClick={() => setSelectedDate(day)}>
                     <span className={cn("text-sm", format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') ? 'bg-primary text-primary-foreground rounded-full flex items-center justify-center h-6 w-6' : '')}>
                         {format(day, 'd')}
                     </span>
@@ -223,6 +312,7 @@ export default function AttendancePage() {
              ))}
         </div>
       </div>
+      {selectedDate && <AttendanceDetailPanel date={selectedDate} onClose={() => setSelectedDate(null)} />}
     </div>
   );
 }
