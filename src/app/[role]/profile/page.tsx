@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Mail, Phone, Plus, History, Gift, Award, FileText, BarChart, FileQuestion, Briefcase, Star, Building, Users, HeartPulse, Shield, BookUser, Download } from "lucide-react";
+import { Edit, Mail, Phone, Plus, History, Gift, Award, FileText, BarChart, FileQuestion, Briefcase, Star, Building, Users, HeartPulse, Shield, BookUser, Download, User } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
