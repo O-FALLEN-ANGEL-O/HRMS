@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { format, getMonth, getYear, setMonth, setYear, subDays } from 'date-fns';
+import { format, getMonth, getYear, setMonth, setYear, subDays, isValid } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -89,7 +89,13 @@ export default function AttendancePage() {
     };
 
     const DayCellContent = ({ date }: { date: Date }) => {
-        const dayData = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+        // Defensive check to ensure date is valid before formatting
+        if (!isValid(date)) {
+            return null;
+        }
+        const dateKey = format(date, 'yyyy-MM-dd');
+        const dayData = detailedAttendanceLog[dateKey];
+        
         if (!dayData) return null;
 
         const getStatusClass = (status: string) => {
