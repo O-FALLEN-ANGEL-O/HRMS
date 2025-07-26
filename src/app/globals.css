@@ -83,7 +83,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gray-50 text-foreground;
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
@@ -91,51 +91,25 @@
   h1 {
     @apply text-2xl md:text-3xl;
   }
-
-  /* Standard Calendar Day Modifiers */
-  .rdp-day_present { @apply bg-green-500 text-white rounded-full hover:bg-green-600 focus:bg-green-600; }
-  .dark .rdp-day_present { @apply bg-green-600 text-white hover:bg-green-500; }
-  .rdp-day_absent { @apply bg-red-500 text-white rounded-full hover:bg-red-600 focus:bg-red-600; }
-  .dark .rdp-day_absent { @apply bg-red-600 text-white hover:bg-red-500; }
-  .rdp-day_leave { @apply bg-yellow-500 text-white rounded-full hover:bg-yellow-600 focus:bg-yellow-600; }
-  .dark .rdp-day_leave { @apply bg-yellow-600 text-white hover:bg-yellow-500; }
-  .rdp-day_dayOff { @apply bg-muted-foreground/30 text-muted-foreground rounded-full hover:bg-muted-foreground/40; }
-  .dark .rdp-day_dayOff { @apply bg-muted-foreground/30 text-muted-foreground hover:bg-muted-foreground/40; }
-  .rdp-day_holiday { @apply bg-purple-500 text-white rounded-full hover:bg-purple-600 focus:bg-purple-600; }
-  .dark .rdp-day_holiday { @apply bg-purple-600 text-white hover:bg-purple-500; }
-  .rdp-day_half-day > .rdp-day-content {
-     background: linear-gradient(to bottom right, theme('colors.green.500') 0%, theme('colors.green.500') 50%, theme('colors.red.500') 50%, theme('colors.red.500') 100%);
-     @apply text-white hover:opacity-90 rounded-full;
-  }
   
-  /* Detailed Calendar Styles */
+  /* Detailed Calendar Styles inspired by reference */
   .detailed-calendar .rdp-day {
-    @apply h-28 w-full rounded-none;
+    @apply h-auto; /* Let content dictate height */
   }
   .detailed-calendar .rdp-head_cell {
-    @apply text-muted-foreground rounded-md w-full font-semibold;
+    @apply text-center;
   }
   .detailed-calendar .rdp-cell {
-    @apply h-28 w-full text-center text-sm p-0 relative focus-within:relative focus-within:z-20;
-    @apply border-r border-b;
+    @apply h-auto; /* Reset fixed height */
+    min-height: 8rem; /* Ensure minimum height for larger screens */
   }
-  .detailed-calendar .rdp-row {
-    @apply w-full;
-  }
-  .detailed-calendar .rdp-table {
-    @apply border-l border-t;
+
+  .detailed-calendar .rdp-day_today:not(.rdp-day_outside) .rdp-day-content:first-child {
+      @apply bg-transparent;
   }
 
   .detailed-calendar .rdp-day_today {
-    @apply bg-transparent text-foreground;
-  }
-
-  .detailed-calendar .rdp-day_today > .rdp-day-content {
-     @apply bg-accent;
-  }
-
-  .detailed-calendar .rdp-day_outside {
-    @apply text-muted-foreground opacity-50;
+    @apply bg-transparent;
   }
 }
 

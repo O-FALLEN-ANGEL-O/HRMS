@@ -6,10 +6,6 @@ export default function AttendanceLayout({
 }) {
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="font-headline tracking-tight">Attendance</h1>
-        <p className="text-muted-foreground">Manage your check-in, check-out, and track your attendance log.</p>
-      </div>
       {children}
     </div>
   );
