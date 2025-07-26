@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase, Inbox, Gift } from 'lucide-react';
+import { Award, Cake, FileText, ThumbsUp, MoreHorizontal, Search, Loader2, User, Building, Briefcase, Inbox, Gift, Bot, Sparkles, MessageSquare, Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -31,9 +31,9 @@ const celebrations = [
 ];
 
 const wallOfFame = [
-    { name: 'Ramyashree', badges: 3, avatar: 'https://ui-avatars.com/api/?name=Ramyashree&background=random' },
-    { name: 'Rajesh thamayya a...', badges: 13, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random' },
-    { name: 'Thrupthi', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Thrupthi&background=random' },
+    { name: 'Rajesh thamayya a...', badges: 13, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', rank: 1 },
+    { name: 'Ramyashree', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Ramyashree&background=random', rank: 2 },
+    { name: 'Thrupthi', badges: 3, avatar: 'https://ui-avatars.com/api/?name=Thrupthi&background=random', rank: 3 },
 ];
 
 const feedPost = {
@@ -127,15 +127,18 @@ export default function DashboardPage() {
                 </Card>
                 <Card>
                     <CardHeader><CardTitle className="text-base">Wall of Fame</CardTitle></CardHeader>
-                    <CardContent className="flex justify-around items-end">
+                    <CardContent className="flex justify-around items-end pt-4">
                         {wallOfFame.map((fame, index) => (
-                             <div key={index} className="flex flex-col items-center gap-2">
-                                <Avatar className="w-12 h-12">
-                                    <AvatarImage src={fame.avatar} alt={fame.name} data-ai-hint="person avatar"/>
-                                    <AvatarFallback>{fame.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <p className="text-xs font-medium text-center max-w-16 truncate">{fame.name}</p>
-                                <Badge variant="secondary">{fame.badges} Badges</Badge>
+                             <div key={index} className="flex flex-col items-center gap-2 text-center">
+                                <div className="relative">
+                                    <Avatar className={`w-12 h-12 ${fame.rank === 1 ? 'w-16 h-16' : ''}`}>
+                                        <AvatarImage src={fame.avatar} alt={fame.name} data-ai-hint="person avatar"/>
+                                        <AvatarFallback>{fame.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                     <Badge variant="secondary" className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs">{fame.rank === 1 ? '🥇' : fame.rank === 2 ? '🥈' : '🥉'}</Badge>
+                                </div>
+                                <p className="text-xs font-medium max-w-20 truncate mt-2">{fame.name}</p>
+                                <p className="text-xs text-muted-foreground">{fame.badges} Badges</p>
                              </div>
                         ))}
                     </CardContent>
@@ -162,11 +165,17 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <p className="font-semibold mb-2">Employee Referral Program is Active!</p>
-                        <div className="relative">
+                        <div className="relative mb-4">
                             <img src={feedPost.image} alt="Post image" className="rounded-lg aspect-video object-cover" data-ai-hint={feedPost.imageHint} />
-                             <Button className="absolute bottom-4 right-4">Refer Now!</Button>
                         </div>
+                        <p className="text-sm text-muted-foreground mb-4">{feedPost.content}</p>
+                        <Button className="w-full">Refer Now!</Button>
                     </CardContent>
+                    <CardFooter className="flex gap-2">
+                         <Button variant="outline" size="sm"><ThumbsUp className="h-4 w-4 mr-2"/>Clap (35)</Button>
+                         <Button variant="outline" size="sm"><MessageSquare className="h-4 w-4 mr-2"/>Comment</Button>
+                         <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-600"><Heart className="h-4 w-4"/></Button>
+                    </CardFooter>
                 </Card>
             </div>
 
@@ -215,6 +224,17 @@ export default function DashboardPage() {
                             <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-yellow-500"></span>Leave</div>
                             <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-purple-500"></span>Holiday</div>
                         </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-accent/50 border-accent">
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                           <Sparkles className="h-5 w-5 text-primary"/> Do you know?
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">Our AI assistant can help you mark attendance, apply for leave, and more. Just ask!</p>
+                        <Button variant="outline" size="sm" className="mt-3 w-full">Ask OneAI</Button>
                     </CardContent>
                 </Card>
             </div>
