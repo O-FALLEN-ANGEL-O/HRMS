@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, MoreHorizontal } from "lucide-react"
@@ -45,11 +45,12 @@ function AdminView() {
     const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
 
     useEffect(() => {
-        // Since mockUsers is imported, we can treat it as a "database"
-        // and any additions from AddEmployeeDialog will be reflected
-        // if we re-fetch from the source.
         setEmployees(mockUsers.map(u => u.profile));
     }, []);
+
+    const handleAddEmployee = (newEmployee: EmployeeProfile) => {
+      setEmployees(prev => [newEmployee, ...prev]);
+    }
     
     const handleAction = (action: string) => {
         toast({
@@ -60,11 +61,14 @@ function AdminView() {
 
     return (
         <Card>
-          <CardHeader>
-            <CardTitle>All Employees</CardTitle>
-            <CardDescription>
-              A list of all employees in the organization. Click a row to view details.
-            </CardDescription>
+          <CardHeader className="flex flex-row justify-between items-center">
+            <div>
+              <CardTitle>All Employees</CardTitle>
+              <CardDescription>
+                A list of all employees in the organization. Click a row to view details.
+              </CardDescription>
+            </div>
+             <AddEmployeeButton onEmployeeAdded={handleAddEmployee} />
           </CardHeader>
           <CardContent>
             <Table>
@@ -149,11 +153,6 @@ export default function EmployeesPage() {
           <h1 className="text-3xl font-bold font-headline">{isTeamView ? "My Team" : "Employees"}</h1>
           <p className="text-muted-foreground">{isTeamView ? "Monitor your team's status and performance." : "Manage your organization's members."}</p>
         </div>
-        {!isTeamView && (
-            <Suspense fallback={<Button disabled>Loading...</Button>}>
-                <AddEmployeeButton />
-            </Suspense>
-        )}
       </div>
       <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
         {isTeamView ? <TeamView /> : <AdminView />}
