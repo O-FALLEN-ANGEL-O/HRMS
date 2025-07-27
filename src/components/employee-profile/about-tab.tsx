@@ -1,17 +1,17 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Edit, User, Mail, Briefcase, Building, ChevronDown, Download } from "lucide-react";
+import { Edit, User, Mail, Briefcase, Building, ChevronDown, Download, ChevronUp } from "lucide-react";
 import type { UserProfile } from '@/lib/mock-data/employees';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Input } from '../ui/input';
 
-function InfoCard({ title, icon: Icon, children, onEdit, isEditing }: { title: string, icon: React.ElementType, children: React.ReactNode, onEdit?: () => void, isEditing: boolean }) {
+function InfoCard({ title, icon: Icon, children, isEditing }: { title: string, icon: React.ElementType, children: React.ReactNode, isEditing: boolean }) {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -19,11 +19,6 @@ function InfoCard({ title, icon: Icon, children, onEdit, isEditing }: { title: s
                     <Icon className="h-5 w-5 text-primary" />
                     <span>{title}</span>
                 </CardTitle>
-                {onEdit && (
-                    <Button variant="ghost" size="icon" onClick={onEdit} disabled={isEditing} className="h-8 w-8">
-                        <Edit className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                )}
             </CardHeader>
             <CardContent>
                 {children}
@@ -46,10 +41,11 @@ function InfoRow({ label, value, isEditing, onChange }: { label: string, value: 
 }
 
 const ActivityCalendar = () => {
+    const [isExpanded, setIsExpanded] = useState(true);
     // This is a simplified mock. In a real app, this would be dynamic.
     const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const statusData = [
-        ...Array(5).fill('Day Off'), 
+        ...Array(4).fill('Day Off'), 
         ...Array(5).fill('Present'),
         ...Array(2).fill('Day Off'),
         { status: 'Present', checkIn: '09:01 AM', checkOut: '06:01 PM' },
@@ -81,24 +77,30 @@ const ActivityCalendar = () => {
 
     return (
         <Card>
-             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">Activity</CardTitle>
-                <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                       <span>September 2023</span> <ChevronDown className="h-4 w-4"/>
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                       <Download className="h-4 w-4"/> <span>Report</span>
-                    </Button>
+             <CardHeader>
+                <div className="flex justify-between items-center">
+                     <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+                        Activity
+                        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="ml-2 h-6 w-6">
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                    </h2>
+                    <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                           <span>September 2023</span> <ChevronDown className="h-4 w-4"/>
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                           <Download className="h-4 w-4"/> <span>Report</span>
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
-            <CardContent>
+            {isExpanded && <CardContent>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
                     {weekDays.map((day, i) => <div key={`${day}-${i}`}>{day}</div>)}
                 </div>
                 <div className="grid grid-cols-7 grid-rows-5 gap-2">
-                   {/* This is a simplified static grid for display */}
-                   {Array.from({length: 4}).map((_, i) => <div key={`pad-${i}`} className="text-right text-gray-400 text-sm p-1">{27+i}</div>)}
+                   {Array.from({length: 5}).map((_, i) => <div key={`pad-${i}`} className="text-right text-gray-400 text-sm p-1">{27+i}</div>)}
                    {statusData.map((dayStatus, index) => {
                         const day = index + 1;
                         const isToday = day === 29;
@@ -134,8 +136,6 @@ const ActivityCalendar = () => {
                              </TooltipProvider>
                         )
                     })}
-                    {Array.from({length: 1}).map((_, i) => <div key={`pad2-${i}`} className="text-right text-gray-400 text-sm p-1">{1+i}</div>)}
-
                 </div>
                  <div className="flex items-center justify-end space-x-4 mt-6 text-xs text-gray-600">
                     <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-500"></div><span>Present</span></div>
@@ -144,12 +144,12 @@ const ActivityCalendar = () => {
                     <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Applied Leave</span></div>
                     <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-200"></div><span>Day Off</span></div>
                 </div>
-            </CardContent>
+            </CardContent>}
         </Card>
     )
 }
 
-export function AboutTab({ employee, isEditing, onFieldChange }: { employee: UserProfile, isEditing: boolean, onFieldChange: (path: string, value: any) => void }) {
+export function AboutTab({ employee, isEditing, onFieldChange, canEdit }: { employee: UserProfile, isEditing: boolean, onFieldChange: (path: string, value: any) => void, canEdit: boolean }) {
     if(!employee) return null;
 
     return (
@@ -205,7 +205,7 @@ export function AboutTab({ employee, isEditing, onFieldChange }: { employee: Use
                         <p className="text-sm text-muted-foreground">#45, Sunshine Apartments, Bandra West, Mumbai, Maharashtra - 400050</p>
                     </div>
                 </InfoCard>
-                 <ActivityCalendar />
+                 {canEdit && <ActivityCalendar />}
              </div>
         </div>
     )

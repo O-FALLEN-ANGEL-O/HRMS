@@ -50,7 +50,7 @@ const feedPosts = [
 
 const DesktopDashboard = () => {
     const { user } = useAuth();
-    const [date, setDate] = useState<Date | undefined>(new Date(2025, 6, 25));
+    const [date, setDate] = useState<Date | undefined>(new Date());
     
     return (
         <div className="space-y-6">
@@ -278,9 +278,8 @@ const MobileDashboard = () => {
             </Card>
             
             <Tabs defaultValue="feed" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="feed">Feed</TabsTrigger>
-                    <TabsTrigger value="highlights">Highlights</TabsTrigger>
                     <TabsTrigger value="fame">Wall of Fame</TabsTrigger>
                 </TabsList>
                 <TabsContent value="feed" className="space-y-4">
@@ -313,12 +312,27 @@ const MobileDashboard = () => {
                         </Card>
                     ))}
                 </TabsContent>
-                 <TabsContent value="highlights">
-                    <Card><CardContent className="p-4 text-center text-muted-foreground">Highlights coming soon.</CardContent></Card>
-                 </TabsContent>
                 <TabsContent value="fame">
-                    <Card><CardContent className="p-4 text-center text-muted-foreground">Wall of Fame coming soon.</CardContent></Card>
-                </TabsContent>
+                    <Card>
+                      <CardContent className="p-4">
+                        <ul className="space-y-4">
+                            {wallOfFame.concat(leaderboardList).map((person, index) => (
+                                <li key={index} className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                        <span className="font-bold text-sm w-4">{index+1}</span>
+                                        <Avatar className="w-10 h-10">
+                                            <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
+                                            <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <p className="text-sm">{person.name}</p>
+                                    </div>
+                                    <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges} Badges</span>
+                                </li>
+                            ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                 </TabsContent>
             </Tabs>
         </div>
     )

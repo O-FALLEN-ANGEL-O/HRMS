@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { mockUsers } from '@/lib/mock-data/employees';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, CalendarDays, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, Save, X, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -131,7 +131,7 @@ export default function EmployeeDetailPage() {
                                 <Button onClick={handleSave}><Save className="h-4 w-4 mr-2"/>Save</Button>
                             </>
                         ) : (
-                            <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
+                            canViewDetailedProfile && <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
                         )}
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export default function EmployeeDetailPage() {
                                 <TabsTrigger value="about">About</TabsTrigger>
                                 <TabsTrigger value="professional">Professional</TabsTrigger>
                                 <TabsTrigger value="family">Family & Health</TabsTrigger>
-                                <TabsTrigger value="hr">HR Information</TabsTrigger>
+                                {canViewDetailedProfile && <TabsTrigger value="hr">HR Information</TabsTrigger>}
                                 <TabsTrigger value="documents">Documents</TabsTrigger>
                             </TabsList>
                             <div className="flex items-center space-x-2">
@@ -181,7 +181,7 @@ export default function EmployeeDetailPage() {
                         </div>
                         <div className="flex-1 p-6 overflow-y-auto bg-muted/30">
                             <TabsContent value="about">
-                                <AboutTab employee={employee} isEditing={isEditing} onFieldChange={handleFieldChange}/>
+                                <AboutTab employee={employee} isEditing={isEditing} onFieldChange={handleFieldChange} canEdit={canViewDetailedProfile}/>
                             </TabsContent>
                             <TabsContent value="professional">
                                 <ProfessionalTab employee={employee} isEditing={isEditing} setEmployee={setEmployee}/>
@@ -189,9 +189,9 @@ export default function EmployeeDetailPage() {
                             <TabsContent value="family">
                                 <FamilyHealthTab employee={employee} isEditing={isEditing} setEmployee={setEmployee}/>
                             </TabsContent>
-                             <TabsContent value="hr">
+                             {canViewDetailedProfile && <TabsContent value="hr">
                                 <HRInformationTab />
-                            </TabsContent>
+                            </TabsContent>}
                             <TabsContent value="documents">
                                 <DocumentsTab />
                             </TabsContent>

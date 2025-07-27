@@ -85,7 +85,7 @@ export default function RoleSelectorPage() {
         // We can shorten or remove the artificial delay now
         const timer = setTimeout(() => {
             setIsInitialLoading(false);
-        }, 1500); // Reduced from 4000ms
+        }, 1500);
         return () => clearTimeout(timer);
     }, []);
 
