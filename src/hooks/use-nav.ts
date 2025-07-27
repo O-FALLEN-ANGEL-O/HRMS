@@ -86,14 +86,14 @@ export const navConfig: Record<string, NavItem[]> = {
   ],
   employee: [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
-    { label: 'Learning', href: '/learning', icon: GraduationCap },
     { label: 'Leaves', href: '/leaves', icon: CalendarOff },
     { label: 'Attendance', href: '/attendance', icon: Calendar },
+    { label: 'Learning', href: '/learning', icon: GraduationCap },
     { label: 'Payroll', href: '/payroll', icon: DollarSign },
     { label: 'Helpdesk', href: '/helpdesk', icon: HelpCircle },
-    { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
+    { label: 'Assessments', href: '/assessments', icon: ClipboardCheck },
     { label: 'Company Feed', href: '/company-feed', icon: Newspaper },
+    { label: 'AI Tools', href: '/ai-tools/chatbot', icon: AnimatedBot },
     { label: 'Settings', href: '/settings', icon: Settings },
   ],
   recruiter: [

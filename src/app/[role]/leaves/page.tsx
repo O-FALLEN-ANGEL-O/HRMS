@@ -19,7 +19,7 @@ const initialLeaveRequests = [
 const leaveBalances = [
     { type: 'Sick Leave', balance: 8 },
     { type: 'Casual Leave', balance: 10 },
-    { type: 'Paid Time Off', balance: 15 },
+    { type: 'Paid Time Off', balance: 14.5 },
 ];
 
 type LeaveRequest = typeof initialLeaveRequests[0];
