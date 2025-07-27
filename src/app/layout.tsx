@@ -12,7 +12,7 @@ import { LoadingLogo } from '@/components/loading-logo';
 import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Home, Calendar, User, Plus, Grid2X2, CheckCircle, Wallet, Clock, LogOut } from 'lucide-react';
+import { ArrowLeft, Home, Calendar, User, Plus, Grid2X2, CheckCircle, Wallet, Clock, LogOut, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
