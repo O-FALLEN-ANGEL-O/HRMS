@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake, UserCheck } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
