@@ -70,7 +70,7 @@ export default function ManagerReportsPage() {
     
     const handleDownload = (format: 'PDF' | 'CSV') => {
         toast({
-            title: 'Download Started',
+            title: "Download Started",
             description: `Your ${reportParams.period} report for ${reportParams.target} in ${format} format is downloading.`
         })
     }

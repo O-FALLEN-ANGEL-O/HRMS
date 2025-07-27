@@ -10,6 +10,24 @@ export type UserProfile = {
   profile_picture_url?: string;
   phone_number?: string;
   status: 'Active' | 'Inactive';
+  professionalInfo?: {
+    experience: { role: string; company: string; dates: string }[];
+    education: { degree: string; institution: string; year: string }[];
+    skills: string[];
+    certifications: string[];
+  };
+  familyAndHealthInfo?: {
+      dependents: { name: string; relationship: string; dob: string }[],
+      health: {
+          bloodGroup: string;
+          allergies: string;
+      },
+      emergencyContact: {
+          name: string;
+          relationship: string;
+          phone: string;
+      }
+  }
 };
 
 export type User = {

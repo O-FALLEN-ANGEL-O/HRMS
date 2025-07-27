@@ -5,14 +5,13 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Edit, User, Mail, Briefcase, Building, ChevronDown, ChevronUp, Download } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/hooks/use-auth';
+import { Edit, User, Mail, Briefcase, Building, ChevronDown, Download } from "lucide-react";
 import type { UserProfile } from '@/lib/mock-data/employees';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Input } from '../ui/input';
 
-function InfoCard({ title, icon: Icon, children, onEdit }: { title: string, icon: React.ElementType, children: React.ReactNode, onEdit?: () => void }) {
+function InfoCard({ title, icon: Icon, children, onEdit, isEditing }: { title: string, icon: React.ElementType, children: React.ReactNode, onEdit?: () => void, isEditing: boolean }) {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -21,7 +20,7 @@ function InfoCard({ title, icon: Icon, children, onEdit }: { title: string, icon
                     <span>{title}</span>
                 </CardTitle>
                 {onEdit && (
-                    <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={onEdit} disabled={isEditing} className="h-8 w-8">
                         <Edit className="h-4 w-4 text-muted-foreground" />
                     </Button>
                 )}
@@ -33,11 +32,15 @@ function InfoCard({ title, icon: Icon, children, onEdit }: { title: string, icon
     )
 }
 
-function InfoRow({ label, value }: { label: string, value: React.ReactNode }) {
+function InfoRow({ label, value, isEditing, onChange }: { label: string, value: React.ReactNode, isEditing?: boolean, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
     return (
         <div className="flex justify-between items-center py-2 border-b border-dashed last:border-none">
             <span className="text-muted-foreground text-sm">{label}</span>
-            <span className="font-medium text-sm text-right">{value || 'N/A'}</span>
+            {isEditing && onChange ? (
+                <Input className="text-right h-7 p-1 max-w-[150px] text-sm" value={value as string} onChange={onChange}/>
+            ) : (
+                <span className="font-medium text-sm text-right">{value || 'N/A'}</span>
+            )}
         </div>
     )
 }
@@ -91,7 +94,7 @@ const ActivityCalendar = () => {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
-                    {weekDays.map(day => <div key={day}>{day}</div>)}
+                    {weekDays.map((day, i) => <div key={`${day}-${i}`}>{day}</div>)}
                 </div>
                 <div className="grid grid-cols-7 grid-rows-5 gap-2">
                    {/* This is a simplified static grid for display */}
@@ -146,17 +149,13 @@ const ActivityCalendar = () => {
     )
 }
 
-export function AboutTab({ employee }: { employee: UserProfile }) {
-    const { toast } = useToast();
-    const handleEdit = (section: string) => toast({title: `Edit ${section}`, description: "This would open an edit dialog."});
-    const { user } = useAuth();
-
-    if(!user || !employee) return null;
+export function AboutTab({ employee, isEditing, onFieldChange }: { employee: UserProfile, isEditing: boolean, onFieldChange: (path: string, value: any) => void }) {
+    if(!employee) return null;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-1 space-y-6">
-                 <InfoCard title="Basic Information" icon={User} onEdit={() => handleEdit('Basic Info')}>
+                 <InfoCard title="Basic Information" icon={User} isEditing={isEditing}>
                     <InfoRow label="Employee ID" value={employee.employee_id} />
                     <InfoRow label="Date of Birth" value={"July 20, 1995"} />
                     <InfoRow label="Gender" value={"Female"} />
@@ -164,23 +163,38 @@ export function AboutTab({ employee }: { employee: UserProfile }) {
                     <InfoRow label="Nationality" value={"Indian"} />
                 </InfoCard>
 
-                <InfoCard title="Contact Information" icon={Mail} onEdit={() => handleEdit('Contact Info')}>
+                <InfoCard title="Contact Information" icon={Mail} isEditing={isEditing}>
                     <InfoRow label="Work Email" value={employee.email} />
                     <InfoRow label="Personal Email" value={"anika.sharma@email.com"} />
-                    <InfoRow label="Phone Number" value={employee.phone_number} />
+                    <InfoRow 
+                        label="Phone Number" 
+                        value={employee.phone_number} 
+                        isEditing={isEditing}
+                        onChange={(e) => onFieldChange('phone_number', e.target.value)}
+                    />
                 </InfoCard>
             </div>
              <div className="lg:col-span-2 space-y-6">
-                 <InfoCard title="Position Details" icon={Briefcase} onEdit={() => handleEdit('Position Details')}>
+                 <InfoCard title="Position Details" icon={Briefcase} isEditing={isEditing}>
                     <InfoRow label="Company" value={"OptiTalent Inc."} />
-                    <InfoRow label="Department" value={employee.department.name} />
-                    <InfoRow label="Job Title" value={employee.job_title} />
+                    <InfoRow 
+                        label="Department" 
+                        value={employee.department.name} 
+                        isEditing={isEditing}
+                        onChange={(e) => onFieldChange('department.name', e.target.value)}
+                    />
+                    <InfoRow 
+                        label="Job Title" 
+                        value={employee.job_title} 
+                        isEditing={isEditing}
+                        onChange={(e) => onFieldChange('job_title', e.target.value)}
+                    />
                     <InfoRow label="Reporting Manager" value={"Isabella Nguyen"} />
                      <InfoRow label="Date of Joining" value={"July 25, 2022"} />
                     <InfoRow label="Employment Type" value={"Permanent"} />
                     <InfoRow label="Location" value={"Mangaluru, IN"} />
                 </InfoCard>
-                 <InfoCard title="Address Details" icon={Building} onEdit={() => handleEdit('Address')}>
+                 <InfoCard title="Address Details" icon={Building} isEditing={isEditing}>
                     <div className="space-y-1">
                         <p className="font-medium text-sm">Current Address</p>
                         <p className="text-sm text-muted-foreground">#123, Rose Villa, Richmond Town, Bengaluru, Karnataka - 560025</p>
