@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake } from 'lucide-react';
+import { TrendingDown, TrendingUp, BarChart, Users, FileText, MessageSquare, HelpCircle, TrendingUpIcon, BookOpen, Search, Flag, BrainCircuit, UserMinus, UserPlus, Clock, GraduationCap, Percent, Target, Briefcase, User as UserIcon, CheckCircle, Ticket, Building, DollarSign, Award, ClipboardCheck, Server, Package, Factory, AlertCircle, ShieldCheck, ClipboardList, Handshake, Megaphone, Goal, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
@@ -1136,6 +1136,34 @@ const QaDashboard = () => (
     </div>
 );
 
+const MarketingDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Campaign ROI" value="152%" icon={DollarSign} description="+5% from last campaign" />
+            <DashboardCard title="Leads Generated" value="1,280" icon={Megaphone} description="This month" />
+            <DashboardCard title="Conversion Rate" value="12.5%" icon={Goal} description="From lead to qualified" />
+            <DashboardCard title="Cost Per Acquisition" value="$25.50" icon={TrendingDown} description="Down 10% from last Q" />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>Lead source analysis and campaign performance charts would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
+const AccountManagerDashboard = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <DashboardCard title="Client Satisfaction" value="9.2/10" icon={Users} description="Average CSAT score" />
+            <DashboardCard title="Account Health" value="88%" icon={ShieldCheck} description="Proactive health score" />
+            <DashboardCard title="Upsell Revenue" value="$15.2K" icon={TrendingUp} description="This quarter" />
+            <DashboardCard title="SLA Compliance" value="99.8%" icon={CheckCircle} description="Across all accounts" />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>Client churn risk and revenue per account would be displayed here...</CardTitle></CardHeader>
+        </Card>
+    </div>
+);
+
 
 const ProcessManagerDashboard = () => {
     const [data, setData] = useState<TicketData | null>(null);
@@ -1302,8 +1330,10 @@ export default function AnalyticsPage() {
             return <ItManagerDashboard />;
         case 'operations-manager':
             return <OperationsManagerDashboard />;
+        case 'marketing':
+            return <MarketingDashboard />;
         case 'account-manager':
-             return <DefaultDashboard role={role} />
+             return <AccountManagerDashboard />
         case 'trainer':
             return <TrainerDashboard />;
         case 'employee':
@@ -1316,7 +1346,7 @@ export default function AnalyticsPage() {
                         <BarChart className="h-12 w-12 text-primary" />
                     </div>
                     <h3 className="text-lg font-semibold">Analytics Unavailable</h3>
-                    <p className="text-muted-foreground text-sm max-w-md">The analytics dashboard is not available for your current role.</p>
+                    <p className="text-muted-foreground text-sm max-w-md">The analytics dashboard is not available for your current role. A custom view can be configured.</p>
                     </CardContent>
                 </Card>
             )
