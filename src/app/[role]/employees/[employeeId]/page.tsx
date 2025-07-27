@@ -28,7 +28,7 @@ const ActivityHeatmap = () => {
             <CardContent>
                 <div className="flex flex-col gap-2">
                      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
-                        {weekDays.map(day => <div key={day}>{day}</div>)}
+                        {weekDays.map((day, index) => <div key={`${day}-${index}`}>{day}</div>)}
                     </div>
                     <div className="grid grid-cols-15 gap-1">
                         {activityGrid.map((activity, index) => {
@@ -61,9 +61,9 @@ const ConnectionCard = ({ title, items }: { title: string, items: {label: string
         <h3 className="font-semibold text-gray-700 mb-4">{title}</h3>
         <div className="space-y-3">
             {items.map(item => (
-                <button key={item.label} className="w-full flex justify-between items-center bg-gray-100 p-3 rounded-md text-sm text-gray-700 hover:bg-gray-200">
+                <button key={item.label} className="w-full flex justify-between items-center bg-gray-100 dark:bg-muted p-3 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-muted/80">
                     <span className="flex items-center">
-                        {item.count && <span className="bg-white border rounded-md px-1.5 py-0.5 mr-2 text-xs">{item.count}</span>}
+                        {item.count && <span className="bg-white dark:bg-card border rounded-md px-1.5 py-0.5 mr-2 text-xs">{item.count}</span>}
                         {item.label}
                     </span>
                     <Plus className="h-4 w-4 text-gray-500"/>
@@ -150,9 +150,9 @@ export default function EmployeeDetailPage() {
             <header className="flex-shrink-0">
                 <div className="flex items-center justify-between">
                      <div className="flex items-center text-sm">
-                        <span className="text-gray-500">Employee</span>
-                        <ChevronRight className="h-4 w-4 text-gray-400 mx-1" />
-                        <span className="text-gray-800 font-medium">{employee.employee_id}</span>
+                        <span className="text-muted-foreground">Employee</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground mx-1" />
+                        <span className="text-foreground font-medium">{employee.employee_id}</span>
                      </div>
                     <div className="flex items-center space-x-2">
                         <Button variant="outline">Edit</Button>
@@ -162,11 +162,11 @@ export default function EmployeeDetailPage() {
             </header>
             
             <main className="flex-1 flex overflow-hidden mt-6">
-                <aside className="w-80 bg-white border-r p-6 hidden md:flex flex-col justify-between">
+                <aside className="w-80 bg-card border-r p-6 hidden md:flex flex-col justify-between">
                     <div>
                         <div className="flex items-center mb-6">
-                             <h1 className="text-xl font-bold text-gray-800">{employee.full_name}</h1>
-                             <Badge variant={employee.status === 'Active' ? 'default' : 'destructive'} className="ml-3 bg-green-100 text-green-700">{employee.status}</Badge>
+                             <h1 className="text-xl font-bold text-foreground">{employee.full_name}</h1>
+                             <Badge variant={employee.status === 'Active' ? 'default' : 'destructive'} className="ml-3 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">{employee.status}</Badge>
                         </div>
                         <div className="flex justify-center mb-6">
                              <Avatar className="w-40 h-40">
@@ -175,19 +175,19 @@ export default function EmployeeDetailPage() {
                             </Avatar>
                         </div>
                         <nav className="space-y-2">
-                            <Button variant="ghost" className="w-full justify-between text-gray-600"><span>Assigned To</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
-                            <Button variant="ghost" className="w-full justify-between text-gray-600"><span>Attachments</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
-                            <div className="flex items-center justify-between bg-gray-100 rounded-md p-2 text-sm">
-                                <span className="text-gray-700">adam7bc121.jpeg</span>
-                                <button className="text-gray-500 hover:text-gray-700">
+                            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground"><span>Assigned To</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
+                            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground"><span>Attachments</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
+                            <div className="flex items-center justify-between bg-muted rounded-md p-2 text-sm">
+                                <span className="text-foreground">adam7bc121.jpeg</span>
+                                <button className="text-muted-foreground hover:text-foreground">
                                     <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>
-                            <Button variant="ghost" className="w-full justify-between text-gray-600"><span>Reviews</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
-                            <Button variant="ghost" className="w-full justify-between text-gray-600"><span>Tags</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
-                            <Button variant="ghost" className="w-full justify-between text-gray-600"><span>Share</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
+                            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground"><span>Reviews</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
+                            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground"><span>Tags</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
+                            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground"><span>Share</span> <Plus className="h-4 w-4 text-muted-foreground"/></Button>
                         </nav>
-                         <div className="mt-6 flex items-center space-x-4 text-gray-500">
+                         <div className="mt-6 flex items-center space-x-4 text-muted-foreground">
                             <div className="flex items-center space-x-1">
                                 <Heart className="h-4 w-4"/>
                                 <span>0</span>
@@ -198,14 +198,14 @@ export default function EmployeeDetailPage() {
                             </div>
                         </div>
                     </div>
-                     <div className="text-xs text-gray-400 space-y-1">
+                     <div className="text-xs text-muted-foreground space-y-1">
                         <p>You last edited this · 22 minutes ago</p>
                         <p>You created this · 1 year ago</p>
                     </div>
                 </aside>
                 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="bg-white border-b border-gray-200 px-6 py-2 flex justify-between items-center">
+                    <div className="bg-card border-b px-6 py-2 flex justify-between items-center">
                         <Tabs defaultValue="connections" className="w-full">
                             <TabsList>
                                 <TabsTrigger value="about">About</TabsTrigger>
@@ -218,7 +218,7 @@ export default function EmployeeDetailPage() {
                             <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
                         </div>
                     </div>
-                    <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
+                    <div className="flex-1 p-6 overflow-y-auto bg-muted/30">
                         <Tabs defaultValue="connections" className="w-full">
                             <TabsContent value="about">
                                 <AboutTab employee={employee} />
