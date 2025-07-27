@@ -32,9 +32,6 @@ export default function RegularizeAttendancePage() {
         <div className="space-y-6">
             <header className="flex justify-between items-center">
                 <div>
-                     <Button variant="ghost" onClick={() => router.back()} className="mb-2">
-                        <ChevronLeft className="mr-2 h-4 w-4"/> Back to Attendance
-                    </Button>
                     <h1 className="text-3xl font-bold font-headline">Attendance Regularization</h1>
                     <p className="text-muted-foreground">Select a day and submit a request to correct your attendance.</p>
                 </div>

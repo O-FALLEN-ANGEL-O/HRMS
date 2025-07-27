@@ -135,9 +135,6 @@ export default function EmployeeDetailPage() {
     return (
         <div className="h-full flex flex-col">
             <header className="flex-shrink-0">
-                <Button variant="ghost" onClick={() => router.back()} className="mb-2">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to Employee List
-                </Button>
                 <div className="flex items-center justify-between">
                      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                         Employee Profile
