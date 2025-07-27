@@ -6,59 +6,125 @@ import { mockEmployees } from '@/lib/mock-data/employees';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft } from 'lucide-react';
+import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, ExpandMore, ExpandLess, CalendarDays } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 type EmployeeProfile = typeof mockEmployees[0];
 
-const ActivityHeatmap = () => {
-    // Generate a 7x15 grid for a more direct weekly view
-    const activityGrid = Array.from({ length: 7 * 15 }, () => Math.random());
-    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const ActivityCalendar = () => {
+    const { toast } = useToast();
+    const [currentMonth, setCurrentMonth] = useState(new Date(2023, 8, 1)); // September 2023
+
+    const generateMonthData = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+
+        const dates = [];
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            dates.push({ day: null, status: 'empty' });
+        }
+
+        const statuses = ['present', 'present', 'present', 'absent', 'present', 'leave', 'half-day', 'day-off'];
+
+        for (let i = 1; i <= lastDay.getDate(); i++) {
+            const date = new Date(year, month, i);
+            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            const status = (date.getDay() === 0 || date.getDay() === 6) ? 'day-off' : randomStatus;
+            
+            dates.push({
+                day: i,
+                fullDate: date,
+                status: status,
+                checkIn: status === 'present' || status === 'half-day' ? '09:00 AM' : undefined,
+                checkOut: status === 'present' ? '06:00 PM' : undefined
+            });
+        }
+        return dates;
+    };
+    
+    const monthData = useMemo(generateMonthData, [currentMonth]);
+    
+    const getStatusColor = (status: string) => {
+        switch(status) {
+            case 'present': return 'bg-green-500';
+            case 'absent': return 'bg-red-500';
+            case 'leave': return 'bg-yellow-400';
+            case 'half-day': return 'bg-gradient-to-r from-green-500 to-red-500';
+            case 'day-off':
+            default: return 'bg-gray-200';
+        }
+    }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-lg font-semibold">Activity</CardTitle>
-                 <CardDescription>A simplified view of recent attendance activity.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex flex-col gap-2">
-                     <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
-                        {weekDays.map(day => <div key={day}>{day}</div>)}
-                    </div>
-                    <div className="grid grid-cols-15 gap-1">
-                        {activityGrid.map((activity, index) => {
-                            let color = 'bg-gray-200 dark:bg-muted/50';
-                            if (activity > 0.8) color = 'bg-green-600';
-                            else if (activity > 0.5) color = 'bg-green-400';
-                            else if (activity > 0.2) color = 'bg-green-200';
-                            return <div key={index} className={`${color} h-4 w-full rounded-sm`}></div>;
-                        })}
+                <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center">Activity</h2>
+                    <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm">
+                            {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                            <ExpandMore className="ml-2 h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => toast({title: "Download action triggered"})}>
+                            <Download className="mr-2 h-4 w-4"/>Report
+                        </Button>
                     </div>
                 </div>
-                 <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground mt-4">
-                    <span>Less</span>
-                    <div className="flex gap-1">
-                        <div className="h-3 w-3 rounded-sm bg-gray-200 dark:bg-muted/50"></div>
-                        <div className="h-3 w-3 rounded-sm bg-green-200"></div>
-                        <div className="h-3 w-3 rounded-sm bg-green-400"></div>
-                        <div className="h-3 w-3 rounded-sm bg-green-600"></div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <span key={day}>{day}</span>)}
+                </div>
+                <div className="grid grid-cols-7 grid-rows-5 gap-2">
+                    {monthData.map((item, index) => (
+                        <TooltipProvider key={index}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="p-1 text-right relative group">
+                                        <span className={`text-sm ${!item.day ? 'text-gray-400' : ''}`}>
+                                            {item.day || new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index - new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay() + 1).getDate()}
+                                        </span>
+                                        {item.day && <div className={`w-full h-1.5 ${getStatusColor(item.status)} rounded-full mt-1`}></div>}
+                                    </div>
+                                </TooltipTrigger>
+                                {item.day && (
+                                    <TooltipContent>
+                                        <p className="font-bold">{item.fullDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                        <p>Status: <span className="capitalize">{item.status.replace('-', ' ')}</span></p>
+                                        {item.checkIn && <p>Check-in: {item.checkIn}</p>}
+                                        {item.checkOut && <p>Check-out: {item.checkOut}</p>}
+                                    </TooltipContent>
+                                )}
+                            </Tooltip>
+                        </TooltipProvider>
+                    ))}
+                </div>
+                <div className="flex items-center justify-end flex-wrap space-x-4 mt-6 text-xs text-gray-600">
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-green-500"></div><span>Present</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span>Absent</span></div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full relative overflow-hidden"><div className="absolute inset-0 w-1/2 bg-green-500"></div><div className="absolute inset-0 w-1/2 bg-red-500 ml-[50%]"></div></div>
+                        <span>Half Day</span>
                     </div>
-                    <span>More</span>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Applied Leave</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-200"></div><span>Day Off</span></div>
                 </div>
             </CardContent>
         </Card>
-    );
-};
+    )
+}
 
 
 const ConnectionCard = ({ title, items }: { title: string, count?: number, items: {label: string, count?: number}[] }) => (
     <div>
-        <h3 className="font-semibold text-gray-700 mb-4">{title}</h3>
+        <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-4">{title}</h3>
         <div className="space-y-3">
             {items.map(item => (
                 <button key={item.label} className="w-full flex justify-between items-center bg-gray-100 dark:bg-muted p-3 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-muted/80">
@@ -75,16 +141,20 @@ const ConnectionCard = ({ title, items }: { title: string, count?: number, items
 
 
 function ConnectionsTab() {
+    const { user } = useAuth();
     const attendanceItems = [ { label: '99+ Attendance' }, { label: 'Attendance Request'}, { label: 'Employee Checkin'}];
     const leaveItems = [ { label: 'Leave Application', count: 3}, { label: 'Leave Allocation', count: 2}, { label: 'Leave Policy Assignment'}];
     const lifecycleItems = [ { label: 'Employee Onboarding'}, { label: 'Employee Transfer'}, { label: 'Employee Promotion'}, { label: 'Employee Grievance', count: 1}];
     const exitItems = [ { label: 'Employee Separation' }];
     const shiftItems = [ { label: 'Shift Request' }];
     const expenseItems = [ { label: 'Expense Claim' }];
+
+    const managementRoles = ['admin', 'hr', 'manager', 'team-leader', 'qa-analyst'];
+    const showActivityCalendar = user && managementRoles.includes(user.role);
     
     return (
         <div className="space-y-6">
-            <ActivityHeatmap />
+            {showActivityCalendar && <ActivityCalendar />}
             <Card>
                  <CardHeader>
                     <CardTitle className="text-lg font-semibold">Connections</CardTitle>
@@ -255,4 +325,3 @@ export default function EmployeeDetailPage() {
         </div>
     );
 }
-
