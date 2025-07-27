@@ -107,8 +107,6 @@ function MobileBottomNav() {
     const navItems = [
         { href: `/${role}/dashboard`, icon: Home, label: 'Home' },
         { href: `/${role}/attendance`, icon: Calendar, label: 'Attendance' },
-        // Placeholder for the central button
-        { href: ``, icon: null, label: '' },
         { href: `/${role}/company-feed`, icon: Newspaper, label: 'Feed' },
         { href: `/${role}/profile`, icon: User, label: 'Profile' },
     ];
@@ -116,20 +114,25 @@ function MobileBottomNav() {
     return (
         <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-secondary border-t z-20">
             <div className="flex justify-around items-center h-16">
-                {navItems.map((item, index) => {
-                    if (!item.icon) {
-                        return <QuickViewSheet key="quick-view" />;
-                    }
-                    return (
-                        <Link key={item.href} href={item.href} className={cn(
-                            "flex flex-col items-center justify-center w-full h-full",
-                            pathname === item.href ? 'text-primary' : 'text-muted-foreground'
-                        )}>
-                            <item.icon className="h-6 w-6" />
-                            <span className="text-xs">{item.label}</span>
-                        </Link>
-                    )
-                })}
+                <Link href={navItems[0].href} className={cn("flex flex-col items-center justify-center flex-1 h-full", pathname === navItems[0].href ? 'text-primary' : 'text-muted-foreground')}>
+                    <Home className="h-6 w-6" />
+                    <span className="text-xs">{navItems[0].label}</span>
+                </Link>
+                <Link href={navItems[1].href} className={cn("flex flex-col items-center justify-center flex-1 h-full", pathname === navItems[1].href ? 'text-primary' : 'text-muted-foreground')}>
+                    <Calendar className="h-6 w-6" />
+                    <span className="text-xs">{navItems[1].label}</span>
+                </Link>
+                <div className="flex-shrink-0 w-16">
+                    <QuickViewSheet />
+                </div>
+                <Link href={navItems[2].href} className={cn("flex flex-col items-center justify-center flex-1 h-full", pathname === navItems[2].href ? 'text-primary' : 'text-muted-foreground')}>
+                    <Newspaper className="h-6 w-6" />
+                    <span className="text-xs">{navItems[2].label}</span>
+                </Link>
+                <Link href={navItems[3].href} className={cn("flex flex-col items-center justify-center flex-1 h-full", pathname === navItems[3].href ? 'text-primary' : 'text-muted-foreground')}>
+                    <User className="h-6 w-6" />
+                    <span className="text-xs">{navItems[3].label}</span>
+                </Link>
             </div>
         </footer>
     )
