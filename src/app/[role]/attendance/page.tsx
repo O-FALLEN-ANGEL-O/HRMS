@@ -2,14 +2,14 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { format, getDay } from 'date-fns';
+import { format, getDay, startOfMonth, endOfMonth, addMonths, subMonths, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, X, Loader2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { FaceVerificationDialog } from '@/components/attendance/face-verification-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -81,7 +81,7 @@ function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose
     };
 
     return (
-        <aside className="absolute top-0 right-0 h-full w-full max-w-md bg-card shadow-2xl p-6 flex flex-col z-20 transform transition-transform duration-300 ease-in-out">
+        <aside className="fixed top-0 right-0 h-full w-full max-w-md bg-card shadow-2xl p-6 flex flex-col z-20 transform transition-transform duration-300 ease-in-out">
             <div className="flex justify-between items-center pb-4 border-b">
                 <div className="flex items-center space-x-2">
                     <Input className="p-1 border rounded-md" type="date" defaultValue={format(date, 'yyyy-MM-dd')}/>
@@ -118,7 +118,7 @@ function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose
                             </div>
                             <div className="border-t pt-4 mt-4">
                                 <h4 className="font-semibold mb-4">Clocking times</h4>
-                                <div className="pl-4 border-l-2 border-gray-300 space-y-6 relative">
+                                <div className="pl-4 border-l-2 border-primary space-y-6 relative">
                                     <div className="relative pl-6">
                                         <div className="absolute -left-[9px] top-1 w-4 h-4 bg-background border-2 border-primary rounded-full z-10"></div>
                                         <p className="text-sm font-semibold">{dayData.checkIn} <span className="text-xs text-blue-500 bg-blue-100 px-1 py-0.5 rounded">Biometric</span></p>
@@ -155,12 +155,12 @@ export default function AttendancePage() {
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const params = useParams();
+  const router = useRouter();
   const role = params.role as string;
   
   const [attendanceLog, setAttendanceLog] = useState<Record<string, any> | null>(null);
   
   useEffect(() => {
-    // Initialize date-dependent state on the client side to avoid hydration mismatch
     const now = new Date();
     setCurrentDate(now);
     setAttendanceLog(generateAttendanceLog(now.getFullYear(), now.getMonth()));
@@ -177,7 +177,6 @@ export default function AttendancePage() {
         const todayEntry = newLog[todayKey];
 
         if (todayEntry && todayEntry.status === 'Present') {
-            // Clocking out
             const checkInTime = todayEntry.checkIn ? new Date(`${todayKey}T${todayEntry.checkIn}`) : new Date();
             const checkOutTime = new Date(`${todayKey}T${currentTime}`);
             const diffMs = checkOutTime.getTime() - checkInTime.getTime();
@@ -190,7 +189,6 @@ export default function AttendancePage() {
                 totalHours: `${diffHours}h ${diffMins}m`
             };
         } else {
-            // Clocking in
             newLog[todayKey] = {
                 status: 'Present',
                 checkIn: currentTime,
@@ -246,85 +244,141 @@ export default function AttendancePage() {
      );
   }
 
-  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  const start = startOfMonth(currentDate);
+  const end = endOfMonth(currentDate);
+  const daysInMonth = Array.from({ length: end.getDate() }, (_, i) => new Date(start.getFullYear(), start.getMonth(), i + 1));
+  const firstDayOfMonth = start.getDay();
 
-  const daysInMonth = Array.from({ length: endOfMonth.getDate() }, (_, i) => new Date(currentDate.getFullYear(), currentDate.getMonth(), i + 1));
-  
-  const firstDayOfMonth = startOfMonth.getDay();
-
-  const getDayBgClass = (date: Date) => {
+  const getDayBgClass = (date: Date, prefix: string = 'bg-') => {
     const dayInfo = attendanceLog[format(date, 'yyyy-MM-dd')];
-    if (!dayInfo) return 'bg-card';
+    if (!dayInfo) return `${prefix}card dark:${prefix}card`;
     switch (dayInfo.status) {
-        case 'Present': return 'bg-green-50 dark:bg-green-900/20';
-        case 'Week Off': return 'bg-red-50 dark:bg-red-900/20';
-        case 'Holiday': return 'bg-purple-50 dark:bg-purple-900/20';
-        case 'Leave': return 'bg-blue-50 dark:bg-blue-900/20';
-        case 'Absent': return 'bg-yellow-50 dark:bg-yellow-900/20';
-        default: return 'bg-card';
+        case 'Present': return `${prefix}green-50 dark:${prefix}green-900/20`;
+        case 'Week Off': return `${prefix}red-50 dark:${prefix}red-900/20`;
+        case 'Holiday': return `${prefix}purple-50 dark:${prefix}purple-900/20`;
+        case 'Leave': return `${prefix}blue-50 dark:${prefix}blue-900/20`;
+        case 'Absent': return `${prefix}yellow-50 dark:${prefix}yellow-900/20`;
+        default: return `${prefix}card dark:${prefix}card`;
     }
   }
 
 
   return (
-    <div className="space-y-6 relative overflow-hidden">
-       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div>
-                <h1 className="text-3xl font-bold font-headline">My Attendance</h1>
-                <p className="text-muted-foreground">Track your work hours and request corrections.</p>
-            </div>
-            <div className="flex items-center space-x-2">
+    <div className="relative overflow-hidden h-full">
+        {/* Mobile View */}
+        <div className="md:hidden p-4">
+            <header className="flex justify-between items-center mb-6">
+                <Button variant="ghost" size="icon" onClick={() => router.back()}><ChevronLeft /></Button>
+                <h1 className="text-xl font-bold">My Attendance</h1>
+                <Button variant="ghost" size="icon"><MoreVertical /></Button>
+            </header>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
                  <FaceVerificationDialog onVerificationSuccess={handleClockInOut} />
                  <Button asChild>
                     <Link href={`/${role}/attendance/regularize`}>
                          <Plus className="mr-2 h-4 w-4"/>
-                        Attendance Regularization
+                        Correction
                     </Link>
                 </Button>
             </div>
-        </header>
-
-      <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div className="flex items-center space-x-2">
-                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() - 1, 1))}>
-                    <ChevronLeft className="h-5 w-5 text-muted-foreground" />
-                </Button>
-                <h2 className="text-xl font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
-                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() + 1, 1))}>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </Button>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-1.5"></div><span>Present</span></div>
-                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1.5"></div><span>Absent</span></div>
-                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5"></div><span>Week off</span></div>
-                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></div><span>Leave</span></div>
-                <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-purple-500 mr-1.5"></div><span>Holiday</span></div>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden border">
-             {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                <div key={day} className="text-center py-2 bg-muted/50 font-semibold text-muted-foreground text-xs">{day}</div>
-             ))}
-
-             {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                <div key={`blank-${i}`} className="bg-card p-2 h-24 sm:h-32"></div>
-             ))}
-
-             {daysInMonth.map(day => (
-                <div key={day.toString()} className={cn("relative p-2 h-24 sm:h-32 cursor-pointer transition-colors hover:bg-accent", getDayBgClass(day))} onClick={() => setSelectedDate(day)}>
-                    <span className={cn("text-sm", format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') ? 'bg-primary text-primary-foreground rounded-full flex items-center justify-center h-6 w-6' : '')}>
-                        {format(day, 'd')}
-                    </span>
-                    <DayCellContent date={day} />
+            
+            <div className="bg-card p-4 rounded-2xl shadow-sm">
+                 <div className="flex justify-between items-center mb-6">
+                    <Button variant="ghost" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+                        <ChevronLeft />
+                    </Button>
+                    <h2 className="text-lg font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
+                    <Button variant="ghost" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+                        <ChevronRight />
+                    </Button>
                 </div>
-             ))}
+
+                <div className="grid grid-cols-5 gap-2 text-xs text-center text-muted-foreground mb-4">
+                    <div className="flex items-center justify-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-200"></span>Present</div>
+                    <div className="flex items-center justify-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-200"></span>Absent</div>
+                    <div className="flex items-center justify-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-200"></span>Week off</div>
+                    <div className="flex items-center justify-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-200"></span>Leave</div>
+                    <div className="flex items-center justify-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-purple-200"></span>Holiday</div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground mb-2">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => <div key={day}>{day}</div>)}
+                </div>
+
+                <div className="grid grid-cols-7 gap-2 text-sm">
+                    {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`blank-${i}`}></div>)}
+                    {daysInMonth.map(day => (
+                        <div key={day.toString()} className={cn("text-center p-1 rounded-lg", getDayBgClass(day))} onClick={() => setSelectedDate(day)}>
+                           <div className={cn('font-bold', isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center mx-auto' : '')}>
+                             {format(day, 'd')}
+                           </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
-      </div>
-      {selectedDate && <AttendanceDetailPanel date={selectedDate} onClose={() => setSelectedDate(null)} dayData={attendanceLog[format(selectedDate, 'yyyy-MM-dd')]}/>}
+
+        {/* Desktop View */}
+        <div className="hidden md:block space-y-6">
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold font-headline">My Attendance</h1>
+                        <p className="text-muted-foreground">Track your work hours and request corrections.</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <FaceVerificationDialog onVerificationSuccess={handleClockInOut} />
+                        <Button asChild>
+                            <Link href={`/${role}/attendance/regularize`}>
+                                <Plus className="mr-2 h-4 w-4"/>
+                                Attendance Regularization
+                            </Link>
+                        </Button>
+                    </div>
+                </header>
+
+            <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div className="flex items-center space-x-2">
+                        <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() - 1, 1))}>
+                            <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                        </Button>
+                        <h2 className="text-xl font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
+                        <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() + 1, 1))}>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </Button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-1.5"></div><span>Present</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1.5"></div><span>Absent</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5"></div><span>Week off</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></div><span>Leave</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-purple-500 mr-1.5"></div><span>Holiday</span></div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden border">
+                    {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                        <div key={day} className="text-center py-2 bg-muted/50 font-semibold text-muted-foreground text-xs">{day}</div>
+                    ))}
+
+                    {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                        <div key={`blank-${i}`} className="bg-card p-2 h-24 sm:h-32"></div>
+                    ))}
+
+                    {daysInMonth.map(day => (
+                        <div key={day.toString()} className={cn("relative p-2 h-24 sm:h-32 cursor-pointer transition-colors hover:bg-accent", getDayBgClass(day))} onClick={() => setSelectedDate(day)}>
+                            <span className={cn("text-sm", format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') ? 'bg-primary text-primary-foreground rounded-full flex items-center justify-center h-6 w-6' : '')}>
+                                {format(day, 'd')}
+                            </span>
+                            <DayCellContent date={day} />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+        
+        {selectedDate && <AttendanceDetailPanel date={selectedDate} onClose={() => setSelectedDate(null)} dayData={attendanceLog[format(selectedDate, 'yyyy-MM-dd')]}/>}
     </div>
   );
 }
