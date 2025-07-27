@@ -1,6 +1,6 @@
 
 import { config } from 'dotenv';
-config();
+config({ path: '.env.local' });
 
 import '@/ai/flows/auto-assign-roles.ts';
 import '@/ai/flows/detect-payroll-errors.ts';
