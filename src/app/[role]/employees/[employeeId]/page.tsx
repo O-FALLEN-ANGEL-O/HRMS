@@ -15,48 +15,44 @@ import { useToast } from '@/hooks/use-toast';
 type EmployeeProfile = typeof mockEmployees[0];
 
 const ActivityHeatmap = () => {
-    const months = ['DEC', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV'];
-    const days = ['Mon', 'Wed', 'Fri'];
-    
-    // Create a grid of random activity levels
-    const activityGrid = Array.from({ length: 53 * 3 }, () => Math.random());
+    // Generate a 7x15 grid for a more direct weekly view
+    const activityGrid = Array.from({ length: 7 * 15 }, () => Math.random());
+    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="text-lg font-semibold">Activity</CardTitle>
+                 <CardDescription>A simplified view of recent attendance activity.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="flex space-x-4 text-xs text-gray-500 mb-2">
-                    <div className="w-8"></div>
-                    <div className="grid grid-cols-12 gap-1 flex-1">
-                        {months.map(m => <span key={m}>{m}</span>)}
+                <div className="flex flex-col gap-2">
+                     <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+                        {weekDays.map(day => <div key={day}>{day}</div>)}
                     </div>
-                </div>
-                 <div className="flex space-x-4">
-                    <div className="flex flex-col space-y-1 text-xs text-gray-500">
-                        {days.map(d => <span key={d} className="h-3">{d}</span>)}
-                    </div>
-                    <div className="grid grid-flow-col grid-rows-3 gap-1 flex-1">
+                    <div className="grid grid-cols-15 gap-1">
                         {activityGrid.map((activity, index) => {
                             let color = 'bg-gray-200 dark:bg-muted/50';
                             if (activity > 0.8) color = 'bg-green-600';
                             else if (activity > 0.5) color = 'bg-green-400';
                             else if (activity > 0.2) color = 'bg-green-200';
-                            
-                            // Simulate the green block from the image
-                            if (index > 80 && index < 120) {
-                                color = 'bg-green-500';
-                            }
-                            
-                            return <div key={index} className={`${color} h-3 w-3 rounded-sm`}></div>
+                            return <div key={index} className={`${color} h-4 w-full rounded-sm`}></div>;
                         })}
                     </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-4">This is based on the attendance of this Employee</p>
+                 <div className="flex items-center justify-end gap-4 text-xs text-muted-foreground mt-4">
+                    <span>Less</span>
+                    <div className="flex gap-1">
+                        <div className="h-3 w-3 rounded-sm bg-gray-200 dark:bg-muted/50"></div>
+                        <div className="h-3 w-3 rounded-sm bg-green-200"></div>
+                        <div className="h-3 w-3 rounded-sm bg-green-400"></div>
+                        <div className="h-3 w-3 rounded-sm bg-green-600"></div>
+                    </div>
+                    <span>More</span>
+                </div>
             </CardContent>
         </Card>
-    )
+    );
 };
 
 
@@ -100,6 +96,23 @@ function ConnectionsTab() {
     )
 }
 
+function AboutTab({ employee }: { employee: EmployeeProfile }) {
+    const { toast } = useToast();
+    const handleEdit = (section: string) => toast({title: `Edit ${section}`, description: "This would open an edit dialog."});
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>About</CardTitle>
+                <CardDescription>Personal and professional details for {employee.full_name}.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p>Detailed 'About' tab content would go here.</p>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function EmployeeDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -126,7 +139,7 @@ export default function EmployeeDetailPage() {
                     <CardDescription>The employee with ID "{employeeId}" could not be found.</CardDescription>
                 </CardHeader>
                  <CardContent>
-                    <Button onClick={() => router.back()}> Go Back</Button>
+                    <Button onClick={() => router.back()}>Go Back</Button>
                 </CardContent>
             </Card>
         );
@@ -195,14 +208,7 @@ export default function EmployeeDetailPage() {
                     <div className="bg-white border-b border-gray-200 px-6 py-2 flex justify-between items-center">
                         <Tabs defaultValue="connections" className="w-full">
                             <TabsList>
-                                <TabsTrigger value="overview">Overview</TabsTrigger>
-                                <TabsTrigger value="joining">Joining</TabsTrigger>
-                                <TabsTrigger value="address">Address & Contacts</TabsTrigger>
-                                <TabsTrigger value="attendance">Attendance & Leaves</TabsTrigger>
-                                <TabsTrigger value="salary">Salary</TabsTrigger>
-                                <TabsTrigger value="personal">Personal</TabsTrigger>
-                                <TabsTrigger value="profile">Profile</TabsTrigger>
-                                <TabsTrigger value="exit">Exit</TabsTrigger>
+                                <TabsTrigger value="about">About</TabsTrigger>
                                 <TabsTrigger value="connections">Connections</TabsTrigger>
                             </TabsList>
                         </Tabs>
@@ -213,8 +219,14 @@ export default function EmployeeDetailPage() {
                         </div>
                     </div>
                     <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
-                        {/* The content would be driven by the selected tab. For now, showing Connections. */}
-                        <ConnectionsTab />
+                        <Tabs defaultValue="connections" className="w-full">
+                            <TabsContent value="about">
+                                <AboutTab employee={employee} />
+                            </TabsContent>
+                            <TabsContent value="connections">
+                                <ConnectionsTab />
+                            </TabsContent>
+                        </Tabs>
                     </div>
                 </div>
             </main>
