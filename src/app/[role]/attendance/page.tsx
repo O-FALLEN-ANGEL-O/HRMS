@@ -1,16 +1,18 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format, getDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { FaceVerificationDialog } from '@/components/attendance/face-verification-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 // Function to generate mock attendance data for a given month and year
 const generateAttendanceLog = (year: number, month: number) => {
@@ -150,21 +152,27 @@ function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose
 }
 
 export default function AttendancePage() {
-  const [currentDate, setCurrentDate] = useState(new Date()); // Default to current date
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const params = useParams();
   const role = params.role as string;
   
-  const [attendanceLog, setAttendanceLog] = useState(() => 
-    generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth())
-  );
+  const [attendanceLog, setAttendanceLog] = useState<Record<string, any> | null>(null);
   
+  useEffect(() => {
+    // Initialize date-dependent state on the client side to avoid hydration mismatch
+    const now = new Date();
+    setCurrentDate(now);
+    setAttendanceLog(generateAttendanceLog(now.getFullYear(), now.getMonth()));
+  }, []);
+
   const handleClockInOut = () => {
     const today = new Date();
     const todayKey = format(today, 'yyyy-MM-dd');
     const currentTime = format(today, 'HH:mm');
     
     setAttendanceLog(prevLog => {
+        if (!prevLog) return null;
         const newLog = { ...prevLog };
         const todayEntry = newLog[todayKey];
 
@@ -195,7 +203,7 @@ export default function AttendancePage() {
   };
 
   const DayCellContent = ({ date }: { date: Date }) => {
-    if (!date || !date.getDate()) return null;
+    if (!date || !date.getDate() || !attendanceLog) return null;
 
     const dateKey = format(date, 'yyyy-MM-dd');
     const dayData = attendanceLog[dateKey];
@@ -229,6 +237,15 @@ export default function AttendancePage() {
     return null;
   };
   
+  if (!currentDate || !attendanceLog) {
+     return (
+        <div className="space-y-6">
+            <Skeleton className="h-12 w-1/2" />
+            <Skeleton className="h-[600px] w-full" />
+        </div>
+     );
+  }
+
   const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
@@ -271,11 +288,11 @@ export default function AttendancePage() {
       <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div className="flex items-center space-x-2">
-                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}>
+                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() - 1, 1))}>
                     <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                 </Button>
                 <h2 className="text-xl font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
-                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}>
+                <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() + 1, 1))}>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </Button>
             </div>
