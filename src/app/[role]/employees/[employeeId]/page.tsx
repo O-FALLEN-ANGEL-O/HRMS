@@ -28,7 +28,7 @@ const ActivityHeatmap = () => {
             <CardContent>
                 <div className="flex flex-col gap-2">
                      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
-                        {weekDays.map((day, index) => <div key={`${day}-${index}`}>{day}</div>)}
+                        {weekDays.map(day => <div key={day}>{day}</div>)}
                     </div>
                     <div className="grid grid-cols-15 gap-1">
                         {activityGrid.map((activity, index) => {
@@ -56,7 +56,7 @@ const ActivityHeatmap = () => {
 };
 
 
-const ConnectionCard = ({ title, items }: { title: string, items: {label: string, count?: number}[] }) => (
+const ConnectionCard = ({ title, items }: { title: string, count?: number, items: {label: string, count?: number}[] }) => (
     <div>
         <h3 className="font-semibold text-gray-700 mb-4">{title}</h3>
         <div className="space-y-3">
@@ -78,6 +78,9 @@ function ConnectionsTab() {
     const attendanceItems = [ { label: '99+ Attendance' }, { label: 'Attendance Request'}, { label: 'Employee Checkin'}];
     const leaveItems = [ { label: 'Leave Application', count: 3}, { label: 'Leave Allocation', count: 2}, { label: 'Leave Policy Assignment'}];
     const lifecycleItems = [ { label: 'Employee Onboarding'}, { label: 'Employee Transfer'}, { label: 'Employee Promotion'}, { label: 'Employee Grievance', count: 1}];
+    const exitItems = [ { label: 'Employee Separation' }];
+    const shiftItems = [ { label: 'Shift Request' }];
+    const expenseItems = [ { label: 'Expense Claim' }];
     
     return (
         <div className="space-y-6">
@@ -90,6 +93,9 @@ function ConnectionsTab() {
                     <ConnectionCard title="Attendance" items={attendanceItems} />
                     <ConnectionCard title="Leave" items={leaveItems} />
                     <ConnectionCard title="Lifecycle" items={lifecycleItems} />
+                    <ConnectionCard title="Exit" items={exitItems} />
+                    <ConnectionCard title="Shift" items={shiftItems} />
+                    <ConnectionCard title="Expense" items={expenseItems} />
                 </CardContent>
             </Card>
         </div>
@@ -210,6 +216,14 @@ export default function EmployeeDetailPage() {
                             <TabsList>
                                 <TabsTrigger value="about">About</TabsTrigger>
                                 <TabsTrigger value="connections">Connections</TabsTrigger>
+                                <TabsTrigger value="overview">Overview</TabsTrigger>
+                                <TabsTrigger value="joining">Joining</TabsTrigger>
+                                <TabsTrigger value="address">Address & Contacts</TabsTrigger>
+                                <TabsTrigger value="attendance">Attendance & Leaves</TabsTrigger>
+                                <TabsTrigger value="salary">Salary</TabsTrigger>
+                                <TabsTrigger value="personal">Personal</TabsTrigger>
+                                <TabsTrigger value="profile">Profile</TabsTrigger>
+                                <TabsTrigger value="exit">Exit</TabsTrigger>
                             </TabsList>
                         </Tabs>
                         <div className="flex items-center space-x-2">
@@ -226,6 +240,14 @@ export default function EmployeeDetailPage() {
                             <TabsContent value="connections">
                                 <ConnectionsTab />
                             </TabsContent>
+                            <TabsContent value="overview"><Card><CardContent className="p-4">Overview Content</CardContent></Card></TabsContent>
+                            <TabsContent value="joining"><Card><CardContent className="p-4">Joining Content</CardContent></Card></TabsContent>
+                            <TabsContent value="address"><Card><CardContent className="p-4">Address & Contacts Content</CardContent></Card></TabsContent>
+                            <TabsContent value="attendance"><Card><CardContent className="p-4">Attendance & Leaves Content</CardContent></Card></TabsContent>
+                            <TabsContent value="salary"><Card><CardContent className="p-4">Salary Content</CardContent></Card></TabsContent>
+                            <TabsContent value="personal"><Card><CardContent className="p-4">Personal Content</CardContent></Card></TabsContent>
+                            <TabsContent value="profile"><Card><CardContent className="p-4">Profile Content</CardContent></Card></TabsContent>
+                            <TabsContent value="exit"><Card><CardContent className="p-4">Exit Content</CardContent></Card></TabsContent>
                         </Tabs>
                     </div>
                 </div>
@@ -233,3 +255,4 @@ export default function EmployeeDetailPage() {
         </div>
     );
 }
+
