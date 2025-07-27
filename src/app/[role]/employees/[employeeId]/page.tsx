@@ -4,8 +4,9 @@
 import { useParams, useRouter } from 'next/navigation';
 import { mockUsers } from '@/lib/mock-data/employees';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, ChevronLeft, Download, ChevronDown, ChevronUp, CalendarDays, MoreHorizontal, Save, X } from 'lucide-react';
-import React, { useEffect, useState, useCallback } from 'react';
+import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, CalendarDays, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,7 +18,6 @@ import { HRInformationTab } from '@/components/employee-profile/hr-information-t
 import type { UserProfile } from '@/lib/mock-data/employees';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
 export default function EmployeeDetailPage() {
@@ -36,6 +36,7 @@ export default function EmployeeDetailPage() {
     useEffect(() => {
         const foundUser = mockUsers.find(e => e.profile.employee_id === employeeId);
         if (foundUser) {
+            // Deep copy to prevent mutation of the mock "database"
             const employeeProfile = JSON.parse(JSON.stringify(foundUser.profile));
             setEmployee(employeeProfile);
             setOriginalEmployee(JSON.parse(JSON.stringify(foundUser.profile)));
@@ -43,24 +44,34 @@ export default function EmployeeDetailPage() {
         setLoading(false);
     }, [employeeId]);
     
-    const handleFieldChange = useCallback((path: string, value: any) => {
+    const handleFieldChange = (path: string, value: any) => {
         setEmployee(prev => {
             if (!prev) return null;
-            const keys = path.split('.');
+            // Create a deep copy to edit
             const newEmployee = JSON.parse(JSON.stringify(prev));
+            
+            // Navigate the path and set the value
+            const keys = path.split('.');
             let current: any = newEmployee;
             for (let i = 0; i < keys.length - 1; i++) {
                 current = current[keys[i]];
             }
             current[keys[keys.length - 1]] = value;
+            
             return newEmployee;
         });
-    }, []);
+    };
 
     const handleSave = () => {
-        setOriginalEmployee(employee);
+        setOriginalEmployee(employee); // Persist changes to the "original" state for this session
         setIsEditing(false);
-        // In a real app, this would be an API call
+        
+        // In a real app, this would be an API call to update the database
+        const index = mockUsers.findIndex(u => u.profile.employee_id === employeeId);
+        if (index > -1 && employee) {
+            mockUsers[index].profile = employee;
+        }
+        
         console.log("Saving employee data:", employee);
         toast({
             title: "Changes Saved",
@@ -69,7 +80,7 @@ export default function EmployeeDetailPage() {
     };
     
     const handleCancel = () => {
-        setEmployee(originalEmployee);
+        setEmployee(originalEmployee); // Revert to the last saved state
         setIsEditing(false);
     }
     
@@ -88,10 +99,12 @@ export default function EmployeeDetailPage() {
             </Card>
         );
     }
+    
+    // Determine if the logged-in user has permission to see detailed profiles
+    const canViewDetailedProfile = loggedInUser && (loggedInUser.role === 'admin' || loggedInUser.role === 'hr' || loggedInUser.role === 'manager' || loggedInUser.role === 'team-leader' || loggedInUser.role === 'qa-analyst' || loggedInUser.role === 'trainer' || loggedInUser.role === 'finance' || loggedInUser.role === 'it-manager');
 
-    const canViewDetailedProfile = loggedInUser && (loggedInUser.role === 'admin' || loggedInUser.role === 'hr' || loggedInUser.role === 'manager' || loggedInUser.role === 'team-leader' || loggedInUser.role === 'qa-analyst' || loggedInUser.role === 'trainer');
-
-    if (!canViewDetailedProfile) {
+    // If the logged-in user is the employee themselves, they can see their own profile.
+    if (!canViewDetailedProfile && loggedInUser?.profile.employee_id !== employeeId) {
         return (
              <Card>
                 <CardContent className="p-6">
