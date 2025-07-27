@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, getDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
@@ -23,21 +24,32 @@ const generateAttendanceLog = (year: number, month: number) => {
     }> = {};
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
         const dateKey = format(date, 'yyyy-MM-dd');
         const dayOfWeek = getDay(date); // Sunday is 0, Saturday is 6
 
+        // Don't generate data for future days in the current month
+        if (isCurrentMonth && day > today.getDate()) {
+            continue;
+        }
+
         if (dayOfWeek === 0 || dayOfWeek === 6) {
-            log[dateKey] = { status: 'Week Off', location: 'Office' };
+            log[dateKey] = { status: 'Week Off', location: 'Office', shiftDetails: 'Weekend' };
         } else if (day === 15) { 
             log[dateKey] = { status: 'Holiday', location: 'Office', shiftDetails: 'General Holiday' };
         } else if (day === 10) { 
             log[dateKey] = { status: 'Leave', location: 'Office', shiftDetails: 'Sick Leave' };
         } else if (day === 18) { 
             log[dateKey] = { status: 'Absent', location: 'Office', shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00' };
-        } else { 
+        } else if (isCurrentMonth && day === today.getDate()) {
+            // Leave today blank to be filled by clock-in/out
+            continue;
+        }
+        else { 
              log[dateKey] = {
                 status: 'Present',
                 checkIn: '09:12',
@@ -52,9 +64,7 @@ const generateAttendanceLog = (year: number, month: number) => {
 };
 
 
-function AttendanceDetailPanel({ date, onClose }: { date: Date, onClose: () => void }) {
-    const detailedAttendanceLog = generateAttendanceLog(date.getFullYear(), date.getMonth());
-    const dayData = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose: () => void, dayData: any }) {
     if (!dayData) return null;
 
     const getStatusBadge = () => {
@@ -140,18 +150,55 @@ function AttendanceDetailPanel({ date, onClose }: { date: Date, onClose: () => v
 }
 
 export default function AttendancePage() {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // Set to July 2025 for demo
+  const [currentDate, setCurrentDate] = useState(new Date()); // Default to current date
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const params = useParams();
   const role = params.role as string;
   
-  const detailedAttendanceLog = generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth());
+  const [attendanceLog, setAttendanceLog] = useState(() => 
+    generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth())
+  );
+  
+  const handleClockInOut = () => {
+    const today = new Date();
+    const todayKey = format(today, 'yyyy-MM-dd');
+    const currentTime = format(today, 'HH:mm');
+    
+    setAttendanceLog(prevLog => {
+        const newLog = { ...prevLog };
+        const todayEntry = newLog[todayKey];
+
+        if (todayEntry && todayEntry.status === 'Present') {
+            // Clocking out
+            const checkInTime = todayEntry.checkIn ? new Date(`${todayKey}T${todayEntry.checkIn}`) : new Date();
+            const checkOutTime = new Date(`${todayKey}T${currentTime}`);
+            const diffMs = checkOutTime.getTime() - checkInTime.getTime();
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            newLog[todayKey] = {
+                ...todayEntry,
+                checkOut: currentTime,
+                totalHours: `${diffHours}h ${diffMins}m`
+            };
+        } else {
+            // Clocking in
+            newLog[todayKey] = {
+                status: 'Present',
+                checkIn: currentTime,
+                shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00',
+                location: 'Office'
+            };
+        }
+        return newLog;
+    });
+  };
 
   const DayCellContent = ({ date }: { date: Date }) => {
     if (!date || !date.getDate()) return null;
 
     const dateKey = format(date, 'yyyy-MM-dd');
-    const dayData = detailedAttendanceLog[dateKey];
+    const dayData = attendanceLog[dateKey];
     if (!dayData) return null;
     
     if (dayData.status === 'Present' || dayData.status === 'Week Off' || dayData.status === 'Holiday' || dayData.status === 'Leave' || dayData.status === 'Absent') {
@@ -170,8 +217,8 @@ export default function AttendancePage() {
         <div className={cn("absolute bottom-2 left-2 right-2 rounded-md p-1 text-xs border", getStatusClass())}>
             {dayData.status === 'Present' ? (
                 <>
-                    <p>{dayData.checkIn} - {dayData.checkOut}</p>
-                    <p className="font-semibold">Total: {dayData.totalHours}</p>
+                    <p>{dayData.checkIn} - {dayData.checkOut || '...'}</p>
+                    <p className="font-semibold">Total: {dayData.totalHours || '...'}</p>
                 </>
             ) : (
                 <p className="font-semibold text-center">{dayData.status}</p>
@@ -190,7 +237,7 @@ export default function AttendancePage() {
   const firstDayOfMonth = startOfMonth.getDay();
 
   const getDayBgClass = (date: Date) => {
-    const dayInfo = detailedAttendanceLog[format(date, 'yyyy-MM-dd')];
+    const dayInfo = attendanceLog[format(date, 'yyyy-MM-dd')];
     if (!dayInfo) return 'bg-card';
     switch (dayInfo.status) {
         case 'Present': return 'bg-green-50 dark:bg-green-900/20';
@@ -211,7 +258,7 @@ export default function AttendancePage() {
                 <p className="text-muted-foreground">Track your work hours and request corrections.</p>
             </div>
             <div className="flex items-center space-x-2">
-                 <FaceVerificationDialog />
+                 <FaceVerificationDialog onVerificationSuccess={handleClockInOut} />
                  <Button asChild>
                     <Link href={`/${role}/attendance/regularize`}>
                          <Plus className="mr-2 h-4 w-4"/>
@@ -260,7 +307,7 @@ export default function AttendancePage() {
              ))}
         </div>
       </div>
-      {selectedDate && <AttendanceDetailPanel date={selectedDate} onClose={() => setSelectedDate(null)} />}
+      {selectedDate && <AttendanceDetailPanel date={selectedDate} onClose={() => setSelectedDate(null)} dayData={attendanceLog[format(selectedDate, 'yyyy-MM-dd')]}/>}
     </div>
   );
 }

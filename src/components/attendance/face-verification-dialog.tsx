@@ -20,7 +20,11 @@ import { verifyFaceAction } from '@/app/[role]/attendance/actions';
 
 type VerificationStatus = 'idle' | 'verifying' | 'success' | 'failed';
 
-export function FaceVerificationDialog() {
+interface FaceVerificationDialogProps {
+  onVerificationSuccess: () => void;
+}
+
+export function FaceVerificationDialog({ onVerificationSuccess }: FaceVerificationDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -97,7 +101,9 @@ export function FaceVerificationDialog() {
       setVerificationResult(result);
       if (result.isSamePerson) {
         setVerificationStatus('success');
-        toast({ title: 'Clock-in Successful', description: `Welcome, ${user.profile.full_name.split(' ')[0]}!`});
+        onVerificationSuccess();
+        toast({ title: 'Clock-in/out Successful!', description: `Attendance recorded for ${user.profile.full_name.split(' ')[0]}.`});
+        setTimeout(() => setIsOpen(false), 1500); // Close dialog after success
       } else {
         setVerificationStatus('failed');
       }
