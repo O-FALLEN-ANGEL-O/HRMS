@@ -6,7 +6,7 @@ import { mockEmployees } from '@/lib/mock-data/employees';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, ExpandMore, ExpandLess, CalendarDays } from 'lucide-react';
+import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -20,7 +20,7 @@ const ActivityCalendar = () => {
     const { toast } = useToast();
     const [currentMonth, setCurrentMonth] = useState(new Date(2023, 8, 1)); // September 2023
 
-    const generateMonthData = () => {
+    const monthData = useMemo(() => {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
         const firstDay = new Date(year, month, 1);
@@ -28,15 +28,27 @@ const ActivityCalendar = () => {
 
         const dates = [];
         for (let i = 0; i < firstDay.getDay(); i++) {
-            dates.push({ day: null, status: 'empty' });
+            dates.push({ day: null, status: 'empty', fullDate: null });
         }
 
-        const statuses = ['present', 'present', 'present', 'absent', 'present', 'leave', 'half-day', 'day-off'];
+        const statuses = ['present', 'present', 'present', 'absent', 'leave', 'half-day', 'day-off'];
 
         for (let i = 1; i <= lastDay.getDate(); i++) {
             const date = new Date(year, month, i);
-            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-            const status = (date.getDay() === 0 || date.getDay() === 6) ? 'day-off' : randomStatus;
+            let randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            
+            let status;
+            if (date.getDay() === 0 || date.getDay() === 6) {
+                status = 'day-off';
+            } else if (i === 12) {
+                 status = 'absent';
+            } else if (i === 19) {
+                status = 'leave';
+            } else if (i === 26) {
+                status = 'half-day';
+            } else {
+                status = 'present';
+            }
             
             dates.push({
                 day: i,
@@ -47,20 +59,19 @@ const ActivityCalendar = () => {
             });
         }
         return dates;
-    };
-    
-    const monthData = useMemo(generateMonthData, [currentMonth]);
+    }, [currentMonth]);
     
     const getStatusColor = (status: string) => {
         switch(status) {
             case 'present': return 'bg-green-500';
             case 'absent': return 'bg-red-500';
             case 'leave': return 'bg-yellow-400';
-            case 'half-day': return 'bg-gradient-to-r from-green-500 to-red-500';
-            case 'day-off':
-            default: return 'bg-gray-200';
+            case 'half-day': return 'bg-gradient-to-r from-green-500 from-50% to-red-500 to-50%';
+            case 'day-off': default: return 'bg-gray-200';
         }
-    }
+    };
+    
+    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
         <Card>
@@ -70,7 +81,7 @@ const ActivityCalendar = () => {
                     <div className="flex items-center space-x-2">
                         <Button variant="outline" size="sm">
                             {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                            <ExpandMore className="ml-2 h-4 w-4" />
+                            <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => toast({title: "Download action triggered"})}>
                             <Download className="mr-2 h-4 w-4"/>Report
@@ -80,7 +91,7 @@ const ActivityCalendar = () => {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <span key={day}>{day}</span>)}
+                   {weekDays.map((day, index) => <div key={`${day}-${index}`}>{day}</div>)}
                 </div>
                 <div className="grid grid-cols-7 grid-rows-5 gap-2">
                     {monthData.map((item, index) => (
@@ -88,13 +99,13 @@ const ActivityCalendar = () => {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div className="p-1 text-right relative group">
-                                        <span className={`text-sm ${!item.day ? 'text-gray-400' : ''}`}>
-                                            {item.day || new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index - new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay() + 1).getDate()}
+                                         <span className={`text-sm ${!item.day ? 'text-gray-400' : ''}`}>
+                                            {item.day || ''}
                                         </span>
                                         {item.day && <div className={`w-full h-1.5 ${getStatusColor(item.status)} rounded-full mt-1`}></div>}
                                     </div>
                                 </TooltipTrigger>
-                                {item.day && (
+                                {item.day && item.fullDate && (
                                     <TooltipContent>
                                         <p className="font-bold">{item.fullDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                         <p>Status: <span className="capitalize">{item.status.replace('-', ' ')}</span></p>
@@ -149,7 +160,7 @@ function ConnectionsTab() {
     const shiftItems = [ { label: 'Shift Request' }];
     const expenseItems = [ { label: 'Expense Claim' }];
 
-    const managementRoles = ['admin', 'hr', 'manager', 'team-leader', 'qa-analyst'];
+    const managementRoles = ['admin', 'hr', 'manager', 'team-leader', 'qa-analyst', 'trainer', 'operations-manager', 'finance', 'it-manager'];
     const showActivityCalendar = user && managementRoles.includes(user.role);
     
     return (
