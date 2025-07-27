@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { Message } from 'genkit/experimental/ai';
+import { Message, Part } from 'genkit/experimental/ai';
 
 const AiChatbotInputSchema = z.object({
   history: z.array(z.custom<Message>()).describe("The history of the conversation so far."),
@@ -25,7 +25,7 @@ export async function aiChatbot(input: AiChatbotInput): Promise<AiChatbotOutput>
   return aiChatbotFlow(input);
 }
 
-const prompt = `You are a friendly and helpful HR assistant chatbot for a company called OptiTalent.
+const systemPrompt = `You are a friendly and helpful HR assistant chatbot for a company called OptiTalent.
 
 Your goal is to answer employee questions about company policies, benefits, leave requests, and other HR-related topics.
 Be concise and clear in your answers.
@@ -42,10 +42,14 @@ const aiChatbotFlow = ai.defineFlow(
     outputSchema: AiChatbotOutputSchema,
   },
   async ({ history, query }) => {
+    const systemMessage: Message = {
+        role: 'system',
+        content: [{ text: systemPrompt }]
+    };
+
     const llmResponse = await ai.generate({
       prompt: query,
-      history,
-      system: prompt,
+      history: [systemMessage, ...history],
     });
 
     return llmResponse.text;
