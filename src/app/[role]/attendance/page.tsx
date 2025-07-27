@@ -303,7 +303,7 @@ export default function AttendancePage() {
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground mb-2">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => <div key={day}>{day}</div>)}
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => <div key={`${day}-${index}`}>{day}</div>)}
                 </div>
 
                 <div className="grid grid-cols-7 gap-2 text-sm">
