@@ -2,19 +2,18 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { mockEmployees, mockUsers } from '@/lib/mock-data/employees';
+import { mockUsers } from '@/lib/mock-data/employees';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, ChevronDown, ChevronUp, CalendarDays, BookUser, History, Award, Star, Users, HeartPulse, Shield } from 'lucide-react';
+import { Loader2, Plus, Edit, Mail, Phone, Building, Briefcase, User, Heart, MessageSquare, Trash2, ChevronRight, MoreHorizontal, ChevronLeft, Download, ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-
-import { AboutTab } from '@/components/employee-profile/about-tab';
+import { AboutTab, ActivityCalendar } from '@/components/employee-profile/about-tab';
 import { ProfessionalTab } from '@/components/employee-profile/professional-tab';
 import { FamilyHealthTab } from '@/components/employee-profile/family-health-tab';
 import { DocumentsTab } from '@/components/employee-profile/documents-tab';
@@ -162,7 +161,7 @@ export default function EmployeeDetailPage() {
                             <TabsContent value="family">
                                 <FamilyHealthTab />
                             </TabsContent>
-                            <TabsContent value="hr">
+                             <TabsContent value="hr">
                                 <HRInformationTab />
                             </TabsContent>
                             <TabsContent value="documents">
