@@ -1036,19 +1036,126 @@ const ManagerDashboard = () => (
     </div>
 );
 
-const TeamLeadDashboard = () => (
-    <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <DashboardCard title="Shift Adherence" value="98%" icon={Clock} description="Real-time adherence" />
-            <DashboardCard title="Avg. Handle Time" value="4m 15s" icon={Ticket} description="-5s from yesterday" />
-            <DashboardCard title="Team QA Score" value="94.5%" icon={CheckCircle} description="This week's average" />
-            <DashboardCard title="Escalations" value="2" icon={AlertCircle} description="Today" />
+const TeamLeadDashboard = () => {
+    const mockTeamData = [
+        { id: 'usr_01', name: 'Anika Sharma', status: 'On Call', avatar: 'https://placehold.co/100x100?text=AS', qa: 98, csat: 95, tickets: 12 },
+        { id: 'usr_02', name: 'Rohan Verma', status: 'Available', avatar: 'https://placehold.co/100x100?text=RV', qa: 92, csat: 88, tickets: 15 },
+        { id: 'usr_03', name: 'Priya Mehta', status: 'On Break', avatar: 'https://placehold.co/100x100?text=PM', qa: 95, csat: 99, tickets: 10 },
+        { id: 'usr_04', name: 'Siddharth Roy', status: 'Available', avatar: 'https://placehold.co/100x100?text=SR', qa: 89, csat: 91, tickets: 14 },
+    ];
+
+    const weeklyTrendData = [
+        { day: 'Mon', score: 92.5 },
+        { day: 'Tue', score: 93.0 },
+        { day: 'Wed', score: 94.5 },
+        { day: 'Thu', score: 94.0 },
+        { day: 'Fri', score: 95.5 },
+        { day: 'Sat', score: 96.0 },
+    ];
+
+    const getStatusColor = (status: string) => {
+        if (status === 'On Call') return 'bg-red-500';
+        if (status === 'Available') return 'bg-green-500';
+        if (status === 'On Break') return 'bg-yellow-500';
+        return 'bg-gray-400';
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <DashboardCard title="Shift Adherence" value="98%" icon={Clock} description="Real-time adherence" />
+                <DashboardCard title="Avg. Handle Time" value="4m 15s" icon={Ticket} description="-5s from yesterday" />
+                <DashboardCard title="Team QA Score" value="94.5%" icon={CheckCircle} description="This week's average" />
+                <DashboardCard title="Escalations" value="2" icon={AlertCircle} description="Today" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Team Performance</CardTitle>
+                        <CardDescription>Key metrics for each team member today.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Agent</TableHead>
+                                    <TableHead>QA Score</TableHead>
+                                    <TableHead>CSAT</TableHead>
+                                    <TableHead>Tickets Handled</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {mockTeamData.map(member => (
+                                    <TableRow key={member.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-9 w-9">
+                                                    <AvatarImage src={member.avatar} data-ai-hint="person avatar"/>
+                                                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <span>{member.name}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{member.qa}%</TableCell>
+                                        <TableCell>{member.csat}%</TableCell>
+                                        <TableCell>{member.tickets}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Live Roster</CardTitle>
+                            <CardDescription>Current team status.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {mockTeamData.map(member => (
+                                <div key={member.id} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={member.avatar} data-ai-hint="person avatar"/>
+                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-medium">{member.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <span className={cn("h-2 w-2 rounded-full", getStatusColor(member.status))}></span>
+                                        <span>{member.status}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Weekly QA Trend</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-40">
+                             <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={weeklyTrendData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="day" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis domain={[85, 100]} fontSize={12} tickLine={false} axisLine={false} />
+                                    <Tooltip contentStyle={{
+                                        backgroundColor: "hsl(var(--card))",
+                                        border: "1px solid hsl(var(--border))",
+                                        borderRadius: "var(--radius)",
+                                    }}/>
+                                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
-         <Card>
-            <CardHeader><CardTitle>A live team roster and daily attendance heatmap would be displayed here...</CardTitle></CardHeader>
-        </Card>
-    </div>
-);
+    );
+};
 
 
 const RecruiterDashboard = () => (
