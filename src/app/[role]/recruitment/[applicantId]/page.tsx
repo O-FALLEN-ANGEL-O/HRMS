@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Briefcase, FileText, Send, User, MessageSquare, Award, Calendar } from "lucide-react";
+import { Briefcase, FileText, Send, User, MessageSquare, Award, Calendar, Check, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useState, memo, useMemo } from "react";
@@ -21,7 +21,7 @@ import { StandardAssessmentsTab } from "@/components/standard-assessments-tab";
 const MOCK_APPLICANT_BASE = {
     id: 'app-001',
     name: 'Aarav Sharma',
-    avatar: 'https://placehold.co/100x100?text=AS',
+    avatar: 'https://placehold.co/100x100.png',
     roleApplied: 'Senior Frontend Developer',
     applicationDate: '2023-10-25',
     referral: 'Priya Mehta (EMP008)',
@@ -84,6 +84,21 @@ export default function ApplicantProfilePage() {
         toast({ title: 'Note Added', description: 'Your feedback has been saved.' });
     }
 
+    const handleAction = (action: 'schedule' | 'reject') => {
+        if(action === 'schedule') {
+            toast({
+                title: 'Interview Scheduled',
+                description: `An interview has been scheduled with ${MOCK_APPLICANT_BASE.name}.`,
+            });
+        } else {
+            toast({
+                title: 'Application Rejected',
+                description: `An email has been sent to ${MOCK_APPLICANT_BASE.name} informing them of the decision.`,
+                variant: 'destructive',
+            });
+        }
+    }
+
     return (
         <div className="space-y-6">
             <Alert variant="destructive" className="border-yellow-500/50 text-yellow-900 dark:text-yellow-200 [&>svg]:text-yellow-500">
@@ -118,8 +133,8 @@ export default function ApplicantProfilePage() {
                             </div>
                         </div>
                          <div className="flex flex-col gap-2 w-full md:w-auto">
-                            <Button>Schedule Interview</Button>
-                            <Button variant="outline">Reject Application</Button>
+                            <Button onClick={() => handleAction('schedule')}><Check className="mr-2 h-4 w-4"/> Schedule Interview</Button>
+                            <Button variant="outline" onClick={() => handleAction('reject')}><X className="mr-2 h-4 w-4"/> Reject Application</Button>
                         </div>
                     </div>
                 </CardContent>

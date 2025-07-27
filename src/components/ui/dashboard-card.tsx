@@ -1,9 +1,8 @@
 
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from './button';
 import type { LucideIcon } from 'lucide-react';
+import { Button } from './button';
 
 interface DashboardCardProps {
   title: string;
@@ -39,7 +38,7 @@ const DashboardCardComponent = ({ title, icon: Icon, actionIcon: ActionIcon, val
         </CardTitle>
         {ActionIcon && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onActionClick}><ActionIcon className="h-4 w-4 text-muted-foreground" /></Button>}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         {children}
       </CardContent>
     </Card>

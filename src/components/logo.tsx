@@ -42,7 +42,7 @@ const LogoComponent = ({ className, showText }: LogoProps) => {
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 1, ease: "easeInOut", repeat: Infinity, repeatType: "loop", repeatDelay: 1 },
+                    default: { duration: 1, ease: "easeInOut" },
                 }}
             />
             <motion.path
@@ -53,7 +53,7 @@ const LogoComponent = ({ className, showText }: LogoProps) => {
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 1, ease: "easeInOut", delay: 0.2, repeat: Infinity, repeatType: "loop", repeatDelay: 1 },
+                    default: { duration: 1, ease: "easeInOut", delay: 0.2 },
                 }}
             />
             <motion.path
@@ -64,7 +64,7 @@ const LogoComponent = ({ className, showText }: LogoProps) => {
                 initial="hidden"
                 animate="visible"
                 transition={{
-                    default: { duration: 1, ease: "easeInOut", delay: 0.4, repeat: Infinity, repeatType: "loop", repeatDelay: 1 },
+                    default: { duration: 1, ease: "easeInOut", delay: 0.4 },
                 }}
             />
         </motion.svg>

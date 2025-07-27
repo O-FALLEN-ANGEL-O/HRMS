@@ -6,14 +6,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Award, Cake, FileText, MoreHorizontal, Inbox, Gift, Hand, Search, Bell, Settings, Users, MessageSquare, ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
+import { DashboardCard } from '@/components/ui/dashboard-card';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const wallOfFame = [
     { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
@@ -34,7 +38,7 @@ const feedPosts = [
         timestamp: '1 month ago',
         avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
         title: 'Employee Referral Program is Active!',
-        image: 'https://placehold.co/800x400/A893E0/FFFFFF?text=Referrals',
+        image: 'https://placehold.co/800x400.png',
         imageHint: 'employee referral program'
     },
     {
@@ -43,7 +47,7 @@ const feedPosts = [
         timestamp: '2 months ago',
         avatar: 'https://ui-avatars.com/api/?name=Jackson+Lee&background=random',
         title: 'Annual Company Retreat Location Announced!',
-        image: 'https://placehold.co/800x400/E6E6FA/333333?text=Retreat',
+        image: 'https://placehold.co/800x400.png',
         imageHint: 'company retreat beach'
     }
 ];
@@ -62,54 +66,45 @@ const DesktopDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
         {/* Left Column */}
         <div className="hidden xl:flex xl:flex-col space-y-6">
-             <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Wall of Fame</CardTitle>
-                </CardHeader>
-                <CardContent>
-                     <div className="flex justify-between items-center bg-gray-50 dark:bg-muted p-3 rounded-lg mb-4">
-                        <h3 className="text-md font-semibold">Badge received</h3>
-                        <span className="text-sm text-gray-500 dark:text-muted-foreground">This week</span>
-                    </div>
-                    <div className="flex justify-around items-center text-center mt-4">
-                        {wallOfFame.map((person, index) => (
-                             <div key={index}>
-                                <Avatar className={`w-16 h-16 mx-auto border-2 ${person.crown === 'gold' ? 'border-yellow-400' : person.crown === 'silver' ? 'border-gray-400' : 'border-amber-600'}`}>
-                                    <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person portrait" />
+             <DashboardCard title="Wall of Fame">
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-muted p-3 rounded-lg mb-4">
+                    <h3 className="text-md font-semibold">Badge received</h3>
+                    <span className="text-sm text-gray-500 dark:text-muted-foreground">This week</span>
+                </div>
+                <div className="flex justify-around items-center text-center mt-4">
+                    {wallOfFame.map((person, index) => (
+                         <div key={index}>
+                            <Avatar className={`w-16 h-16 mx-auto border-2 ${person.crown === 'gold' ? 'border-yellow-400' : person.crown === 'silver' ? 'border-gray-400' : 'border-amber-600'}`}>
+                                <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person portrait" />
+                                <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <p className="mt-2 font-semibold text-sm">{person.name}</p>
+                            <p className="text-xs text-gray-500">{person.badges} Badge</p>
+                        </div>
+                    ))}
+                </div>
+                <ul className="mt-6 space-y-4">
+                    {leaderboardList.map((person) => (
+                        <li key={person.rank} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <span className="font-bold text-sm">{person.rank}</span>
+                                <Avatar className="w-10 h-10">
+                                    <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
                                     <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
-                                <p className="mt-2 font-semibold text-sm">{person.name}</p>
-                                <p className="text-xs text-gray-500">{person.badges} Badge</p>
+                                <p className="text-sm">{person.name}</p>
                             </div>
-                        ))}
-                    </div>
-                    <ul className="mt-6 space-y-4">
-                        {leaderboardList.map((person) => (
-                            <li key={person.rank} className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <span className="font-bold text-sm">{person.rank}</span>
-                                    <Avatar className="w-10 h-10">
-                                        <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
-                                        <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <p className="text-sm">{person.name}</p>
-                                </div>
-                                <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges}</span>
-                            </li>
-                        ))}
-                    </ul>
-                    <Link href="#" className="text-primary hover:underline mt-4 block text-center text-sm">See more</Link>
-                </CardContent>
-             </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Team planned leaves</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center py-8">
-                     <CalendarDays className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
+                            <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges}</span>
+                        </li>
+                    ))}
+                </ul>
+                <Link href="#" className="text-primary hover:underline mt-4 block text-center text-sm">See more</Link>
+             </DashboardCard>
+             <DashboardCard title="Team planned leaves" icon={CalendarDays}>
+                <div className="text-center py-8">
                      <p className="text-gray-500 mt-2 text-sm">No planned leaves today</p>
-                </CardContent>
-             </Card>
+                </div>
+             </DashboardCard>
         </div>
 
         {/* Main Content (Center) */}
@@ -165,64 +160,36 @@ const DesktopDashboard = () => {
 
         {/* Right Sidebar (becomes main column on smaller screens) */}
         <div className="lg:col-span-1 space-y-6">
-             <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                    <h2 className="font-bold text-lg text-blue-800 dark:text-blue-200">Welcome!</h2>
-                    <Hand className="text-blue-500" />
-                </div>
-                <p className="text-sm text-gray-700 dark:text-blue-200 mt-2">Welcome to OptiTalent. We're thrilled to have you with us and look forward to your success and growth.</p>
-                <div className="mt-4 flex items-center space-x-2 text-sm text-gray-600 dark:text-blue-300">
-                    <Users className="h-4 w-4" />
-                    <span>1 people wished you</span>
-                </div>
-            </div>
-            
-            <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Inbox</CardTitle>
-                </CardHeader>
-                <CardContent>
-                     <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-muted rounded-lg">
-                        <div className="flex items-center space-x-3">
-                             <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-full">
-                                <Inbox className="text-purple-600 dark:text-purple-300 h-5 w-5"/>
-                            </div>
-                            <div>
-                                <p className="font-semibold">1</p>
-                                <p className="text-sm text-gray-500">Pending tasks</p>
-                            </div>
-                        </div>
+            <DashboardCard title="Welcome!">
+                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <p className="text-sm text-gray-700 dark:text-blue-200 mt-2">Welcome to OptiTalent. We're thrilled to have you with us and look forward to your success and growth.</p>
+                    <div className="mt-4 flex items-center space-x-2 text-sm text-gray-600 dark:text-blue-300">
+                        <Users className="h-4 w-4" />
+                        <span>1 person wished you</span>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </DashboardCard>
 
-             <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Calendar</h2>
-                        <Button variant="link" className="text-sm font-medium p-0 h-auto" asChild><Link href={`/${user?.role}/attendance`}>Go to calendar</Link></Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <CalendarComponent
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="p-0"
-                         classNames={{
-                           day_selected: "bg-primary text-white rounded-full focus:bg-primary focus:text-white",
-                           day_today: "bg-blue-100 dark:bg-blue-900 text-primary rounded-full"
-                        }}
-                    />
-                     <div className="flex flex-wrap justify-between text-xs mt-4 gap-2">
-                        <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-primary rounded-full"></span><span>Today</span></div>
-                        <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span><span>Present</span></div>
-                        <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-yellow-400 rounded-full"></span><span>Leave</span></div>
-                        <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-full"></span><span>Absent</span></div>
-                        <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-gray-300 rounded-full"></span><span>Holiday</span></div>
-                    </div>
-                </CardContent>
-            </Card>
+            <DashboardCard title="Calendar">
+                <CalendarComponent
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    className="p-0"
+                     classNames={{
+                       day_selected: "bg-primary text-white rounded-full focus:bg-primary focus:text-white",
+                       day_today: "bg-blue-100 dark:bg-blue-900 text-primary rounded-full"
+                    }}
+                />
+                 <div className="flex flex-wrap justify-between text-xs mt-4 gap-2">
+                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-primary rounded-full"></span><span>Today</span></div>
+                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span><span>Present</span></div>
+                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-yellow-400 rounded-full"></span><span>Leave</span></div>
+                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-full"></span><span>Absent</span></div>
+                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-gray-300 rounded-full"></span><span>Holiday</span></div>
+                </div>
+                <Button variant="link" className="text-sm font-medium p-0 h-auto mt-4" asChild><Link href={`/${user?.role}/attendance`}>Go to calendar</Link></Button>
+            </DashboardCard>
             
             <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start space-x-4">
                 <Lightbulb className="text-3xl text-orange-500" />

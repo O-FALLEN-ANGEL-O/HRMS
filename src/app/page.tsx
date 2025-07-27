@@ -14,67 +14,7 @@ import { navConfig } from '@/hooks/use-nav';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingLogo } from '@/components/loading-logo';
-
-const AnimatedLogo = memo(function AnimatedLogo() {
-  const iconVariants = {
-    hidden: {
-      pathLength: 0,
-      fill: "rgba(124, 58, 237, 0)"
-    },
-    visible: {
-      pathLength: 1,
-      fill: "rgba(124, 58, 237, 1)"
-    }
-  }
-  return (
-    <div className="inline-flex items-center gap-3 font-headline text-3xl font-bold text-primary">
-        <motion.svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="40" 
-            height="40" 
-            viewBox="0 0 24 24" 
-            strokeWidth="2" 
-            stroke="currentColor" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-            className="text-primary"
-        >
-            <motion.path
-                d="M12 2L2 7l10 5 10-5-10-5z"
-                variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                stroke="var(--primary)"
-                transition={{
-                    default: { duration: 0.3, ease: "easeInOut" },
-                    fill: { duration: 0.3, ease: [1, 0, 0.8, 1] }
-                }}
-            />
-            <motion.path
-                d="M2 17l10 5 10-5"
-                 variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                stroke="var(--primary)"
-                transition={{
-                    default: { duration: 0.3, ease: "easeInOut", delay: 0.1 },
-                }}
-            />
-            <motion.path
-                d="M2 12l10 5 10-5"
-                 variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                stroke="var(--primary)"
-                transition={{
-                    default: { duration: 0.3, ease: "easeInOut", delay: 0.2 },
-                }}
-            />
-        </motion.svg>
-        <span>OptiTalent</span>
-    </div>
-  );
-});
+import { Logo } from '@/components/logo';
 
 export default function RoleSelectorPage() {
     const { login, loading: authLoading } = useAuth();
@@ -82,7 +22,6 @@ export default function RoleSelectorPage() {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     useEffect(() => {
-        // We can shorten or remove the artificial delay now
         const timer = setTimeout(() => {
             setIsInitialLoading(false);
         }, 1500);
@@ -133,12 +72,12 @@ export default function RoleSelectorPage() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-2xl mx-auto space-y-8">
         <div className="text-center space-y-4">
-            <AnimatedLogo />
+            <Logo className="inline-flex text-3xl mb-2" showText={true} />
             <h1 className="text-4xl font-bold font-headline leading-tight text-foreground">The Future of HR is Here.</h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">One platform to manage your entire workforce, from hiring to retiring. Powered by AI, designed for humans.</p>
         </div>
 
-        <Card className="w-full shadow-lg border-none">
+        <Card className="w-full shadow-lg border">
         <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline text-2xl"><ShieldQuestion className="text-primary"/> Select a Role to Demo</CardTitle>
             <CardDescription>Click any role to directly access its role-based dashboard and features.</CardDescription>

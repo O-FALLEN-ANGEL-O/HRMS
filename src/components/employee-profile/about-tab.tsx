@@ -10,6 +10,7 @@ import type { UserProfile } from '@/lib/mock-data/employees';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Input } from '../ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 function InfoCard({ title, icon: Icon, children, isEditing }: { title: string, icon: React.ElementType, children: React.ReactNode, isEditing: boolean }) {
     return (
@@ -42,6 +43,7 @@ function InfoRow({ label, value, isEditing, onChange }: { label: string, value: 
 
 const ActivityCalendar = () => {
     const [isExpanded, setIsExpanded] = useState(true);
+    const { toast } = useToast();
     // This is a simplified mock. In a real app, this would be dynamic.
     const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const statusData = [
@@ -75,6 +77,13 @@ const ActivityCalendar = () => {
         }
     };
 
+    const handleDownloadReport = () => {
+        toast({
+            title: "Downloading Report",
+            description: "A PDF report for September 2023 attendance is being generated."
+        });
+    }
+
     return (
         <Card>
              <CardHeader>
@@ -89,7 +98,7 @@ const ActivityCalendar = () => {
                         <Button variant="outline" size="sm" className="flex items-center gap-2">
                            <span>September 2023</span> <ChevronDown className="h-4 w-4"/>
                         </Button>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={handleDownloadReport}>
                            <Download className="h-4 w-4"/> <span>Report</span>
                         </Button>
                     </div>
