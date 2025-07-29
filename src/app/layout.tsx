@@ -189,6 +189,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+
 // Root Layout Component
 export default function RootLayout({
   children,
@@ -198,9 +199,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>OptiTalent HRMS</title>
-        <meta name="description" content="A Next-Generation HRMS for modern businesses." />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+          <title>OptiTalent HRMS</title>
+          <meta
+            name="description"
+            content="A Next-Generation HRMS for modern businesses."
+          />
+          <link rel="icon" href="/favicon.svg" />
       </head>
       <body
         className={`${poppins.variable} ${spaceGrotesk.variable} font-body antialiased overflow-x-hidden`}
