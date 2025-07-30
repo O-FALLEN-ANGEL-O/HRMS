@@ -8,7 +8,6 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: "OptiTalent HRMS",
   description: "A Next-Generation HRMS for modern businesses.",
-  icons: [{ rel: "icon", url: "/icon.svg" }],
 };
 
 export default function RootLayout({
