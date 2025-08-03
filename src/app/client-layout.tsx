@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, AuthProvider } from '@/hooks/use-auth';
 
 const AppSidebar = dynamic(() => import('@/components/app-sidebar'), {
   loading: () => <Skeleton className="hidden md:flex h-screen w-[3.75rem]" />,
@@ -172,15 +172,17 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            <AppLayout>
-                {children}
-            </AppLayout>
-        </ThemeProvider>
+        <AuthProvider>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <AppLayout>
+                    {children}
+                </AppLayout>
+            </ThemeProvider>
+        </AuthProvider>
     )
 }

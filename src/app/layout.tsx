@@ -1,7 +1,6 @@
 import './globals.css'
 import { Toaster } from "@/components/ui/toaster"
 import { poppins, spaceGrotesk } from "@/lib/fonts"
-import { AuthProvider } from '@/hooks/use-auth'
 import ClientLayout from './client-layout'
 import type { Metadata } from 'next'
 
@@ -22,11 +21,9 @@ export default function RootLayout({
         className={`${poppins.variable} ${spaceGrotesk.variable} font-body antialiased overflow-x-hidden`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </AuthProvider>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
         <Toaster />
       </body>
     </html>
