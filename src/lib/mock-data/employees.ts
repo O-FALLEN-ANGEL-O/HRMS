@@ -240,6 +240,34 @@ export const mockUsers: User[] = [
             phone_number: '111-222-3344',
             status: 'Active',
             profile_picture_url: `https://ui-avatars.com/api/?name=Anika+Sharma&background=random`,
+             professionalInfo: {
+                experience: [
+                    { role: 'UI/UX Designer', company: 'CreativeMinds Inc.', dates: '2020 - 2022' },
+                    { role: 'Jr. Designer', company: 'DesignWorks Co.', dates: '2019 - 2020' },
+                ],
+                education: [
+                    { degree: 'B.Des in Visual Communication', institution: 'National Institute of Design', year: '2019' },
+                ],
+                skills: ['Figma', 'Sketch', 'Adobe XD', 'Prototyping', 'User Research', 'HTML/CSS'],
+                certifications: [
+                    'Certified UX Professional - Nielsen Norman Group - 2021',
+                ]
+            },
+            familyAndHealthInfo: {
+                dependents: [
+                    { name: 'Ravi Sharma', relationship: 'Spouse', dob: '1990-05-15' },
+                    { name: 'Priya Sharma', relationship: 'Daughter', dob: '2022-01-20' },
+                ],
+                health: {
+                    bloodGroup: 'O+',
+                    allergies: 'None',
+                },
+                emergencyContact: {
+                    name: 'Ravi Sharma',
+                    relationship: 'Spouse',
+                    phone: '987-654-3210',
+                }
+            }
         }
     },
      { 
