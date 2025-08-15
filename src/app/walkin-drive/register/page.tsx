@@ -170,6 +170,7 @@ export default function WalkInRegistrationPage() {
             resumeUrl: null,
             experience: [],
             education: [],
+            assessments: [],
         };
         
         // In a real app, you would save this to the database
