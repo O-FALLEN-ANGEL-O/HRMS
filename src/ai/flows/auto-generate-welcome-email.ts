@@ -62,6 +62,7 @@ const prompt = ai.definePrompt({
   - A warm and welcoming tone.
   - Specific details about the new hire's role and department.
   - Information about the company culture and values.
+  - A dedicated "Next Steps" section that instructs the user to complete their onboarding by clicking a link. The link should be https://[your-company-domain].com/walkin-drive/login. Tell them to use their Applicant ID and email address to log in.
   - Contact information for the HR contact person.
 
   The welcome email subject should be concise and inviting.

@@ -168,7 +168,7 @@ export default function OnboardingPage() {
             <Bot /> AI Welcome Email Generator
           </CardTitle>
           <CardDescription>
-            Automatically generate a personalized welcome email for your new hires.
+            Automatically generate a personalized welcome email. The AI will include a secure link for the new hire to complete onboarding.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-8">
