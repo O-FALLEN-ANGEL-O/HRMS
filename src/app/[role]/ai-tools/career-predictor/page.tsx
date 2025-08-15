@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { predictCareerPathAction } from './actions';
 import type { PredictCareerPathOutput } from '@/ai/flows/predict-career-path';
 import { Bot, Loader2, Send, BrainCircuit, TrendingUp, Sparkles, Zap } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function CareerPredictorPage() {
   const [result, setResult] = useState<PredictCareerPathOutput | null>(null);
