@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -7,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Bell, Search } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 
 export default function AppHeader() {
@@ -28,7 +28,7 @@ export default function AppHeader() {
           </div>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" className="rounded-full"><Bell/></Button>
+        <NotificationBell />
         <ThemeToggle />
       </div>
     </header>
