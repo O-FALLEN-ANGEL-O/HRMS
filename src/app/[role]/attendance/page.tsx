@@ -12,15 +12,17 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { FaceVerificationDialog } from '@/components/attendance/face-verification-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 
 // Function to generate mock attendance data for a given month and year
 const generateAttendanceLog = (year: number, month: number) => {
     const log: Record<string, {
-        status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday';
+        status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday' | 'Half Day';
         checkIn?: string;
         checkOut?: string;
         totalHours?: string;
+        overtime?: string;
         shiftDetails?: string;
         location: 'Office' | 'Home';
     }> = {};
@@ -50,13 +52,34 @@ const generateAttendanceLog = (year: number, month: number) => {
         } else if (isCurrentMonth && day === today.getDate()) {
             // Leave today blank to be filled by clock-in/out
             continue;
+        } else if (day === 20) { // Example of a half day
+            log[dateKey] = { 
+                status: 'Half Day', 
+                checkIn: '09:05',
+                checkOut: '14:00',
+                totalHours: '4h 55m',
+                overtime: '0h 0m',
+                location: 'Office', 
+                shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00' 
+            };
+        } else if (day === 22) { // Example of overtime
+            log[dateKey] = {
+                status: 'Present',
+                checkIn: '09:00',
+                checkOut: '19:30',
+                totalHours: '10h 30m',
+                overtime: '1h 30m',
+                shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00',
+                location: 'Office',
+            };
         }
         else { 
              log[dateKey] = {
                 status: 'Present',
                 checkIn: '09:12',
-                checkOut: '19:00',
-                totalHours: '9h 48m',
+                checkOut: '18:15',
+                totalHours: '9h 3m',
+                overtime: '0h 3m',
                 shiftDetails: '[TESMNG(ITESMNG)], 09:00 - 18:00',
                 location: 'Office',
             };
@@ -76,6 +99,7 @@ function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose
             case 'Leave': return <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">{dayData.status}</span>;
             case 'Week Off': return <span className="text-sm font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">{dayData.status}</span>;
             case 'Holiday': return <span className="text-sm font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">{dayData.status}</span>;
+            case 'Half Day': return <span className="text-sm font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full">Half Day</span>;
             default: return null;
         }
     };
@@ -97,11 +121,11 @@ function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 {format(date, 'MMM dd, yyyy')} {getStatusBadge()}
                             </h3>
-                            {dayData.status === 'Present' && <p className="text-sm text-muted-foreground">Working hours: {dayData.totalHours}</p>}
+                            {(dayData.status === 'Present' || dayData.status === 'Half Day') && <p className="text-sm text-muted-foreground">Working hours: {dayData.totalHours}</p>}
                             <p className="text-sm text-muted-foreground">Shift Details: {dayData.shiftDetails}</p>
                         </div>
                     </div>
-                    {dayData.status === 'Present' && (
+                    {(dayData.status === 'Present' || dayData.status === 'Half Day') && (
                         <>
                             <div className="grid grid-cols-3 gap-4 text-sm">
                                 <div>
@@ -114,8 +138,9 @@ function AttendanceDetailPanel({ date, onClose, dayData }: { date: Date, onClose
                                 </div>
                                 <div><p className="text-muted-foreground">Deduction</p><p className="font-semibold">00:00</p></div>
                                 <div><p className="text-muted-foreground">Comp-off</p><p className="font-semibold">0</p></div>
-                                <div><p className="text-muted-foreground">Overtime</p><p className="font-semibold">01:00</p></div>
+                                <div><p className="text-muted-foreground">Overtime</p><p className="font-semibold">{dayData.overtime || '0h 0m'}</p></div>
                             </div>
+                             {dayData.overtime && dayData.overtime !== '0h 0m' && <Button size="sm" className="mt-2">Request Overtime Pay</Button>}
                             <div className="border-t pt-4 mt-4">
                                 <h4 className="font-semibold mb-4">Clocking times</h4>
                                 <div className="pl-4 border-l-2 border-primary space-y-6 relative">
@@ -157,6 +182,7 @@ export default function AttendancePage() {
   const params = useParams();
   const router = useRouter();
   const role = params.role as string;
+  const { toast } = useToast();
   
   const [attendanceLog, setAttendanceLog] = useState<Record<string, any> | null>(null);
   
@@ -177,18 +203,44 @@ export default function AttendancePage() {
         const todayEntry = newLog[todayKey];
 
         if (todayEntry && todayEntry.status === 'Present') {
+            // Clocking Out
             const checkInTime = todayEntry.checkIn ? new Date(`${todayKey}T${todayEntry.checkIn}`) : new Date();
             const checkOutTime = new Date(`${todayKey}T${currentTime}`);
             const diffMs = checkOutTime.getTime() - checkInTime.getTime();
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const totalMinutes = Math.floor(diffMs / (1000 * 60));
+            const totalHours = Math.floor(totalMinutes / 60);
+            const remainingMinutes = totalMinutes % 60;
+            
+            let status: 'Present' | 'Half Day' = 'Present';
+            let overtimeMinutes = 0;
+            const nineHoursInMinutes = 9 * 60;
 
+            if (totalMinutes < nineHoursInMinutes) {
+                status = 'Half Day';
+                toast({
+                    title: "Half Day Marked",
+                    description: `Your total work time of ${totalHours}h ${remainingMinutes}m is less than 9 hours.`,
+                    variant: "destructive"
+                });
+            } else {
+                overtimeMinutes = totalMinutes - nineHoursInMinutes;
+                if (overtimeMinutes > 0) {
+                     toast({
+                        title: "Overtime Logged",
+                        description: `You have accrued ${Math.floor(overtimeMinutes/60)}h ${overtimeMinutes % 60}m of overtime.`,
+                    });
+                }
+            }
+            
             newLog[todayKey] = {
                 ...todayEntry,
                 checkOut: currentTime,
-                totalHours: `${diffHours}h ${diffMins}m`
+                status: status,
+                totalHours: `${totalHours}h ${remainingMinutes}m`,
+                overtime: `${Math.floor(overtimeMinutes / 60)}h ${overtimeMinutes % 60}m`,
             };
         } else {
+            // Clocking In
             newLog[todayKey] = {
                 status: 'Present',
                 checkIn: currentTime,
@@ -207,7 +259,7 @@ export default function AttendancePage() {
     const dayData = attendanceLog[dateKey];
     if (!dayData) return null;
     
-    if (dayData.status === 'Present' || dayData.status === 'Week Off' || dayData.status === 'Holiday' || dayData.status === 'Leave' || dayData.status === 'Absent') {
+    if (['Present', 'Week Off', 'Holiday', 'Leave', 'Absent', 'Half Day'].includes(dayData.status)) {
       const getStatusClass = () => {
         switch (dayData.status) {
           case 'Present': return 'bg-green-100 border-green-200 text-green-800';
@@ -215,13 +267,14 @@ export default function AttendancePage() {
           case 'Week Off': return 'bg-red-100 border-red-200 text-red-800';
           case 'Holiday': return 'bg-purple-100 border-purple-200 text-purple-800';
           case 'Absent': return 'bg-yellow-100 border-yellow-200 text-yellow-800';
+          case 'Half Day': return 'bg-orange-100 border-orange-200 text-orange-800';
           default: return '';
         }
       };
 
       return (
         <div className={cn("absolute bottom-2 left-2 right-2 rounded-md p-1 text-xs border", getStatusClass())}>
-            {dayData.status === 'Present' ? (
+            {(dayData.status === 'Present' || dayData.status === 'Half Day') ? (
                 <>
                     <p>{dayData.checkIn} - {dayData.checkOut || '...'}</p>
                     <p className="font-semibold">Total: {dayData.totalHours || '...'}</p>
@@ -258,6 +311,7 @@ export default function AttendancePage() {
         case 'Holiday': return `${prefix}purple-50 dark:${prefix}purple-900/20`;
         case 'Leave': return `${prefix}blue-50 dark:${prefix}blue-900/20`;
         case 'Absent': return `${prefix}yellow-50 dark:${prefix}yellow-900/20`;
+        case 'Half Day': return `${prefix}orange-50 dark:${prefix}orange-900/20`;
         default: return `${prefix}card dark:${prefix}card`;
     }
   }
@@ -351,6 +405,7 @@ export default function AttendancePage() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
                         <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-1.5"></div><span>Present</span></div>
                         <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1.5"></div><span>Absent</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-orange-500 mr-1.5"></div><span>Half Day</span></div>
                         <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5"></div><span>Week off</span></div>
                         <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></div><span>Leave</span></div>
                         <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-purple-500 mr-1.5"></div><span>Holiday</span></div>
