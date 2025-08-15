@@ -34,7 +34,7 @@ export default function WalkInLoginPage() {
             if (applicant) {
                 toast({
                     title: "Login Successful!",
-                    description: "Redirecting to your dashboard...",
+                    description: "Redirecting to your onboarding portal...",
                 });
                 sessionStorage.setItem('walkinApplicantId', applicant.id);
                 router.push(`/applicant/${applicant.id}`);
@@ -54,17 +54,17 @@ export default function WalkInLoginPage() {
             <div className="max-w-md w-full space-y-6">
                 <div className="text-center">
                     <Logo className="inline-flex mb-2" showText={true} />
-                    <h1 className="text-3xl font-bold font-headline tracking-tight">Applicant Login</h1>
+                    <h1 className="text-3xl font-bold font-headline tracking-tight">Onboarding Portal</h1>
                     <p className="text-muted-foreground">
-                        Enter your details to access your temporary profile.
+                        Welcome! Please enter your details to begin the onboarding process.
                     </p>
                 </div>
                 
                 <Card>
                     <form onSubmit={handleLogin}>
                         <CardHeader>
-                            <CardTitle>Login to Your Dashboard</CardTitle>
-                            <CardDescription>Use the Applicant Number you received via email.</CardDescription>
+                            <CardTitle>Secure Login</CardTitle>
+                            <CardDescription>Use the Applicant Number from your offer email to log in.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
@@ -76,20 +76,18 @@ export default function WalkInLoginPage() {
                                 <Input id="email" type="email" name="email" placeholder="you@example.com" required />
                             </div>
                         </CardContent>
-                        <CardFooter className="flex-col gap-4">
+                        <CardFooter>
                             <Button type="submit" className="w-full" disabled={loading}>
                                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-                                {loading ? 'Verifying...' : 'Login'}
-                            </Button>
-                            <Button variant="outline" asChild className="w-full">
-                                <Link href="/walkin-drive"><ArrowLeft className="mr-2 h-4 w-4"/> Back to Drive Page</Link>
+                                {loading ? 'Verifying...' : 'Access Portal'}
                             </Button>
                         </CardFooter>
                     </form>
                 </Card>
 
                  <footer className="text-center text-sm text-muted-foreground pt-4">
-                    &copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved.
+                    Having trouble? Please contact your recruiter.
+                    <p>&copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved.</p>
                 </footer>
             </div>
         </div>
