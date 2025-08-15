@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { notifications as allNotifications, type Notification } from '@/lib/mock-data/notifications';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 export function NotificationBell() {
     const { user } = useAuth();
