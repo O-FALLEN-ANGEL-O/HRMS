@@ -36,44 +36,13 @@ export default function WelcomeNewHirePage() {
         const foundApplicant = walkinApplicants.find(a => a.id === applicantId);
         if (foundApplicant) {
             setApplicant(foundApplicant);
-            // Simulate employee account creation
-            const existingEmployee = mockUsers.find(u => u.email === foundApplicant.email);
-            if (existingEmployee) {
-                setNewEmployeeId(existingEmployee.profile.employee_id);
+            // Find the employee account that was just created based on email.
+            const newEmployee = mockUsers.find(u => u.email === foundApplicant.email);
+            if (newEmployee) {
+                setNewEmployeeId(newEmployee.profile.employee_id);
             } else {
-                // Create a new employee if they don't exist (this would happen on backend)
-                const employeeId = `PEP${String(mockUsers.length + 1).padStart(4,'0')}`;
-                const newEmployee = {
-                    id: `user-${Date.now()}`,
-                    email: foundApplicant.email,
-                    role: 'employee' as const,
-                    profile: {
-                        id: `profile-${Date.now()}`,
-                        full_name: foundApplicant.fullName,
-                        employee_id: employeeId,
-                        department: { name: 'To Be Assigned' },
-                        department_id: 'd-tba',
-                        job_title: 'New Hire',
-                        role: 'employee' as const,
-                        status: 'Active' as const,
-                        profile_picture_url: foundApplicant.profilePicture,
-                        phone_number: foundApplicant.phone,
-                        // Automatically transfer professional and family info
-                        professionalInfo: {
-                            experience: foundApplicant.experience,
-                            education: foundApplicant.education,
-                            skills: [], // These would be parsed or entered
-                            certifications: [],
-                        },
-                        familyAndHealthInfo: { // Assuming this would be collected too
-                            dependents: [],
-                            health: { bloodGroup: '', allergies: '' },
-                            emergencyContact: { name: '', relationship: '', phone: '' }
-                        }
-                    }
-                };
-                mockUsers.push(newEmployee);
-                setNewEmployeeId(employeeId);
+                 toast({ title: "Account Not Ready", description: "Your employee account is not yet created. Please contact HR.", variant: 'destructive'});
+                 router.push('/walkin-drive');
             }
         } else {
             toast({ title: "Applicant Not Found", variant: 'destructive'});
