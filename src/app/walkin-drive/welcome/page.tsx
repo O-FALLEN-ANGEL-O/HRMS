@@ -56,7 +56,20 @@ export default function WelcomeNewHirePage() {
                         job_title: 'New Hire',
                         role: 'employee' as const,
                         status: 'Active' as const,
-                        profile_picture_url: foundApplicant.profilePicture
+                        profile_picture_url: foundApplicant.profilePicture,
+                        phone_number: foundApplicant.phone,
+                        // Automatically transfer professional and family info
+                        professionalInfo: {
+                            experience: foundApplicant.experience,
+                            education: foundApplicant.education,
+                            skills: [], // These would be parsed or entered
+                            certifications: [],
+                        },
+                        familyAndHealthInfo: { // Assuming this would be collected too
+                            dependents: [],
+                            health: { bloodGroup: '', allergies: '' },
+                            emergencyContact: { name: '', relationship: '', phone: '' }
+                        }
                     }
                 };
                 mockUsers.push(newEmployee);
