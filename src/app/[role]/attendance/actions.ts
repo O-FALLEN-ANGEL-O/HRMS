@@ -1,4 +1,3 @@
-
 'use server';
 
 import { verifyFace } from "@/ai/flows/verify-face";
