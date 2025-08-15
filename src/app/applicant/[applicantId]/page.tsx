@@ -379,6 +379,23 @@ export default function ApplicantDashboardPage() {
         toast({title: "Logged Out", description: "You have been logged out of your temporary account."});
     };
 
+    const handleFinalSubmit = () => {
+        if (!applicant) return;
+        
+        // In a real app, this would trigger a backend process.
+        // Here we just update the mock data.
+        const updatedApplicant = { ...applicant, status: 'Onboarding Complete' as const };
+        handleSetApplicant(updatedApplicant);
+        
+        // Navigate to the "Welcome/Password Reset" page.
+        router.push(`/walkin-drive/welcome?applicantId=${applicant.id}`);
+
+        toast({
+            title: "Onboarding Submitted!",
+            description: "Your details have been submitted. Welcome to the team!",
+        });
+    };
+
     if (!applicant) {
         return <div className="flex h-screen items-center justify-center">Loading applicant profile...</div>;
     }
@@ -413,6 +430,9 @@ export default function ApplicantDashboardPage() {
                                 <h3 className="font-semibold text-blue-800 dark:text-blue-200">Your Application Status</h3>
                                 <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{applicant.status}</p>
                             </div>
+                            <Button onClick={handleFinalSubmit}>
+                                <Send className="mr-2 h-4 w-4" /> Finalize & Submit Onboarding
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>

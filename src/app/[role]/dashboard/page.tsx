@@ -1,12 +1,12 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const wallOfFame = [
     { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
@@ -51,6 +52,36 @@ const feedPosts = [
         imageHint: 'company retreat beach'
     }
 ];
+
+const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle className="text-2xl font-headline">🎉 Welcome to OptiTalent!</DialogTitle>
+                <DialogDescription>
+                    We're thrilled to have you on board. Here are some important documents to get you started.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-4">
+                <Button variant="outline" className="w-full justify-between">
+                    <span>HR Handbook</span>
+                    <Download className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" className="w-full justify-between">
+                    <span>Code of Conduct</span>
+                    <Download className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" className="w-full justify-between">
+                    <span>IT Security Policy</span>
+                    <Download className="h-4 w-4" />
+                </Button>
+            </div>
+            <DialogFooter>
+                <Button onClick={() => onOpenChange(false)}>Got it, thanks!</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+);
 
 const DesktopDashboard = () => {
     const { user } = useAuth();
@@ -307,8 +338,20 @@ const MobileDashboard = () => {
 
 
 export default function DashboardPage() {
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+
+  useEffect(() => {
+    const isNew = sessionStorage.getItem('isNewUser');
+    if (isNew === 'true') {
+        setShowWelcomePopup(true);
+        // Remove the flag so it doesn't show again on page refresh
+        sessionStorage.removeItem('isNewUser');
+    }
+  }, []);
+
   return (
     <>
+        <WelcomePopup open={showWelcomePopup} onOpenChange={setShowWelcomePopup} />
         <div className="hidden md:block">
             <DesktopDashboard />
         </div>

@@ -32,7 +32,7 @@ export type WalkinApplicant = {
     fullName: string;
     email: string;
     phone: string;
-    status: 'Registered' | 'Assessment Pending' | 'Assessment Completed' | 'Interview Scheduled' | 'On Hold' | 'Selected' | 'Not Selected';
+    status: 'Registered' | 'Assessment Pending' | 'Assessment Completed' | 'Interview Scheduled' | 'On Hold' | 'Selected' | 'Not Selected' | 'Onboarding Complete';
     registrationDate: string;
     profilePicture: string | null;
     resumeUrl: string | null;
