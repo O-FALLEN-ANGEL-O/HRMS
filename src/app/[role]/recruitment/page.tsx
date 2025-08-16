@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from 'next/link';
-import { Bot, Search, Filter, Link2, LayoutGrid, List } from "lucide-react";
+import { Bot, Search, Filter, Link2, LayoutGrid, List, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { applicants as initialApplicants, type Applicant } from "@/lib/mock-data/applicants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { mockUsers, UserProfile } from "@/lib/mock-data/employees";
 
 const getStatusBadge = (status: Applicant['status']) => {
     switch (status) {
@@ -84,7 +86,47 @@ function ApplicantTable({ applicants }: { applicants: Applicant[] }) {
     )
 }
 
-function ApplicantKanbanBoard({ applicants }: { applicants: Applicant[] }) {
+function PromoteToEmployeeDialog({ applicant, onPromote }: { applicant: Applicant; onPromote: (applicant: Applicant) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    
+    const handlePromote = () => {
+        onPromote(applicant);
+        setIsOpen(false);
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                 <Button size="sm" className="w-full" onClick={(e) => e.stopPropagation()}>
+                    <UserPlus className="mr-2 h-4 w-4"/>
+                    Promote
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Promote to Employee</DialogTitle>
+                    <DialogDescription>
+                        This will create a new employee record for {applicant.name}. Are you sure?
+                    </DialogDescription>
+                </DialogHeader>
+                 <div className="py-4">
+                    <div className="p-4 bg-muted rounded-md border">
+                        <p><strong>Name:</strong> {applicant.name}</p>
+                        <p><strong>Applying for:</strong> {applicant.role}</p>
+                        <p><strong>New Status:</strong> Active Employee</p>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
+                    <Button onClick={handlePromote}>Confirm & Promote</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
+function ApplicantKanbanBoard({ applicants, onApplicantPromoted }: { applicants: Applicant[], onApplicantPromoted: (applicant: Applicant) => void }) {
     const params = useParams();
     const router = useRouter();
     const role = params.role || 'admin';
@@ -107,8 +149,8 @@ function ApplicantKanbanBoard({ applicants }: { applicants: Applicant[] }) {
                     </div>
                     <div className="space-y-3 bg-muted/50 p-2 rounded-lg h-full min-h-[300px]">
                         {applicantsByStage[stage].map(applicant => (
-                            <Card key={applicant.id} className="cursor-pointer hover:bg-muted" onClick={() => router.push(`/${role}/recruitment/${applicant.id}`)}>
-                                <CardContent className="p-3">
+                            <Card key={applicant.id} className="cursor-pointer hover:bg-muted group">
+                                <CardContent className="p-3" onClick={() => router.push(`/${role}/recruitment/${applicant.id}`)}>
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-9 w-9">
                                             <AvatarImage src={applicant.avatar} alt="Avatar" data-ai-hint="person avatar" />
@@ -120,6 +162,11 @@ function ApplicantKanbanBoard({ applicants }: { applicants: Applicant[] }) {
                                         </div>
                                     </div>
                                 </CardContent>
+                                {stage === 'Hired' && (
+                                     <CardFooter className="p-2 border-t mt-2">
+                                        <PromoteToEmployeeDialog applicant={applicant} onPromote={onApplicantPromoted}/>
+                                     </CardFooter>
+                                )}
                             </Card>
                         ))}
                     </div>
@@ -131,6 +178,7 @@ function ApplicantKanbanBoard({ applicants }: { applicants: Applicant[] }) {
 
 export default function RecruitmentPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
   const params = useParams();
   const { toast } = useToast();
   const role = params.role || 'admin';
@@ -144,12 +192,45 @@ export default function RecruitmentPage() {
     });
   };
 
+  const handlePromoteApplicant = (promotedApplicant: Applicant) => {
+    const employeeId = `PEP${String(mockUsers.length + 1).padStart(4,'0')}`;
+    const newEmployeeProfile: UserProfile = {
+        id: `profile-${Date.now()}`,
+        full_name: promotedApplicant.name,
+        department: { name: "To Be Assigned" },
+        department_id: "d-tba",
+        job_title: promotedApplicant.role,
+        role: "employee", // Default to employee, HR can change later
+        employee_id: employeeId,
+        profile_picture_url: promotedApplicant.avatar,
+        phone_number: 'N/A',
+        status: 'Active'
+    };
+    const newUser = {
+        id: `user-${Date.now()}`,
+        email: `${promotedApplicant.name.toLowerCase().replace(' ', '.')}@optitalent.com`,
+        role: newEmployeeProfile.role,
+        profile: newEmployeeProfile
+    };
+    
+    // In a real app, this would be an API call. Here we just update mock data.
+    mockUsers.push(newUser);
+
+    // Remove the applicant from the pipeline
+    setApplicants(prev => prev.filter(a => a.id !== promotedApplicant.id));
+    
+    toast({
+        title: "Employee Created!",
+        description: `${promotedApplicant.name} has been added to the employee database with ID ${employeeId}.`
+    });
+  };
+
   const filteredApplicants = React.useMemo(() => {
-    return initialApplicants.filter(applicant =>
+    return applicants.filter(applicant =>
       applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.role.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [searchTerm, applicants]);
 
   return (
      <div className="space-y-6">
@@ -191,7 +272,7 @@ export default function RecruitmentPage() {
             </div>
 
             <TabsContent value="kanban">
-                <ApplicantKanbanBoard applicants={filteredApplicants} />
+                <ApplicantKanbanBoard applicants={filteredApplicants} onApplicantPromoted={handlePromoteApplicant} />
             </TabsContent>
             <TabsContent value="table">
                 <Card>
