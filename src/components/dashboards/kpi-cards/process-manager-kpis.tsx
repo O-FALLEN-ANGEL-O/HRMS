@@ -1,34 +1,44 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ticket, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getTicketSummaryAction } from "@/app/[role]/analytics/actions";
+import type { TicketData } from "@/ai/flows/get-ticket-summary-flow.types";
 
-// Mock data to improve performance and stability
-const mockStats = {
-    totalTickets: 215,
-    avgResolutionTime: '4.2 hours',
-    slaMet: 98.5,
-    highPriority: 8,
-};
 
 export function ProcessManagerKpis() {
-    const [stats, setStats] = useState<typeof mockStats | null>(null);
+    const [stats, setStats] = useState<{ totalTickets: number; slaMet: number; highPriority: number; } | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate fetching data
-        const timer = setTimeout(() => {
-            setStats(mockStats);
-            setLoading(false);
-        }, 500); 
+        const fetchStats = async () => {
+            setLoading(true);
+            try {
+                // This is a quick mock. In a real app, you might have separate API endpoints.
+                const ticketData: TicketData = await getTicketSummaryAction();
+                const totalTickets = ticketData.ticketSummary.reduce((sum, item) => sum + item.count, 0);
+                // Mocking other stats
+                const highPriority = Math.floor(totalTickets * 0.05);
+                const slaMet = 98.5;
 
-        return () => clearTimeout(timer);
+                setStats({ totalTickets, slaMet, highPriority });
+            } catch (error) {
+                console.error("Failed to fetch process manager KPIs", error);
+                // Set fallback stats on error
+                setStats({ totalTickets: 215, slaMet: 98.5, highPriority: 8 });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
     }, []);
 
-    if (loading) {
+    if (loading || !stats) {
         return (
              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Skeleton className="h-28" />
@@ -47,7 +57,7 @@ export function ProcessManagerKpis() {
                     <Ticket className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats?.totalTickets}</div>
+                    <div className="text-2xl font-bold">{stats.totalTickets}</div>
                     <p className="text-xs text-muted-foreground">Across all departments</p>
                 </CardContent>
             </Card>
@@ -57,7 +67,7 @@ export function ProcessManagerKpis() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats?.avgResolutionTime}</div>
+                    <div className="text-2xl font-bold">4.2 hours</div>
                     <p className="text-xs text-muted-foreground">This month</p>
                 </CardContent>
             </Card>
@@ -67,7 +77,7 @@ export function ProcessManagerKpis() {
                     <CheckCircle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats?.slaMet}%</div>
+                    <div className="text-2xl font-bold">{stats.slaMet}%</div>
                     <p className="text-xs text-muted-foreground">Target: 98%</p>
                 </CardContent>
             </Card>
@@ -77,7 +87,7 @@ export function ProcessManagerKpis() {
                     <AlertCircle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats?.highPriority}</div>
+                    <div className="text-2xl font-bold">{stats.highPriority}</div>
                     <p className="text-xs text-muted-foreground">Require immediate attention</p>
                 </CardContent>
             </Card>

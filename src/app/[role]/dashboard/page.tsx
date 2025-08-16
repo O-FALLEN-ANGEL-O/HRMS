@@ -1,11 +1,12 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Calendar } from '@/components/ui/calendar';
 import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
@@ -90,114 +91,36 @@ const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
 );
 
 const DesktopCalendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const { user } = useAuth();
-  
-  const statusData = [
-    ...Array(3).fill({ status: 'Day Off' }),
-    { status: 'Present' },
-    ...Array(3).fill({ status: 'Day Off' }),
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Half Day', tooltip: 'Present: 9am-1pm, Absent: 2pm-6pm' },
-    { status: 'Day Off' },
-    { status: 'Day Off' },
-    { status: 'Absent' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Holiday', tooltip: 'National Holiday' },
-    { status: 'Day Off' },
-    { status: 'Day Off' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Leave', tooltip: 'Sick Leave' },
-    { status: 'Present' },
-    { status: 'Present' },
-    { status: 'Day Off' },
-    { status: 'Day Off' },
-    { status: 'Present' },
-    { status: 'Present' },
-  ];
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const { user } = useAuth();
 
-  const getDayClass = (status: string) => {
-    switch (status) {
-      case 'Present': return 'bg-green-400';
-      case 'Absent': return 'bg-red-400';
-      case 'Leave': return 'bg-orange-300';
-      case 'Holiday': return 'bg-purple-400';
-      case 'Day Off': return 'bg-gray-300';
-      case 'Half Day': return 'half-day';
-      default: return 'bg-gray-200';
-    }
-  };
-  
-   const LegendItem = ({ color, label }: { color: string; label: string }) => (
-    <div className="flex items-center">
-      <span className={`w-3 h-3 rounded-full ${color} mr-2`}></span>
-      <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
-    </div>
-  );
-
-  return (
-    <Card className="rounded-2xl overflow-hidden shadow-lg">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-border flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Calendar</h2>
-            <Link href={`/${user?.role}/attendance`} className="text-sm font-medium text-primary hover:underline">Go to calendar</Link>
-        </div>
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(d => new Date(d.setMonth(d.getMonth() - 1)))}><ChevronLeft/></Button>
-                <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
-                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(d => new Date(d.setMonth(d.getMonth() + 1)))}><ChevronRight/></Button>
-            </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500 mb-2">
-                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-            </div>
-            <div className="grid grid-cols-7 gap-1 text-center">
-                {/* This is a static representation for one month layout. A dynamic one would be more complex. */}
-                {Array(2).fill(null).map((_, i) => <div key={`empty-start-${i}`} className="text-gray-400 py-2">{29+i}</div>)}
-                {statusData.slice(0, 33).map((day, i) => (
-                    <TooltipProvider key={i}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="relative py-2 h-10 flex items-center justify-center">
-                            <span className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full", getDayClass(day.status))}></span>
-                            {day.status === 'Half Day' && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full overflow-hidden"><div className="h-1/2 bg-green-400"></div><div className="h-1/2 bg-red-400"></div></div>}
-                            <span className={cn("relative", ['Present', 'Absent', 'Leave', 'Holiday', 'Half Day'].includes(day.status) ? "text-white" : "text-black dark:text-white")}>{i+1}</span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{day.tooltip || day.status}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                ))}
-                 {Array(2).fill(null).map((_, i) => <div key={`empty-end-${i}`} className="text-gray-400 py-2">{i+1}</div>)}
-            </div>
-        </div>
-         <div className="px-6 py-4 border-t border-gray-200 dark:border-border">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <LegendItem color="bg-green-400" label="Present" />
-                <LegendItem color="bg-red-400" label="Absent" />
-                <LegendItem color="bg-orange-300" label="Leave" />
-                <LegendItem color="bg-purple-400" label="Holiday" />
-                <LegendItem color="bg-gray-300" label="Day Off" />
-                 <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full overflow-hidden mr-2">
-                        <div className="h-1/2 bg-green-400"></div>
-                        <div className="h-1/2 bg-red-400"></div>
-                    </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-300">Half Day</span>
-                </div>
-            </div>
-        </div>
-    </Card>
-  )
-}
+    return (
+        <Card className="rounded-2xl overflow-hidden shadow-lg">
+            <CardHeader className="flex justify-between items-center">
+                <CardTitle>My Calendar</CardTitle>
+                <Link href={`/${user?.role}/attendance`} className="text-sm font-medium text-primary hover:underline">
+                    Go to calendar
+                </Link>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+                <Calendar
+                    mode="single"
+                    selected={new Date()}
+                    className="p-0"
+                    classNames={{
+                        head_cell: "w-10",
+                        cell: "w-10 h-10",
+                        day: "w-10 h-10"
+                    }}
+                />
+            </CardContent>
+             <CardFooter className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">Today: {new Date().toLocaleDateString()}</p>
+                <Button variant="secondary" size="sm">View Schedule</Button>
+            </CardFooter>
+        </Card>
+    );
+};
 
 const DesktopDashboard = () => {
     const { user } = useAuth();

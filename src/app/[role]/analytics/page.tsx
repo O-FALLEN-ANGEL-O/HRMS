@@ -73,20 +73,12 @@ const AnalyticsSidebar = ({ activeView, setActiveView }: { activeView: Analytics
 
 
 const BenchmarkingView = () => {
-    const [chartData, setChartData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        setTimeout(() => {
-            setChartData([
-                { name: 'Turnover', company: 8.2, benchmark: 10.5 },
-                { name: 'Engagement', company: 85, benchmark: 78 },
-                { name: 'Diversity', company: 65, benchmark: 70 },
-                { name: 'Time to Hire', company: 45, benchmark: 40 },
-            ]);
-            setLoading(false);
-        }, 1000);
-    }, []);
+    const chartData = [
+        { name: 'Turnover', company: 8.2, benchmark: 10.5 },
+        { name: 'Engagement', company: 85, benchmark: 78 },
+        { name: 'Diversity', company: 65, benchmark: 70 },
+        { name: 'Time to Hire', company: 45, benchmark: 40 },
+    ];
 
     return (
     <div className="space-y-8">
@@ -101,7 +93,7 @@ const BenchmarkingView = () => {
                 </div>
             </CardHeader>
             <CardContent>
-                 <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
                         <label className="text-sm font-medium text-muted-foreground" htmlFor="industry-select">Select Industry</label>
                         <Select defaultValue="technology">
@@ -143,25 +135,23 @@ const BenchmarkingView = () => {
                     <CardTitle>Performance Overview vs. Benchmark</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <Skeleton className="h-96" /> : (
-                         <div className="mt-6 h-96">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <RechartsBarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip contentStyle={{
-                                    backgroundColor: "hsl(var(--card))",
-                                    border: "1px solid hsl(var(--border))",
-                                    borderRadius: "var(--radius)",
-                                  }}/>
-                                <Legend />
-                                <RechartsBar dataKey="company" fill="hsl(var(--primary))" name="OptiTalent" />
-                                <RechartsBar dataKey="benchmark" fill="hsl(var(--muted-foreground))" name="Benchmark" />
-                                </RechartsBarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    )}
+                     <div className="mt-6 h-96">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RechartsBarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip contentStyle={{
+                                backgroundColor: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "var(--radius)",
+                              }}/>
+                            <Legend />
+                            <RechartsBar dataKey="company" fill="hsl(var(--primary))" name="OptiTalent" />
+                            <RechartsBar dataKey="benchmark" fill="hsl(var(--muted-foreground))" name="Benchmark" />
+                            </RechartsBarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -264,21 +254,12 @@ const performanceData = [
 
 
 const PerformanceMetricsView = () => {
-    const [trendsData, setTrendsData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        setTimeout(() => {
-            setTrendsData([
-                { name: 'Q1', score: 4.1 },
-                { name: 'Q2', score: 4.3 },
-                { name: 'Q3', score: 4.2 },
-                { name: 'Q4', score: 4.5 },
-            ]);
-            setLoading(false);
-        }, 1000);
-    }, []);
-
+    const trendsData = [
+        { name: 'Q1', score: 4.1 },
+        { name: 'Q2', score: 4.3 },
+        { name: 'Q3', score: 4.2 },
+        { name: 'Q4', score: 4.5 },
+    ];
     const goalData = [{ name: 'Achieved', value: 85, fill: 'hsl(var(--primary))' }, { name: 'Pending', value: 15, fill: 'hsl(var(--muted))' }];
 
     return (
@@ -384,23 +365,21 @@ const PerformanceMetricsView = () => {
                         <CardTitle>Performance Trends</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {loading ? <Skeleton className="h-48" /> : (
-                            <div className="h-48">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={trendsData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" />
-                                        <YAxis domain={[0, 5]}/>
-                                        <Tooltip contentStyle={{
-                                            backgroundColor: "hsl(var(--card))",
-                                            border: "1px solid hsl(var(--border))",
-                                            borderRadius: "var(--radius)",
-                                        }}/>
-                                        <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
+                        <div className="h-48">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={trendsData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis domain={[0, 5]}/>
+                                    <Tooltip contentStyle={{
+                                        backgroundColor: "hsl(var(--card))",
+                                        border: "1px solid hsl(var(--border))",
+                                        borderRadius: "var(--radius)",
+                                    }}/>
+                                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -430,29 +409,21 @@ const PerformanceMetricsView = () => {
 )};
 
 const DemographicsView = () => {
-    const [demographicsData, setDemographicsData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        setTimeout(() => {
-            setDemographicsData({
-                byDept: [
-                    { name: 'Engineering', value: 450, fill: 'hsl(var(--chart-1))' },
-                    { name: 'Sales', value: 280, fill: 'hsl(var(--chart-2))' },
-                    { name: 'Marketing', value: 180, fill: 'hsl(var(--chart-3))' },
-                    { name: 'HR', value: 120, fill: 'hsl(var(--chart-4))' },
-                    { name: 'Support', value: 224, fill: 'hsl(var(--chart-5))' },
-                ],
-                byAge: [
-                    { name: '18-24', value: 250, fill: 'hsl(var(--chart-1))' },
-                    { name: '25-34', value: 600, fill: 'hsl(var(--chart-2))' },
-                    { name: '35-44', value: 300, fill: 'hsl(var(--chart-3))' },
-                    { name: '45+', value: 104, fill: 'hsl(var(--chart-4))' },
-                ]
-            });
-            setLoading(false);
-        }, 1000);
-    }, []);
+    const demographicsData = {
+        byDept: [
+            { name: 'Engineering', value: 450, fill: 'hsl(var(--chart-1))' },
+            { name: 'Sales', value: 280, fill: 'hsl(var(--chart-2))' },
+            { name: 'Marketing', value: 180, fill: 'hsl(var(--chart-3))' },
+            { name: 'HR', value: 120, fill: 'hsl(var(--chart-4))' },
+            { name: 'Support', value: 224, fill: 'hsl(var(--chart-5))' },
+        ],
+        byAge: [
+            { name: '18-24', value: 250, fill: 'hsl(var(--chart-1))' },
+            { name: '25-34', value: 600, fill: 'hsl(var(--chart-2))' },
+            { name: '35-44', value: 300, fill: 'hsl(var(--chart-3))' },
+            { name: '45+', value: 104, fill: 'hsl(var(--chart-4))' },
+        ]
+    };
 
     return (
     <div className="space-y-8">
@@ -501,7 +472,6 @@ const DemographicsView = () => {
                     <CardTitle>Headcount by Department</CardTitle>
                 </CardHeader>
                 <CardContent className="h-80">
-                    {loading ? <Skeleton className="h-full w-full" /> : (
                     <ResponsiveContainer width="100%" height="100%">
                         <RechartsBarChart data={demographicsData.byDept} layout="vertical">
                            <CartesianGrid strokeDasharray="3 3" />
@@ -511,7 +481,6 @@ const DemographicsView = () => {
                            <RechartsBar dataKey="value" name="Headcount" fill="hsl(var(--primary))" />
                         </RechartsBarChart>
                     </ResponsiveContainer>
-                    )}
                 </CardContent>
             </Card>
             <Card>
@@ -519,7 +488,6 @@ const DemographicsView = () => {
                     <CardTitle>Age Distribution</CardTitle>
                 </CardHeader>
                 <CardContent className="h-80">
-                     {loading ? <Skeleton className="h-full w-full" /> : (
                      <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie data={demographicsData.byAge} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
@@ -528,7 +496,6 @@ const DemographicsView = () => {
                             <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}/>
                         </PieChart>
                     </ResponsiveContainer>
-                     )}
                 </CardContent>
             </Card>
         </div>
@@ -536,22 +503,14 @@ const DemographicsView = () => {
 )};
 
 const RetentionView = () => {
-    const [retentionData, setRetentionData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        setTimeout(() => {
-            setRetentionData([
-                { name: 'Jan', Hires: 15, Departures: 5 },
-                { name: 'Feb', Hires: 20, Departures: 7 },
-                { name: 'Mar', Hires: 18, Departures: 4 },
-                { name: 'Apr', Hires: 25, Departures: 8 },
-                { name: 'May', Hires: 22, Departures: 6 },
-                { name: 'Jun', Hires: 30, Departures: 10 },
-            ]);
-            setLoading(false);
-        }, 1000);
-    }, []);
+    const retentionData = [
+        { name: 'Jan', Hires: 15, Departures: 5 },
+        { name: 'Feb', Hires: 20, Departures: 7 },
+        { name: 'Mar', Hires: 18, Departures: 4 },
+        { name: 'Apr', Hires: 25, Departures: 8 },
+        { name: 'May', Hires: 22, Departures: 6 },
+        { name: 'Jun', Hires: 30, Departures: 10 },
+    ];
 
     return (
   <div className="space-y-8">
@@ -603,7 +562,6 @@ const RetentionView = () => {
             <CardDescription>Monthly new hires vs. departures over the last year.</CardDescription>
         </CardHeader>
         <CardContent className="h-96">
-            {loading ? <Skeleton className="h-full w-full" /> : (
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={retentionData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -615,28 +573,19 @@ const RetentionView = () => {
                     <Line type="monotone" dataKey="Departures" stroke="hsl(var(--destructive))" />
                 </LineChart>
             </ResponsiveContainer>
-            )}
         </CardContent>
     </Card>
   </div>
 )};
 
 const TrainingView = () => {
-    const [trainingData, setTrainingData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        setTimeout(() => {
-            setTrainingData([
-                { name: 'Engineering', rate: 95 },
-                { name: 'Sales', rate: 80 },
-                { name: 'Marketing', rate: 88 },
-                { name: 'Support', rate: 92 },
-                { name: 'HR', rate: 98 },
-            ]);
-            setLoading(false);
-        }, 1000);
-    }, []);
+    const trainingData = [
+        { name: 'Engineering', rate: 95 },
+        { name: 'Sales', rate: 80 },
+        { name: 'Marketing', rate: 88 },
+        { name: 'Support', rate: 92 },
+        { name: 'HR', rate: 98 },
+    ];
 
     return (
      <div className="space-y-8">
@@ -677,7 +626,6 @@ const TrainingView = () => {
                 <CardTitle>Training Completion Rate by Department</CardTitle>
             </CardHeader>
             <CardContent className="h-96">
-                {loading ? <Skeleton className="h-full w-full" /> : (
                 <ResponsiveContainer width="100%" height="100%">
                     <RechartsBarChart data={trainingData}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -687,7 +635,6 @@ const TrainingView = () => {
                         <RechartsBar dataKey="rate" name="Completion Rate" fill="hsl(var(--primary))" />
                     </RechartsBarChart>
                 </ResponsiveContainer>
-                )}
             </CardContent>
         </Card>
     </div>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -192,6 +193,14 @@ export default function AttendancePage() {
     setAttendanceLog(generateAttendanceLog(now.getFullYear(), now.getMonth()));
   }, []);
 
+  const handleMonthChange = (offset: number) => {
+    if (currentDate) {
+        const newDate = addMonths(currentDate, offset);
+        setCurrentDate(newDate);
+        setAttendanceLog(generateAttendanceLog(newDate.getFullYear(), newDate.getMonth()));
+    }
+  };
+
   const handleClockInOut = () => {
     const today = new Date();
     const todayKey = format(today, 'yyyy-MM-dd');
@@ -339,11 +348,11 @@ export default function AttendancePage() {
             
             <div className="bg-card p-4 rounded-2xl shadow-sm">
                  <div className="flex justify-between items-center mb-6">
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+                    <Button variant="ghost" size="icon" onClick={() => handleMonthChange(-1)}>
                         <ChevronLeft />
                     </Button>
                     <h2 className="text-lg font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+                    <Button variant="ghost" size="icon" onClick={() => handleMonthChange(1)}>
                         <ChevronRight />
                     </Button>
                 </div>
@@ -394,11 +403,11 @@ export default function AttendancePage() {
             <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div className="flex items-center space-x-2">
-                        <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() - 1, 1))}>
+                        <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => handleMonthChange(-1)}>
                             <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                         </Button>
                         <h2 className="text-xl font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
-                        <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => setCurrentDate(prev => new Date(prev!.getFullYear(), prev!.getMonth() + 1, 1))}>
+                        <Button variant="ghost" className="p-2 rounded-full hover:bg-muted" onClick={() => handleMonthChange(1)}>
                             <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </Button>
                     </div>
