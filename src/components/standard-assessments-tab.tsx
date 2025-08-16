@@ -12,6 +12,7 @@ import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import { Check, X } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
+import { mockUsers } from '@/lib/mock-data/employees';
 
 export const StandardAssessmentsTab = ({ applicantId }: { applicantId: string }) => {
     const { toast } = useToast();
@@ -19,12 +20,17 @@ export const StandardAssessmentsTab = ({ applicantId }: { applicantId: string })
     const [selectedScores, setSelectedScores] = useState<Record<string, number>>({});
     
     useEffect(() => {
-        // Find the applicant's assessment data from our mock db
+        // Find the applicant's assessment data from our mock db.
+        // This handles both external applicants and internal employees via their unique ID.
         let data = standardApplicantAssessments.find(a => a.applicantId === applicantId);
-        // If they don't exist, create a new entry for them
+        
+        // If they don't exist in the assessment db, create a new entry for them.
         if (!data) {
-            data = { applicantId, assessments: [] };
-            standardApplicantAssessments.push(data);
+            const isEmployee = !!mockUsers.find(u => u.profile.employee_id === applicantId);
+            if(isEmployee) {
+                 data = { applicantId: applicantId, assessments: [] };
+                 standardApplicantAssessments.push(data);
+            }
         }
         setApplicantData(data);
     }, [applicantId]);
