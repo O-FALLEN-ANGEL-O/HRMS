@@ -30,7 +30,6 @@ export default function EmployeeDetailPage() {
     const [employee, setEmployee] = useState<UserProfile | null>(null);
     const [originalEmployee, setOriginalEmployee] = useState<UserProfile | null>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [loading, setLoading] = useState(true);
 
     const employeeId = params.employeeId as string;
 
@@ -42,7 +41,6 @@ export default function EmployeeDetailPage() {
             setEmployee(employeeProfile);
             setOriginalEmployee(JSON.parse(JSON.stringify(foundUser.profile)));
         }
-        setLoading(false);
     }, [employeeId]);
     
     const handleFieldChange = (path: string, value: any) => {
@@ -85,10 +83,6 @@ export default function EmployeeDetailPage() {
         setIsEditing(false);
     }
     
-    if (loading) {
-        return <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    }
-
     if (!employee) {
         return (
             <Card>
@@ -183,7 +177,7 @@ export default function EmployeeDetailPage() {
                         </div>
                         <div className="flex-1 p-6 overflow-y-auto bg-muted/30">
                             <TabsContent value="about">
-                                <AboutTab employee={employee} isEditing={isEditing} onFieldChange={handleFieldChange} canEdit={canViewDetailedProfile}/>
+                                <AboutTab employee={employee} isEditing={isEditing} setEmployee={setEmployee} canEdit={canViewDetailedProfile}/>
                             </TabsContent>
                             <TabsContent value="professional">
                                 <ProfessionalTab employee={employee} isEditing={isEditing} setEmployee={setEmployee}/>

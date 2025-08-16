@@ -761,7 +761,6 @@ const RecruitmentView = () => (
 
 const IndividualPerformanceView = () => {
     const [employeeId, setEmployeeId] = useState('');
-    const [loading, setLoading] = useState(false);
     const [employeeData, setEmployeeData] = useState<any>(null);
     const { toast } = useToast();
 
@@ -770,25 +769,23 @@ const IndividualPerformanceView = () => {
             toast({ title: 'Please enter an Employee ID or Name', variant: 'destructive' });
             return;
         }
-        setLoading(true);
-        setEmployeeData(null);
-        setTimeout(() => {
-            setEmployeeData({
-                name: "Anika Sharma",
-                id: "PEP0012",
-                avatar: "https://placehold.co/100x100?text=AS",
-                csat: 94,
-                qualityScore: 92,
-                resolutionTime: '15 mins',
-                ratings: [
-                    { name: 'Communication', value: 4.8 },
-                    { name: 'Problem Solving', value: 4.5 },
-                    { name: 'Product Knowledge', value: 4.7 },
-                    { name: 'Empathy', value: 4.6 },
-                ]
-            });
-            setLoading(false);
-        }, 1500);
+        
+        // This is a simplified mock search.
+        const mockData = {
+            name: "Anika Sharma",
+            id: "PEP0012",
+            avatar: "https://placehold.co/100x100?text=AS",
+            csat: 94,
+            qualityScore: 92,
+            resolutionTime: '15 mins',
+            ratings: [
+                { name: 'Communication', value: 4.8 },
+                { name: 'Problem Solving', value: 4.5 },
+                { name: 'Product Knowledge', value: 4.7 },
+                { name: 'Empathy', value: 4.6 },
+            ]
+        };
+        setEmployeeData(mockData);
     };
 
     return (
@@ -814,14 +811,11 @@ const IndividualPerformanceView = () => {
                             <SelectItem value="monthly">Monthly</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button onClick={handleFetchData} disabled={loading}>
-                        {loading && <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />}
+                    <Button onClick={handleFetchData}>
                         Fetch Data
                     </Button>
                 </CardContent>
             </Card>
-
-            {loading && <div className="text-center py-8"><div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>}
             
             {employeeData && (
                  <Card>

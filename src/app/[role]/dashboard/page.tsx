@@ -90,38 +90,6 @@ const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
     </Dialog>
 );
 
-const DesktopCalendar = () => {
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const { user } = useAuth();
-
-    return (
-        <Card className="rounded-2xl overflow-hidden shadow-lg">
-            <CardHeader className="flex justify-between items-center">
-                <CardTitle>My Calendar</CardTitle>
-                <Link href={`/${user?.role}/attendance`} className="text-sm font-medium text-primary hover:underline">
-                    Go to calendar
-                </Link>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-                <Calendar
-                    mode="single"
-                    selected={new Date()}
-                    className="p-0"
-                    classNames={{
-                        head_cell: "w-10",
-                        cell: "w-10 h-10",
-                        day: "w-10 h-10"
-                    }}
-                />
-            </CardContent>
-             <CardFooter className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">Today: {new Date().toLocaleDateString()}</p>
-                <Button variant="secondary" size="sm">View Schedule</Button>
-            </CardFooter>
-        </Card>
-    );
-};
-
 const DesktopDashboard = () => {
     const { user } = useAuth();
     
@@ -239,7 +207,30 @@ const DesktopDashboard = () => {
                 </div>
             </DashboardCard>
 
-            <DesktopCalendar />
+            <Card className="rounded-2xl overflow-hidden shadow-lg">
+                <CardHeader className="flex justify-between items-center">
+                    <CardTitle>My Calendar</CardTitle>
+                    <Link href={`/${user?.role}/attendance`} className="text-sm font-medium text-primary hover:underline">
+                        Go to calendar
+                    </Link>
+                </CardHeader>
+                <CardContent className="flex justify-center">
+                    <Calendar
+                        mode="single"
+                        selected={new Date()}
+                        className="p-0"
+                        classNames={{
+                            head_cell: "w-10",
+                            cell: "w-10 h-10",
+                            day: "w-10 h-10"
+                        }}
+                    />
+                </CardContent>
+                <CardFooter className="flex justify-between items-center">
+                    <p className="text-sm text-muted-foreground">Today: {new Date().toLocaleDateString()}</p>
+                    <Button variant="secondary" size="sm">View Schedule</Button>
+                </CardFooter>
+            </Card>
             
             <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start space-x-4">
                 <Lightbulb className="text-3xl text-orange-500" />
@@ -355,70 +346,13 @@ const MobileDashboard = () => {
     )
 }
 
-function QuickViewSheet() {
-    const { user, logout } = useAuth();
-    if (!user) return null;
-
-    const summaryData = {
-        checkIn: '09:12 AM',
-        totalHours: '8h 18m',
-        tasksPending: 3,
-        leaveBalance: 14.5
-    };
-
-    return (
-         <Sheet>
-            <SheetTrigger asChild>
-                <button className="flex flex-col items-center justify-center w-16 h-16 -mt-4 bg-primary text-primary-foreground rounded-full shadow-lg">
-                    <Grid2X2 className="h-6 w-6" />
-                </button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-2xl">
-                <SheetHeader className="text-left">
-                    <SheetTitle>Quick Summary</SheetTitle>
-                    <SheetDescription>Your daily stats at a glance.</SheetDescription>
-                </SheetHeader>
-                <div className="py-4 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-muted rounded-lg">
-                            <div className="flex items-center gap-2 text-muted-foreground text-sm"><Clock className="h-4 w-4" /> Today's Log</div>
-                            <p className="text-xl font-bold">{summaryData.checkIn}</p>
-                            <p className="text-xs">{summaryData.totalHours} worked</p>
-                        </div>
-                         <div className="p-4 bg-muted rounded-lg">
-                            <div className="flex items-center gap-2 text-muted-foreground text-sm"><CheckCircle className="h-4 w-4" /> Pending Tasks</div>
-                            <p className="text-xl font-bold">{summaryData.tasksPending}</p>
-                            <p className="text-xs">items require action</p>
-                        </div>
-                    </div>
-                     <div className="p-4 bg-muted rounded-lg">
-                        <div className="flex items-center gap-2 text-muted-foreground text-sm"><Wallet className="h-4 w-4" /> Leave Balance</div>
-                        <p className="text-xl font-bold">{summaryData.leaveBalance} Days</p>
-                        <p className="text-xs">available for the year</p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button variant="outline" asChild><Link href={`/${user.role}/leaves`}>Apply for Leave</Link></Button>
-                        <Button variant="outline" asChild><Link href={`/${user.role}/attendance/regularize`}>Regularize Attendance</Link></Button>
-                    </div>
-                     <Button variant="destructive" className="w-full" onClick={logout}><LogOut className="mr-2 h-4 w-4"/> Logout</Button>
-                </div>
-            </SheetContent>
-        </Sheet>
-    )
-}
-
-
 export default function DashboardPage() {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
   useEffect(() => {
-    const isNew = sessionStorage.getItem('isNewUser');
-    if (isNew === 'true') {
+    // This effect runs only once on mount
+    if (sessionStorage.getItem('isNewUser') === 'true') {
         setShowWelcomePopup(true);
-        // Remove the flag so it doesn't show again on page refresh
         sessionStorage.removeItem('isNewUser');
     }
   }, []);
