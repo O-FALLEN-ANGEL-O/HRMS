@@ -16,11 +16,13 @@ export const notifications: Record<string, Notification[]> = {
     { id: 'n-hr-1', title: 'New Leave Request', description: 'Priya Mehta has requested 5 days of PTO.', timestamp: '30 minutes ago' },
     { id: 'n-hr-2', title: 'Candidate Moved to Offer Stage', description: 'Aarav Sharma has been moved to the offer stage for Sr. Frontend Developer.', timestamp: '1 hour ago' },
     { id: 'n-hr-3', title: 'Onboarding Completed', description: 'David Chen has completed all onboarding tasks.', timestamp: '1 day ago' },
+    { id: 'n-hr-4', title: 'Profile Update', description: 'Anika Sharma has updated their contact information.', timestamp: '2 hours ago'},
   ],
   manager: [
     { id: 'n-mgr-1', title: 'Leave Request Approved', description: 'Your leave request for Anika Sharma has been approved by HR.', timestamp: '5 minutes ago' },
     { id: 'n-mgr-2', title: 'New Team Member', description: 'Liam Johnson has joined your team as a Software Engineer Trainee.', timestamp: '1 day ago' },
     { id: 'n-mgr-3', title: 'Performance Review Due', description: 'Rohan Verma\'s quarterly performance review is due next week.', timestamp: '3 days ago' },
+    { id: 'n-mgr-4', title: 'Profile Update For Approval', description: 'Anika Sharma has updated their profile details.', timestamp: '2 hours ago'},
   ],
   employee: [
     { id: 'n-emp-1', title: 'Leave Approved', description: 'Your sick leave for July 10th has been approved.', timestamp: '1 hour ago' },

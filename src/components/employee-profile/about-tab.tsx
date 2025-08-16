@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
 
-function InfoCard({ title, icon: Icon, children, isEditing }: { title: string, icon: React.ElementType, children: React.ReactNode, isEditing: boolean }) {
+function InfoCard({ title, icon: Icon, children }: { title: string, icon: React.ElementType, children: React.ReactNode }) {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -158,13 +158,28 @@ const ActivityCalendar = () => {
     )
 }
 
-export function AboutTab({ employee, isEditing, onFieldChange, canEdit }: { employee: UserProfile, isEditing: boolean, onFieldChange: (path: string, value: any) => void, canEdit: boolean }) {
+export function AboutTab({ employee, isEditing, setEmployee, canEdit }: { employee: UserProfile & { professionalInfo?: any }, isEditing: boolean, setEmployee: (e: any) => void, canEdit: boolean }) {
     if(!employee) return null;
+
+    const onFieldChange = (path: string, value: any) => {
+        // Create a deep copy to edit
+        const newEmployee = JSON.parse(JSON.stringify(employee));
+        
+        // Navigate the path and set the value
+        const keys = path.split('.');
+        let current: any = newEmployee;
+        for (let i = 0; i < keys.length - 1; i++) {
+            current = current[keys[i]];
+        }
+        current[keys[keys.length - 1]] = value;
+        
+        setEmployee(newEmployee);
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-1 space-y-6">
-                 <InfoCard title="Basic Information" icon={User} isEditing={isEditing}>
+                 <InfoCard title="Basic Information" icon={User}>
                     <InfoRow label="Employee ID" value={employee.employee_id} />
                     <InfoRow label="Date of Birth" value={"July 20, 1995"} />
                     <InfoRow label="Gender" value={"Female"} />
@@ -172,7 +187,7 @@ export function AboutTab({ employee, isEditing, onFieldChange, canEdit }: { empl
                     <InfoRow label="Nationality" value={"Indian"} />
                 </InfoCard>
 
-                <InfoCard title="Contact Information" icon={Mail} isEditing={isEditing}>
+                <InfoCard title="Contact Information" icon={Mail}>
                     <InfoRow label="Work Email" value={employee.email} />
                     <InfoRow label="Personal Email" value={"anika.sharma@email.com"} />
                     <InfoRow 
@@ -184,7 +199,7 @@ export function AboutTab({ employee, isEditing, onFieldChange, canEdit }: { empl
                 </InfoCard>
             </div>
              <div className="lg:col-span-2 space-y-6">
-                 <InfoCard title="Position Details" icon={Briefcase} isEditing={isEditing}>
+                 <InfoCard title="Position Details" icon={Briefcase}>
                     <InfoRow label="Company" value={"OptiTalent Inc."} />
                     <InfoRow 
                         label="Department" 
@@ -203,7 +218,7 @@ export function AboutTab({ employee, isEditing, onFieldChange, canEdit }: { empl
                     <InfoRow label="Employment Type" value={"Permanent"} />
                     <InfoRow label="Location" value={"Mangaluru, IN"} />
                 </InfoCard>
-                 <InfoCard title="Address Details" icon={Building} isEditing={isEditing}>
+                 <InfoCard title="Address Details" icon={Building}>
                     <div className="space-y-1">
                         <p className="font-medium text-sm">Current Address</p>
                         <p className="text-sm text-muted-foreground">#123, Rose Villa, Richmond Town, Bengaluru, Karnataka - 560025</p>
