@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const wallOfFame = [
     { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
@@ -83,9 +89,118 @@ const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
     </Dialog>
 );
 
+const DesktopCalendar = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const { user } = useAuth();
+  
+  const statusData = [
+    ...Array(3).fill({ status: 'Day Off' }),
+    { status: 'Present' },
+    ...Array(3).fill({ status: 'Day Off' }),
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Half Day', tooltip: 'Present: 9am-1pm, Absent: 2pm-6pm' },
+    { status: 'Day Off' },
+    { status: 'Day Off' },
+    { status: 'Absent' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Holiday', tooltip: 'National Holiday' },
+    { status: 'Day Off' },
+    { status: 'Day Off' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Leave', tooltip: 'Sick Leave' },
+    { status: 'Present' },
+    { status: 'Present' },
+    { status: 'Day Off' },
+    { status: 'Day Off' },
+    { status: 'Present' },
+    { status: 'Present' },
+  ];
+
+  const getDayClass = (status: string) => {
+    switch (status) {
+      case 'Present': return 'bg-green-400';
+      case 'Absent': return 'bg-red-400';
+      case 'Leave': return 'bg-orange-300';
+      case 'Holiday': return 'bg-purple-400';
+      case 'Day Off': return 'bg-gray-300';
+      case 'Half Day': return 'half-day';
+      default: return 'bg-gray-200';
+    }
+  };
+  
+   const LegendItem = ({ color, label }: { color: string; label: string }) => (
+    <div className="flex items-center">
+      <span className={`w-3 h-3 rounded-full ${color} mr-2`}></span>
+      <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
+    </div>
+  );
+
+  return (
+    <Card className="rounded-2xl overflow-hidden shadow-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-border flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Calendar</h2>
+            <Link href={`/${user?.role}/attendance`} className="text-sm font-medium text-primary hover:underline">Go to calendar</Link>
+        </div>
+        <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(d => new Date(d.setMonth(d.getMonth() - 1)))}><ChevronLeft/></Button>
+                <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
+                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(d => new Date(d.setMonth(d.getMonth() + 1)))}><ChevronRight/></Button>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500 mb-2">
+                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center">
+                {/* This is a static representation for one month layout. A dynamic one would be more complex. */}
+                {Array(2).fill(null).map((_, i) => <div key={`empty-start-${i}`} className="text-gray-400 py-2">{29+i}</div>)}
+                {statusData.slice(0, 33).map((day, i) => (
+                    <TooltipProvider key={i}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative py-2 h-10 flex items-center justify-center">
+                            <span className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full", getDayClass(day.status))}></span>
+                            {day.status === 'Half Day' && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full overflow-hidden"><div className="h-1/2 bg-green-400"></div><div className="h-1/2 bg-red-400"></div></div>}
+                            <span className={cn("relative", ['Present', 'Absent', 'Leave', 'Holiday', 'Half Day'].includes(day.status) ? "text-white" : "text-black dark:text-white")}>{i+1}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{day.tooltip || day.status}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                ))}
+                 {Array(2).fill(null).map((_, i) => <div key={`empty-end-${i}`} className="text-gray-400 py-2">{i+1}</div>)}
+            </div>
+        </div>
+         <div className="px-6 py-4 border-t border-gray-200 dark:border-border">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <LegendItem color="bg-green-400" label="Present" />
+                <LegendItem color="bg-red-400" label="Absent" />
+                <LegendItem color="bg-orange-300" label="Leave" />
+                <LegendItem color="bg-purple-400" label="Holiday" />
+                <LegendItem color="bg-gray-300" label="Day Off" />
+                 <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full overflow-hidden mr-2">
+                        <div className="h-1/2 bg-green-400"></div>
+                        <div className="h-1/2 bg-red-400"></div>
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Half Day</span>
+                </div>
+            </div>
+        </div>
+    </Card>
+  )
+}
+
 const DesktopDashboard = () => {
     const { user } = useAuth();
-    const [date, setDate] = useState<Date | undefined>(new Date());
     
     return (
         <div className="space-y-6">
@@ -201,26 +316,7 @@ const DesktopDashboard = () => {
                 </div>
             </DashboardCard>
 
-            <DashboardCard title="Calendar">
-                <CalendarComponent
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="p-0"
-                     classNames={{
-                       day_selected: "bg-primary text-white rounded-full focus:bg-primary focus:text-white",
-                       day_today: "bg-blue-100 dark:bg-blue-900 text-primary rounded-full"
-                    }}
-                />
-                 <div className="flex flex-wrap justify-between text-xs mt-4 gap-2">
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-primary rounded-full"></span><span>Today</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span><span>Present</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-yellow-400 rounded-full"></span><span>Leave</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-full"></span><span>Absent</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-gray-300 rounded-full"></span><span>Holiday</span></div>
-                </div>
-                <Button variant="link" className="text-sm font-medium p-0 h-auto mt-4" asChild><Link href={`/${user?.role}/attendance`}>Go to calendar</Link></Button>
-            </DashboardCard>
+            <DesktopCalendar />
             
             <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start space-x-4">
                 <Lightbulb className="text-3xl text-orange-500" />
@@ -333,6 +429,61 @@ const MobileDashboard = () => {
                  </TabsContent>
             </Tabs>
         </div>
+    )
+}
+
+function QuickViewSheet() {
+    const { user, logout } = useAuth();
+    if (!user) return null;
+
+    const summaryData = {
+        checkIn: '09:12 AM',
+        totalHours: '8h 18m',
+        tasksPending: 3,
+        leaveBalance: 14.5
+    };
+
+    return (
+         <Sheet>
+            <SheetTrigger asChild>
+                <button className="flex flex-col items-center justify-center w-16 h-16 -mt-4 bg-primary text-primary-foreground rounded-full shadow-lg">
+                    <Grid2X2 className="h-6 w-6" />
+                </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl">
+                <SheetHeader className="text-left">
+                    <SheetTitle>Quick Summary</SheetTitle>
+                    <SheetDescription>Your daily stats at a glance.</SheetDescription>
+                </SheetHeader>
+                <div className="py-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-muted rounded-lg">
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm"><Clock className="h-4 w-4" /> Today's Log</div>
+                            <p className="text-xl font-bold">{summaryData.checkIn}</p>
+                            <p className="text-xs">{summaryData.totalHours} worked</p>
+                        </div>
+                         <div className="p-4 bg-muted rounded-lg">
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm"><CheckCircle className="h-4 w-4" /> Pending Tasks</div>
+                            <p className="text-xl font-bold">{summaryData.tasksPending}</p>
+                            <p className="text-xs">items require action</p>
+                        </div>
+                    </div>
+                     <div className="p-4 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm"><Wallet className="h-4 w-4" /> Leave Balance</div>
+                        <p className="text-xl font-bold">{summaryData.leaveBalance} Days</p>
+                        <p className="text-xs">available for the year</p>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" asChild><Link href={`/${user.role}/leaves`}>Apply for Leave</Link></Button>
+                        <Button variant="outline" asChild><Link href={`/${user.role}/attendance/regularize`}>Regularize Attendance</Link></Button>
+                    </div>
+                     <Button variant="destructive" className="w-full" onClick={logout}><LogOut className="mr-2 h-4 w-4"/> Logout</Button>
+                </div>
+            </SheetContent>
+        </Sheet>
     )
 }
 
