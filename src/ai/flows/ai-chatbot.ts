@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI-powered chatbot for answering HR-related questions.
@@ -10,10 +9,10 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { Message, Part } from 'genkit/experimental/ai';
+import { experimental } from 'genkit/ai';
 
 const AiChatbotInputSchema = z.object({
-  history: z.array(z.custom<Message>()).describe("The history of the conversation so far."),
+  history: z.array(z.custom<experimental.Message>()).describe("The history of the conversation so far."),
   query: z.string().describe("The user's latest query."),
 });
 export type AiChatbotInput = z.infer<typeof AiChatbotInputSchema>;
@@ -42,14 +41,13 @@ const aiChatbotFlow = ai.defineFlow(
     outputSchema: AiChatbotOutputSchema,
   },
   async ({ history, query }) => {
-    const systemMessage: Message = {
-        role: 'system',
-        content: [{ text: systemPrompt }]
-    };
+    
+    const llm = ai.getGenerator('googleai/gemini-1.5-flash');
 
-    const llmResponse = await ai.generate({
+    const llmResponse = await llm.generate({
+      system: systemPrompt,
+      history: history,
       prompt: query,
-      history: [systemMessage, ...history],
     });
 
     return llmResponse.text;
