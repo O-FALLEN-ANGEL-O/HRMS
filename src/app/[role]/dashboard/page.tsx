@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { useParams } from 'next/navigation';
 
 const wallOfFame = [
     { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
@@ -428,6 +429,7 @@ const MobileDashboard = () => {
 
 export default function DashboardPage() {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const params = useParams();
 
   useEffect(() => {
     // This effect runs only once on mount
@@ -435,7 +437,7 @@ export default function DashboardPage() {
         setShowWelcomePopup(true);
         sessionStorage.removeItem('isNewUser');
     }
-  }, []);
+  }, [Object.assign({}, params)]);
 
   return (
     <>
