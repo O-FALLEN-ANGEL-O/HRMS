@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (employeeId: string) => Promise<{ error: { message: string } | null }>;
+  login: (identifier: string) => Promise<{ error: { message: string } | null }>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<{ error: { message: string } | null }>;
 }
@@ -38,9 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (employeeId: string) => {
+  const login = async (identifier: string) => {
     setLoading(true);
-    const userToLogin = mockUsers.find(u => u.profile.employee_id === employeeId);
+    // Allow login with either employeeId or email
+    const userToLogin = mockUsers.find(u => 
+        u.profile.employee_id.toLowerCase() === identifier.toLowerCase() || 
+        u.email.toLowerCase() === identifier.toLowerCase()
+    );
 
     if (userToLogin) {
       setUser(userToLogin);
@@ -50,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     } else {
       setLoading(false);
-      return { error: { message: "Invalid Employee ID." } };
+      return { error: { message: "Invalid credentials." } };
     }
   };
   

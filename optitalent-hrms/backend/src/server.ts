@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -6,6 +5,8 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './api/auth/auth.routes';
 import employeeRoutes from './api/employees/employee.routes';
+import departmentRoutes from './api/departments/department.routes';
+import roleRoutes from './api/roles/role.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { protect } from './middlewares/authMiddleware';
 
@@ -29,6 +30,8 @@ app.use('/api/v1/auth', authRoutes);
 
 // Protected Routes
 app.use('/api/v1/employees', protect, employeeRoutes);
+app.use('/api/v1/departments', protect, departmentRoutes);
+app.use('/api/v1/roles', protect, roleRoutes);
 // Add other protected routes here
 
 // Error Handling Middleware

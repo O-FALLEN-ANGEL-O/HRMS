@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -36,5 +35,54 @@ export async function findById(id: string) {
         }
       }
     },
+  });
+}
+
+export async function create(data: any) {
+  return prisma.employee.create({
+    data,
+    include: {
+      department: true,
+      role: true,
+      manager: {
+        select: {
+          firstName: true,
+          lastName: true,
+        }
+      }
+    }
+  });
+}
+
+export async function update(id: string, data: any) {
+  return prisma.employee.update({
+    where: { id },
+    data,
+    include: {
+      department: true,
+      role: true,
+      manager: {
+        select: {
+          firstName: true,
+          lastName: true,
+        }
+      }
+    }
+  });
+}
+
+export async function remove(id: string) {
+  return prisma.employee.delete({
+    where: { id }
+  });
+}
+
+export async function findByEmail(email: string) {
+  return prisma.employee.findUnique({
+    where: { email },
+    include: {
+      department: true,
+      role: true,
+    }
   });
 }
