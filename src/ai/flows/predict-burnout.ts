@@ -46,6 +46,7 @@ const prompt = ai.definePrompt({
   name: 'predictBurnoutPrompt',
   input: {schema: PredictBurnoutInputSchema},
   output: {schema: PredictBurnoutOutputSchema},
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an HR expert specializing in employee well-being and burnout prevention.
 
   Based on the information provided, analyze the employee's burnout risk and provide recommendations for managers.

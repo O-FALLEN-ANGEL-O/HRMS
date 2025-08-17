@@ -44,6 +44,7 @@ const prompt = ai.definePrompt({
   name: 'faceVerificationPrompt',
   input: { schema: FaceVerificationInputSchema },
   output: { schema: FaceVerificationOutputSchema },
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert facial recognition system. Your task is to determine if two images show the same person.
 
   Analyze the two images provided:

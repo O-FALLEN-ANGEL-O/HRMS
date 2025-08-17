@@ -30,6 +30,7 @@ const prompt = ai.definePrompt({
   name: 'autoAssignRolesPrompt',
   input: {schema: AutoAssignRolesInputSchema},
   output: {schema: AutoAssignRolesOutputSchema},
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert in HR role assignment.
 
   Based on the department and job title provided, suggest the most appropriate role for the new user.

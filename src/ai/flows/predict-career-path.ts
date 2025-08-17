@@ -39,6 +39,7 @@ const prompt = ai.definePrompt({
   name: 'predictCareerPathPrompt',
   input: { schema: PredictCareerPathInputSchema },
   output: { schema: PredictCareerPathOutputSchema },
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR strategist and career coach for a BPO/tech company. Your task is to generate a potential 5-7 year career path for an employee based on their profile.
 
   Employee Profile:

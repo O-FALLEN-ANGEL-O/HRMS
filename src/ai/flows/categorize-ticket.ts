@@ -32,6 +32,7 @@ const prompt = ai.definePrompt({
   name: 'categorizeTicketPrompt',
   input: {schema: CategorizeTicketInputSchema},
   output: {schema: CategorizeTicketOutputSchema},
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert support ticket analyst. Your job is to categorize and prioritize incoming support tickets based on their subject and description.
 
   Subject: {{{subject}}}
