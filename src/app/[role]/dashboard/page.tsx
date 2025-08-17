@@ -1,13 +1,12 @@
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
@@ -87,20 +86,12 @@ const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
 const DetailedCalendar = () => {
     const { toast } = useToast();
     const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-    const calendarDays = [
-        ...Array(2).fill({ day: null }), 
-        ...Array.from({length: 31}, (_, i) => ({ day: i + 1 })), 
-        ...Array(2).fill({ day: null })
-    ];
     
+    // This is a simplified mock. In a real app, this would be dynamic.
     const statusData = [
-        ...Array(2).fill(null), // empty days
-        { status: 'Day Off' },
-        { status: 'Present' },
-        { status: 'Present' },
-        { status: 'Present' },
-        { status: 'Present' },
-        { status: 'Day Off' },
+        ...Array(2).fill(null), // empty days before 1st
+        { status: 'Day Off' }, { status: 'Present' }, { status: 'Present' },
+        { status: 'Present' }, { status: 'Present' }, { status: 'Day Off' },
         { status: 'Day Off' },
         { status: 'Half Day', detail: 'Present: 9am-1pm, Absent: 2pm-6pm' },
         { status: 'Absent' },
@@ -115,77 +106,76 @@ const DetailedCalendar = () => {
 
     const getDayClass = (status: string) => {
         switch (status) {
-            case 'Present': return 'bg-green-300 text-white';
-            case 'Absent': return 'bg-red-400 text-white';
-            case 'Leave': return 'bg-orange-300 text-white';
-            case 'Holiday': return 'bg-purple-400 text-white';
-            case 'Day Off': return 'bg-gray-300 text-black';
-            case 'Today': return 'bg-teal-400 text-white';
-            default: return '';
+            case 'Present': return 'bg-green-300';
+            case 'Absent': return 'bg-red-400';
+            case 'Leave': return 'bg-orange-300';
+            case 'Holiday': return 'bg-purple-400';
+            case 'Day Off': return 'bg-gray-300';
+            case 'Today': return 'bg-teal-400';
+            default: return 'bg-gray-300';
         }
     };
     
+    const calendarDays = Array.from({length: 31}, (_, i) => i + 1);
+    
     return (
-        <Card className="rounded-2xl overflow-hidden shadow-lg">
-            <CardHeader className="flex justify-between items-center">
-                <CardTitle>My Calendar</CardTitle>
-                <Link href={`/employee/attendance`} className="text-sm font-medium text-primary hover:underline">
-                    Go to calendar
-                </Link>
-            </CardHeader>
+        <Card className="rounded-xl shadow-md overflow-hidden">
+             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">My Calendar</h2>
+                <a className="text-sm font-medium text-primary hover:underline" href="#">Go to calendar</a>
+            </div>
             <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                     <Button variant="ghost" size="icon" className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
+                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
                         <ChevronLeft className="h-5 w-5 text-gray-600" />
-                    </Button>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">July 2025</h3>
-                    <Button variant="ghost" size="icon" className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
+                    </button>
+                    <h3 className="text-lg font-medium text-gray-800">July 2025</h3>
+                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
                         <ChevronRight className="h-5 w-5 text-gray-600" />
-                    </Button>
+                    </button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500 mb-2">
                     {weekDays.map(day => <div key={day}>{day}</div>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center">
-                    {calendarDays.map((dayInfo, index) => {
-                        if (!dayInfo.day) {
-                            return <div key={`empty-${index}`} className="text-gray-400 py-2">{index === 0 ? 29 : 30}</div>
-                        }
-                        const statusInfo = statusData[index];
-                        if (!statusInfo) return <div key={dayInfo.day} className="py-2">{dayInfo.day}</div>
-
-                        const isHalfDay = statusInfo.status === 'Half Day';
-                        const dayClass = getDayClass(statusInfo.status);
-                        
-                        return (
-                             <TooltipProvider key={dayInfo.day}>
+                    <div className="text-gray-400 py-2">29</div>
+                    <div className="text-gray-400 py-2">30</div>
+                    {calendarDays.map((day, index) => {
+                         const statusInfo = statusData[index + 2]; // +2 to account for empty days
+                         if (!statusInfo) return <div key={day} className="py-2">{day}</div>
+                         
+                         const isHalfDay = statusInfo.status === 'Half Day';
+                         const dayClass = getDayClass(statusInfo.status);
+                         
+                         return (
+                            <TooltipProvider key={day}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div className="relative py-2 group cursor-pointer">
                                             {isHalfDay ? (
-                                                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full overflow-hidden`}>
+                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full overflow-hidden">
                                                    <div className="h-1/2 bg-green-300"></div>
                                                    <div className="h-1/2 bg-red-400"></div>
                                                 </div>
                                             ) : (
                                                 <span className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full", dayClass)}></span>
                                             )}
-                                            <span className={cn("relative", statusInfo.status !== 'Day Off' ? 'text-white' : 'text-black')}>{dayInfo.day}</span>
+                                            <span className={cn("relative", statusInfo.status !== 'Day Off' ? 'text-white' : 'text-black')}>{day}</span>
                                         </div>
                                     </TooltipTrigger>
-                                     <TooltipContent>
+                                    <TooltipContent>
                                         <p className="font-bold">{statusInfo.status}</p>
                                         {statusInfo.detail && <p className="text-xs">{statusInfo.detail}</p>}
                                     </TooltipContent>
                                 </Tooltip>
                              </TooltipProvider>
-                        )
+                         )
                     })}
                     <div className="text-gray-400 py-2">1</div>
                     <div className="text-gray-400 py-2">2</div>
                 </div>
             </div>
-            <CardFooter className="px-6 py-4 border-t border-gray-200">
+            <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600">
                      <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-teal-400 mr-2"></span><span>Today</span></div>
                      <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-green-300 mr-2"></span><span>Present</span></div>
@@ -198,11 +188,10 @@ const DetailedCalendar = () => {
                         <span>Half Day</span>
                      </div>
                 </div>
-            </CardFooter>
+            </div>
         </Card>
     );
 };
-
 
 const DesktopDashboard = () => {
     const { user } = useAuth();
