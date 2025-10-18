@@ -37,25 +37,25 @@ export default function LoginPage() {
     
     return (
         <div className="min-h-screen w-full lg:grid lg:grid-cols-2">
-            <div className="relative hidden flex-col items-center justify-between bg-gradient-to-br from-green-900 via-green-800 to-teal-900 p-8 text-white lg:flex">
+            <div className="relative hidden flex-col items-center justify-between bg-gradient-to-br from-primary via-primary/80 to-secondary p-8 text-white lg:flex">
                 <div className="absolute inset-0 bg-black/40 z-0"></div>
                 <div className="z-10 w-full max-w-md">
                     <Logo className="text-white" showText={true} />
                     <div className="mt-8 space-y-4">
                         <h1 className="text-4xl font-bold font-headline leading-tight">Meet Your AI HR Companion</h1>
-                        <p className="text-lg text-green-200">
+                        <p className="text-lg text-primary-foreground/80">
                             Automate tasks, get instant answers, and focus on what matters most - your people.
                         </p>
                     </div>
                 </div>
 
                 <div className="z-10 flex flex-col items-center text-center">
-                   <AnimatedBot className="text-orange-300" size={120} />
+                   <AnimatedBot className="text-white" size={120} />
                     <p className="mt-4 text-2xl font-semibold">HURRY UP! LOG IN &</p>
                     <p className="text-2xl font-semibold">START USING NOW</p>
                 </div>
 
-                 <p className="z-10 text-xs text-green-300">&copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved.</p>
+                 <p className="z-10 text-xs text-primary-foreground/60">&copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved.</p>
             </div>
             <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
                 <div className="w-full max-w-md space-y-8">
@@ -114,3 +114,5 @@ export default function LoginPage() {
         </div>
     );
 }
+
+    
