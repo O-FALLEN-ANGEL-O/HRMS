@@ -174,32 +174,36 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-             {/* Recent Events */}
-            <Card>
-                <CardHeader><CardTitle>Recent Events</CardTitle></CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {recentEvents.map((event, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <div className="p-3 bg-muted rounded-full">
-                                    <event.icon className="h-5 w-5 text-muted-foreground" />
+             {/* Recent Events & Feed */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-1">
+                    <CardHeader><CardTitle>Recent Events</CardTitle></CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {recentEvents.map((event, index) => (
+                                <div key={index} className="flex items-center gap-4">
+                                    <div className="p-3 bg-muted rounded-full">
+                                        <event.icon className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium">{event.text}</p>
+                                        <p className="text-xs text-muted-foreground">{event.time}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium">{event.text}</p>
-                                    <p className="text-xs text-muted-foreground">{event.time}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+                <div className="lg:col-span-2">
+                    <EmployeeDashboard showHeader={false} />
+                </div>
+            </div>
         </div>
     )
 };
 
 
-const EmployeeDashboard = () => {
+const EmployeeDashboard = ({ showHeader = true }: { showHeader?: boolean }) => {
     const { user } = useAuth();
     if (!user) return null;
 
@@ -226,25 +230,27 @@ const EmployeeDashboard = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                    <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.profile.profile_picture_url} />
-                        <AvatarFallback>{user.profile.full_name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-semibold text-lg">Hello, {user.profile.full_name.split(' ')[0]}!</p>
-                        <p className="text-sm text-muted-foreground">Welcome back</p>
+            {showHeader && (
+                <header className="flex justify-between items-center">
+                    <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12">
+                            <AvatarImage src={user.profile.profile_picture_url} />
+                            <AvatarFallback>{user.profile.full_name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-semibold text-lg">Hello, {user.profile.full_name.split(' ')[0]}!</p>
+                            <p className="text-sm text-muted-foreground">Welcome back</p>
+                        </div>
                     </div>
-                </div>
-                 <div className="flex items-center space-x-1">
-                    <Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button>
-                    <Button variant="ghost" size="icon" className="relative">
-                        <Bell className="h-5 w-5"/>
-                        <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-background"></span>
-                    </Button>
-                </div>
-            </header>
+                    <div className="flex items-center space-x-1">
+                        <Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button>
+                        <Button variant="ghost" size="icon" className="relative">
+                            <Bell className="h-5 w-5"/>
+                            <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-background"></span>
+                        </Button>
+                    </div>
+                </header>
+            )}
             
             <Card>
                 <CardContent className="p-4">
