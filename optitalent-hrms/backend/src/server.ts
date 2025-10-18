@@ -3,14 +3,20 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import authRoutes from './api/auth/auth.routes';
 import employeeRoutes from './api/employees/employee.routes';
 import departmentRoutes from './api/departments/department.routes';
 import roleRoutes from './api/roles/role.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { protect } from './middlewares/authMiddleware';
+import { initializeSupabase } from './lib/supabase';
 
-dotenv.config();
+// Load environment variables from .env file in the backend directory
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Initialize Supabase
+initializeSupabase();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

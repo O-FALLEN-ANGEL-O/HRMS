@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Briefcase, Plus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
@@ -19,40 +19,39 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
-const wallOfFame = [
-    { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
-    { name: 'Thiyagu B', empId: 'EMP010', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Thiyagu+B&background=random', crown: 'silver' },
-    { name: 'Prajwal', empId: 'EMP011', badges: 8, avatar: 'https://ui-avatars.com/api/?name=Prajwal&background=random', crown: 'bronze' },
+const kpiData = [
+    { title: 'Headcount', value: '120', change: '+5%', changeType: 'increase' },
+    { title: 'Active Agents', value: '100', change: '+2%', changeType: 'increase' },
+    { title: 'Avg AHT', value: '5:30', change: '-1%', changeType: 'decrease' },
+    { title: 'FCR', value: '85%', change: '+3%', changeType: 'increase' },
+    { title: 'CSAT', value: '92%', change: '+1%', changeType: 'increase' },
+    { title: 'Trainee Pass Rate', value: '95%', change: '+2%', changeType: 'increase' },
 ];
 
-const leaderboardList = [
-    { rank: 4, name: 'Srehanth Kumar', badges: 4, avatar: 'https://ui-avatars.com/api/?name=Srehanth+K&background=random' },
-    { rank: 5, name: 'Harshini K', badges: 2, avatar: 'https://ui-avatars.com/api/?name=Harshini+K&background=random' },
-    { rank: 6, name: 'Praisy S Shetty', badges: 1, avatar: 'https://ui-avatars.com/api/?name=Praisy+S&background=random' },
-]
-
-const feedPosts = [
-    {
-        author: 'Divyashree',
-        authorRole: 'Specialist',
-        timestamp: '1 month ago',
-        avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
-        title: 'Employee Referral Program is Active!',
-        image: 'https://placehold.co/800x400.png',
-        imageHint: 'employee referral program'
-    },
-    {
-        author: 'Jackson Lee',
-        authorRole: 'Head of HR',
-        timestamp: '2 months ago',
-        avatar: 'https://ui-avatars.com/api/?name=Jackson+Lee&background=random',
-        title: 'Annual Company Retreat Location Announced!',
-        image: 'https://placehold.co/800x400.png',
-        imageHint: 'company retreat beach'
-    }
+const performanceChartData = [
+  { name: 'Jan', performance: 65 },
+  { name: 'Feb', performance: 59 },
+  { name: 'Mar', performance: 80 },
+  { name: 'Apr', performance: 81 },
+  { name: 'May', performance: 56 },
+  { name: 'Jun', performance: 55 },
+  { name: 'Jul', performance: 40 },
+  { name: 'Aug', performance: 65 },
+  { name: 'Sep', performance: 72 },
+  { name: 'Oct', performance: 85 },
+  { name: 'Nov', performance: 92 },
+  { name: 'Dec', performance: 90 },
 ];
+
+const recentEvents = [
+    { icon: UserPlus, text: 'New hire, Alex, joined the team', time: '2 hours ago' },
+    { icon: FileText, text: 'Job posting for Customer Support Specialist created', time: '4 hours ago' },
+    { icon: Briefcase, text: 'Course \'Effective Communication\' updated', time: '6 hours ago' },
+];
+
 
 const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,245 +83,118 @@ const WelcomePopup = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
     </Dialog>
 );
 
-const DetailedCalendar = () => {
-    const { toast } = useToast();
-    const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-    
-    // This is a simplified mock. In a real app, this would be dynamic.
-    const statusData = [
-        ...Array(2).fill(null), // empty days before 1st
-        { status: 'Day Off' }, { status: 'Present' }, { status: 'Present' },
-        { status: 'Present' }, { status: 'Present' }, { status: 'Day Off' },
-        { status: 'Day Off' },
-        { status: 'Half Day', detail: 'Present: 9am-1pm, Absent: 2pm-6pm' },
-        { status: 'Absent' },
-        { status: 'Half Day', detail: 'Absent: 9am-1pm, Present: 2pm-6pm' },
-        { status: 'Present' },
-        { status: 'Holiday' },
-        { status: 'Day Off' },
-        { status: 'Day Off' },
-        { status: 'Today' },
-        ...Array(16).fill({ status: 'Present' }) // Fill rest of the month
-    ];
 
-    const getDayClass = (status: string) => {
-        switch (status) {
-            case 'Present': return 'bg-green-300';
-            case 'Absent': return 'bg-red-400';
-            case 'Leave': return 'bg-orange-300';
-            case 'Holiday': return 'bg-purple-400';
-            case 'Day Off': return 'bg-gray-300';
-            case 'Today': return 'bg-teal-400';
-            default: return 'bg-gray-300';
-        }
-    };
-    
-    const calendarDays = Array.from({length: 31}, (_, i) => i + 1);
-    
-    return (
-        <Card className="rounded-xl shadow-md overflow-hidden">
-             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800">My Calendar</h2>
-                <a className="text-sm font-medium text-primary hover:underline" href="#">Go to calendar</a>
-            </div>
-            <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
-                        <ChevronLeft className="h-5 w-5 text-gray-600" />
-                    </button>
-                    <h3 className="text-lg font-medium text-gray-800">July 2025</h3>
-                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
-                        <ChevronRight className="h-5 w-5 text-gray-600" />
-                    </button>
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500 mb-2">
-                    {weekDays.map(day => <div key={day}>{day}</div>)}
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-center">
-                    <div className="text-gray-400 py-2">29</div>
-                    <div className="text-gray-400 py-2">30</div>
-                    {calendarDays.map((day, index) => {
-                         const statusInfo = statusData[index + 2]; // +2 to account for empty days
-                         if (!statusInfo) return <div key={day} className="py-2">{day}</div>
-                         
-                         const isHalfDay = statusInfo.status === 'Half Day';
-                         const dayClass = getDayClass(statusInfo.status);
-                         
-                         return (
-                            <TooltipProvider key={day}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="relative py-2 group cursor-pointer">
-                                            {isHalfDay ? (
-                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full overflow-hidden">
-                                                   <div className="h-1/2 bg-green-300"></div>
-                                                   <div className="h-1/2 bg-red-400"></div>
-                                                </div>
-                                            ) : (
-                                                <span className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full", dayClass)}></span>
-                                            )}
-                                            <span className={cn("relative", statusInfo.status !== 'Day Off' ? 'text-white' : 'text-black')}>{day}</span>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="font-bold">{statusInfo.status}</p>
-                                        {statusInfo.detail && <p className="text-xs">{statusInfo.detail}</p>}
-                                    </TooltipContent>
-                                </Tooltip>
-                             </TooltipProvider>
-                         )
-                    })}
-                    <div className="text-gray-400 py-2">1</div>
-                    <div className="text-gray-400 py-2">2</div>
-                </div>
-            </div>
-            <div className="px-6 py-4 border-t border-gray-200">
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600">
-                     <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-teal-400 mr-2"></span><span>Today</span></div>
-                     <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-green-300 mr-2"></span><span>Present</span></div>
-                     <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-orange-300 mr-2"></span><span>Leave</span></div>
-                     <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-red-400 mr-2"></span><span>Absent</span></div>
-                     <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-purple-400 mr-2"></span><span>Holiday</span></div>
-                     <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-gray-300 mr-2"></span><span>Day Off</span></div>
-                     <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full overflow-hidden mr-2 flex"><div className="w-1/2 bg-green-300"></div><div className="w-1/2 bg-red-400"></div></div>
-                        <span>Half Day</span>
-                     </div>
-                </div>
-            </div>
-        </Card>
-    );
-};
+const KpiCard = ({ title, value, change, changeType }: { title: string, value: string, change: string, changeType: 'increase' | 'decrease' }) => (
+    <Card>
+        <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div className="text-4xl font-bold">{value}</div>
+            <p className={cn("text-xs", changeType === 'increase' ? 'text-green-600' : 'text-red-600')}>
+                {change}
+            </p>
+        </CardContent>
+    </Card>
+);
 
 const DesktopDashboard = () => {
     const { user } = useAuth();
+    const { toast } = useToast();
+    const handleQuickAction = (action: string) => {
+        toast({ title: 'Action Triggered', description: `This would normally ${action.toLowerCase()}.`})
+    }
     
     return (
         <div className="space-y-6">
-       <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
-          <p className="text-gray-500 dark:text-gray-400">You are having a great day.</p>
-        </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
-        {/* Left Column */}
-        <div className="hidden xl:flex xl:flex-col space-y-6">
-             <DashboardCard title="Wall of Fame">
-                <div className="flex justify-between items-center bg-gray-50 dark:bg-muted p-3 rounded-lg mb-4">
-                    <h3 className="text-md font-semibold">Badge received</h3>
-                    <span className="text-sm text-gray-500 dark:text-muted-foreground">This week</span>
-                </div>
-                <div className="flex justify-around items-center text-center mt-4">
-                    {wallOfFame.map((person, index) => (
-                         <div key={index}>
-                            <Avatar className={`w-16 h-16 mx-auto border-2 ${person.crown === 'gold' ? 'border-yellow-400' : person.crown === 'silver' ? 'border-gray-400' : 'border-amber-600'}`}>
-                                <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person portrait" />
-                                <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <p className="mt-2 font-semibold text-sm">{person.name}</p>
-                            <p className="text-xs text-gray-500">{person.badges} Badge</p>
-                        </div>
-                    ))}
-                </div>
-                <ul className="mt-6 space-y-4">
-                    {leaderboardList.map((person) => (
-                        <li key={person.rank} className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <span className="font-bold text-sm">{person.rank}</span>
-                                <Avatar className="w-10 h-10">
-                                    <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
-                                    <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <p className="text-sm">{person.name}</p>
-                            </div>
-                            <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges}</span>
-                        </li>
-                    ))}
-                </ul>
-                <Link href="#" className="text-primary hover:underline mt-4 block text-center text-sm">See more</Link>
-             </DashboardCard>
-             <DashboardCard title="Team planned leaves" icon={CalendarDays}>
-                <div className="text-center py-8">
-                     <p className="text-gray-500 mt-2 text-sm">No planned leaves today</p>
-                </div>
-             </DashboardCard>
-        </div>
-
-        {/* Main Content (Center) */}
-        <div className="lg:col-span-2 space-y-6">
-           <Card className="rounded-2xl shadow-lg">
-                <CardHeader>
-                    <div className="flex items-start space-x-4">
-                        <Avatar className="w-14 h-14">
-                            <AvatarImage src={feedPosts[0].avatar} alt={feedPosts[0].author} data-ai-hint="person portrait" />
-                            <AvatarFallback>{feedPosts[0].author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <div className="flex justify-between items-center w-full">
-                                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">{feedPosts[0].author}</h3>
-                            </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">People Operations</p>
-                            <p className="text-xs text-gray-400 mt-1">{feedPosts[0].timestamp}</p>
-                        </div>
-                         <span className="ml-auto bg-purple-100 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Featured</span>
-                    </div>
-                </CardHeader>
-                <CardContent className="border-t pt-4">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-lg">{feedPosts[0].title}</p>
-                    <Image alt={feedPosts[0].title} data-ai-hint={feedPosts[0].imageHint} className="w-full rounded-lg aspect-video object-cover" width={800} height={400} src={feedPosts[0].image} />
-                     <div className="mt-6 flex justify-between items-center text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center space-x-6">
-                            <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
-                                <ThumbsUp className="h-5 w-5" />
-                                <span className="font-medium">Like</span>
-                            </Button>
-                            <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
-                                <MessageSquare className="h-5 w-5" />
-                                <span className="font-medium">Comment</span>
-                            </Button>
-                        </div>
-                        <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
-                            <Share2 className="h-5 w-5" />
-                            <span className="font-medium">Share</span>
-                        </Button>
-                    </div>
-                     <div className="mt-4 border-t border-gray-200 dark:border-border pt-4">
-                        <div className="flex items-center space-x-3">
-                            <Avatar className="w-10 h-10">
-                                <AvatarImage src={user?.profile.profile_picture_url} alt="User avatar" data-ai-hint="person avatar"/>
-                                <AvatarFallback>{user?.profile.full_name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <Input className="w-full bg-gray-100 dark:bg-muted border-none rounded-full px-4 py-2 focus:ring-2 focus:ring-primary text-sm" placeholder="Write a comment..." type="text"/>
-                        </div>
-                    </div>
-                </CardContent>
-           </Card>
-        </div>
-
-        {/* Right Sidebar (becomes main column on smaller screens) */}
-        <div className="lg:col-span-1 space-y-6">
-            <DashboardCard title="Welcome!">
-                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <p className="text-sm text-gray-700 dark:text-blue-200 mt-2">Welcome to OptiTalent. We're thrilled to have you with us and look forward to your success and growth.</p>
-                    <div className="mt-4 flex items-center space-x-2 text-sm text-gray-600 dark:text-blue-300">
-                        <Users className="h-4 w-4" />
-                        <span>1 person wished you</span>
-                    </div>
-                </div>
-            </DashboardCard>
-
-            <DetailedCalendar />
-            
-            <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start space-x-4">
-                <Lightbulb className="text-3xl text-orange-500" />
+            <div className="flex justify-between items-center">
                 <div>
-                    <h4 className="font-bold text-orange-800 dark:text-orange-200">Do you know?</h4>
-                    <p className="text-sm text-gray-700 dark:text-orange-300 mt-1">Our HR Chatbot can answer most of your policy questions instantly. Give it a try!</p>
+                    <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
+                    <p className="text-muted-foreground">Welcome back, {user?.profile.full_name.split(' ')[0] || 'User'}!</p>
                 </div>
             </div>
+
+            {/* Key Performance Indicators */}
+            <div>
+                <h2 className="text-lg font-semibold mb-2">Key Performance Indicators</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {kpiData.map(kpi => <KpiCard key={kpi.title} {...kpi} />)}
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Overall Performance */}
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Overall Performance</CardTitle>
+                        <div className="flex items-baseline gap-2">
+                            <p className="text-3xl font-bold">90%</p>
+                            <p className="text-sm text-green-600">+5% Last 30 Days</p>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={performanceChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
+                                <YAxis axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'hsl(var(--background))',
+                                        border: '1px solid hsl(var(--border))',
+                                        borderRadius: 'var(--radius)',
+                                    }}
+                                />
+                                <Line type="monotone" dataKey="performance" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                {/* Quick Actions & System Health */}
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                            <Button className="w-full justify-start" onClick={() => handleQuickAction('Create Role')} variant="outline">Create Role</Button>
+                            <Button className="w-full justify-start" onClick={() => handleQuickAction('Create Job')} variant="outline">Create Job</Button>
+                            <Button className="w-full justify-start" onClick={() => handleQuickAction('Create Course')} variant="outline">Create Course</Button>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader><CardTitle>System Health</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="flex justify-between items-center text-sm mb-1">
+                                <span className="text-muted-foreground">System Uptime</span>
+                                <span className="font-semibold">75%</span>
+                            </div>
+                            <Progress value={75} className="h-2" />
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+             {/* Recent Events */}
+            <Card>
+                <CardHeader><CardTitle>Recent Events</CardTitle></CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {recentEvents.map((event, index) => (
+                            <div key={index} className="flex items-center gap-4">
+                                <div className="p-3 bg-muted rounded-full">
+                                    <event.icon className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">{event.text}</p>
+                                    <p className="text-xs text-muted-foreground">{event.time}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
         </div>
-      </div>
-    </div>
     )
 };
 
@@ -330,6 +202,27 @@ const DesktopDashboard = () => {
 const MobileDashboard = () => {
     const { user } = useAuth();
     if (!user) return null;
+
+    const feedPosts = [
+    {
+        author: 'Divyashree',
+        authorRole: 'Specialist',
+        timestamp: '1 month ago',
+        avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
+        title: 'Employee Referral Program is Active!',
+        image: 'https://placehold.co/800x400.png',
+        imageHint: 'employee referral program'
+    },
+    {
+        author: 'Jackson Lee',
+        authorRole: 'Head of HR',
+        timestamp: '2 months ago',
+        avatar: 'https://ui-avatars.com/api/?name=Jackson+Lee&background=random',
+        title: 'Annual Company Retreat Location Announced!',
+        image: 'https://placehold.co/800x400.png',
+        imageHint: 'company retreat beach'
+    }
+];
 
     return (
         <div className="space-y-6">
@@ -404,21 +297,7 @@ const MobileDashboard = () => {
                 <TabsContent value="fame">
                     <Card>
                       <CardContent className="p-4">
-                        <ul className="space-y-4">
-                            {wallOfFame.concat(leaderboardList).map((person, index) => (
-                                <li key={index} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <span className="font-bold text-sm w-4">{index+1}</span>
-                                        <Avatar className="w-10 h-10">
-                                            <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
-                                            <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <p className="text-sm">{person.name}</p>
-                                    </div>
-                                    <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges} Badges</span>
-                                </li>
-                            ))}
-                        </ul>
+                        <p>Wall of fame would be shown here.</p>
                       </CardContent>
                     </Card>
                  </TabsContent>
@@ -451,3 +330,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
