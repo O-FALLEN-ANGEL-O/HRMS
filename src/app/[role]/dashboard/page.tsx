@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Briefcase, Plus } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Briefcase, Plus, UserPlus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
@@ -23,12 +23,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const kpiData = [
-    { title: 'Headcount', value: '120', change: '+5%', changeType: 'increase' },
-    { title: 'Active Agents', value: '100', change: '+2%', changeType: 'increase' },
-    { title: 'Avg AHT', value: '5:30', change: '-1%', changeType: 'decrease' },
-    { title: 'FCR', value: '85%', change: '+3%', changeType: 'increase' },
-    { title: 'CSAT', value: '92%', change: '+1%', changeType: 'increase' },
-    { title: 'Trainee Pass Rate', value: '95%', change: '+2%', changeType: 'increase' },
+    { title: 'Headcount', value: '120', change: '+5%', changeType: 'increase' as const },
+    { title: 'Active Agents', value: '100', change: '+2%', changeType: 'increase' as const },
+    { title: 'Avg AHT', value: '5:30', change: '-1%', changeType: 'decrease' as const },
+    { title: 'FCR', value: '85%', change: '+3%', changeType: 'increase' as const },
+    { title: 'CSAT', value: '92%', change: '+1%', changeType: 'increase' as const },
+    { title: 'Trainee Pass Rate', value: '95%', change: '+2%', changeType: 'increase' as const },
 ];
 
 const performanceChartData = [
@@ -98,7 +98,7 @@ const KpiCard = ({ title, value, change, changeType }: { title: string, value: s
     </Card>
 );
 
-const DesktopDashboard = () => {
+const AdminDashboard = () => {
     const { user } = useAuth();
     const { toast } = useToast();
     const handleQuickAction = (action: string) => {
@@ -199,7 +199,7 @@ const DesktopDashboard = () => {
 };
 
 
-const MobileDashboard = () => {
+const EmployeeDashboard = () => {
     const { user } = useAuth();
     if (!user) return null;
 
@@ -309,6 +309,8 @@ const MobileDashboard = () => {
 export default function DashboardPage() {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const params = useParams();
+  const { user } = useAuth();
+  const role = user?.role || 'employee';
 
   useEffect(() => {
     // This effect runs only once on mount
@@ -318,15 +320,13 @@ export default function DashboardPage() {
     }
   }, [Object.assign({}, params)]);
 
+  const dataIntensiveRoles = ['admin', 'hr', 'manager', 'team-leader', 'process-manager', 'qa-analyst', 'recruiter'];
+  const showAdminDashboard = dataIntensiveRoles.includes(role);
+
   return (
     <>
         <WelcomePopup open={showWelcomePopup} onOpenChange={setShowWelcomePopup} />
-        <div className="hidden md:block">
-            <DesktopDashboard />
-        </div>
-        <div className="md:hidden">
-            <MobileDashboard />
-        </div>
+        {showAdminDashboard ? <AdminDashboard /> : <EmployeeDashboard />}
     </>
   );
 }
