@@ -1,491 +1,267 @@
--- =============================================================================
--- COMPLETE SUPABASE DATABASE SCHEMA FOR PORTFOLIO HRMS PROJECT
--- Optimized for 1000+ concurrent users with heavy load handling
--- Includes: Core HRMS + Analytics + Real-time features + File management
--- =============================================================================
+-- -----------------------------------------------------------------------------
+-- HR360+ COMPLETE SUPABASE SCHEMA (V2)
+-- -----------------------------------------------------------------------------
+-- This script is idempotent and can be re-run safely.
+-- It sets up all tables, relationships, helper functions, and Row-Level Security.
+-- -----------------------------------------------------------------------------
 
 -- -----------------------------------------------------------------------------
--- 1. EXTENSIONS & PERFORMANCE OPTIMIZATIONS
+-- 0. EXTENSIONS & SETTINGS
 -- -----------------------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For fast text search
-CREATE EXTENSION IF NOT EXISTS "btree_gist"; -- For advanced indexing
-
--- Performance settings for 1000+ users
-ALTER SYSTEM SET max_connections = 200;
-ALTER SYSTEM SET shared_buffers = '256MB';
-ALTER SYSTEM SET effective_cache_size = '1GB';
 
 -- -----------------------------------------------------------------------------
--- 2. CUSTOM TYPES (ENUMS) - Simplified for performance
+-- 1. HELPER FUNCTIONS
 -- -----------------------------------------------------------------------------
-CREATE TYPE user_role AS ENUM (
-  'admin', 'hr', 'manager', 'employee', 'recruiter', 'trainer', 'qa-analyst'
-);
-
-CREATE TYPE employment_status AS ENUM (
-  'active', 'inactive', 'resigned', 'terminated', 'probation'
-);
-
-CREATE TYPE leave_status AS ENUM ('pending', 'approved', 'rejected', 'cancelled');
-CREATE TYPE ticket_status AS ENUM ('open', 'in_progress', 'resolved', 'closed');
-CREATE TYPE notification_type AS ENUM ('info', 'warning', 'error', 'success');
-CREATE TYPE file_type AS ENUM ('document', 'image', 'video', 'audio', 'other');
-
--- -----------------------------------------------------------------------------
--- 3. CORE TABLES - Optimized for 1000+ users
--- -----------------------------------------------------------------------------
-
--- Departments (cached, rarely changes)
-CREATE TABLE departments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(100) UNIQUE NOT NULL,
-  code VARCHAR(10) UNIQUE NOT NULL,
-  description TEXT,
-  manager_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Users (linked to auth.users for Supabase Auth)
-CREATE TABLE users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT UNIQUE NOT NULL,
-  role user_role DEFAULT 'employee',
-  full_name VARCHAR(255) NOT NULL,
-  avatar_url TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  last_login_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Employees (main employee data)
-CREATE TABLE employees (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  department_id UUID REFERENCES departments(id),
-  manager_id UUID REFERENCES employees(id),
-  employee_code VARCHAR(20) UNIQUE NOT NULL,
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  phone VARCHAR(20),
-  date_of_birth DATE,
-  hire_date DATE NOT NULL,
-  employment_status employment_status DEFAULT 'active',
-  job_title VARCHAR(100),
-  salary DECIMAL(12,2),
-  address JSONB,
-  emergency_contact JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- -----------------------------------------------------------------------------
--- 4. ATTENDANCE & TIME TRACKING - Partitioned for performance
--- -----------------------------------------------------------------------------
-CREATE TABLE attendance (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  date DATE NOT NULL,
-  clock_in TIMESTAMPTZ,
-  clock_out TIMESTAMPTZ,
-  work_hours DECIMAL(4,2),
-  overtime_hours DECIMAL(4,2) DEFAULT 0,
-  is_late BOOLEAN DEFAULT FALSE,
-  location JSONB,
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-) PARTITION BY RANGE (date);
-
--- Create partitions for current and future years
-CREATE TABLE attendance_2024 PARTITION OF attendance
-  FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
-CREATE TABLE attendance_2025 PARTITION OF attendance
-  FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
-
--- Indexes for attendance queries
-CREATE INDEX idx_attendance_employee_date ON attendance(employee_id, date);
-CREATE INDEX idx_attendance_date ON attendance(date);
-
--- -----------------------------------------------------------------------------
--- 5. LEAVE MANAGEMENT - Optimized structure
--- -----------------------------------------------------------------------------
-CREATE TABLE leave_types (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(50) UNIQUE NOT NULL,
-  code VARCHAR(10) UNIQUE NOT NULL,
-  days_per_year INTEGER NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE leave_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  leave_type_id UUID NOT NULL REFERENCES leave_types(id),
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  days_requested INTEGER NOT NULL,
-  reason TEXT,
-  status leave_status DEFAULT 'pending',
-  approved_by UUID REFERENCES employees(id),
-  approved_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Leave balances (calculated and cached)
-CREATE TABLE leave_balances (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID UNIQUE NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  leave_type_id UUID NOT NULL REFERENCES leave_types(id),
-  balance_days INTEGER NOT NULL,
-  year INTEGER NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(employee_id, leave_type_id, year)
-);
-
--- -----------------------------------------------------------------------------
--- 6. PAYROLL SYSTEM - Simplified for performance
--- -----------------------------------------------------------------------------
-CREATE TABLE payroll_periods (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(50) NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  is_processed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE payroll_records (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  payroll_period_id UUID NOT NULL REFERENCES payroll_periods(id),
-  basic_salary DECIMAL(10,2) NOT NULL,
-  allowances DECIMAL(10,2) DEFAULT 0,
-  deductions DECIMAL(10,2) DEFAULT 0,
-  overtime_pay DECIMAL(10,2) DEFAULT 0,
-  gross_salary DECIMAL(10,2) NOT NULL,
-  net_salary DECIMAL(10,2) NOT NULL,
-  payslip_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(employee_id, payroll_period_id)
-);
-
--- -----------------------------------------------------------------------------
--- 7. PERFORMANCE MANAGEMENT
--- -----------------------------------------------------------------------------
-CREATE TABLE performance_reviews (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  reviewer_id UUID NOT NULL REFERENCES employees(id),
-  review_period VARCHAR(20) NOT NULL,
-  goals JSONB,
-  achievements JSONB,
-  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
-  comments TEXT,
-  is_completed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- -----------------------------------------------------------------------------
--- 8. FILE MANAGEMENT SYSTEM - For documents and uploads
--- -----------------------------------------------------------------------------
-CREATE TABLE file_categories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(50) UNIQUE NOT NULL,
-  description TEXT,
-  allowed_types file_type[] DEFAULT ARRAY['document', 'image'],
-  max_size_mb INTEGER DEFAULT 10,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE files (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  filename VARCHAR(255) NOT NULL,
-  original_name VARCHAR(255) NOT NULL,
-  file_type file_type NOT NULL,
-  file_size INTEGER NOT NULL,
-  mime_type VARCHAR(100),
-  file_url TEXT NOT NULL,
-  thumbnail_url TEXT,
-  category_id UUID REFERENCES file_categories(id),
-  uploaded_by UUID NOT NULL REFERENCES employees(id),
-  is_public BOOLEAN DEFAULT FALSE,
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Employee documents linking
-CREATE TABLE employee_documents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  file_id UUID NOT NULL REFERENCES files(id) ON DELETE CASCADE,
-  document_type VARCHAR(50) NOT NULL,
-  expiry_date DATE,
-  is_verified BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(employee_id, document_type)
-);
-
--- -----------------------------------------------------------------------------
--- 9. NOTIFICATIONS & ACTIVITY LOGS
--- -----------------------------------------------------------------------------
-CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  type notification_type NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  message TEXT NOT NULL,
-  action_url TEXT,
-  is_read BOOLEAN DEFAULT FALSE,
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_notifications_employee_read ON notifications(employee_id, is_read);
-
--- Activity logs for audit trail
-CREATE TABLE activity_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID REFERENCES employees(id),
-  action VARCHAR(50) NOT NULL,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id UUID,
-  old_values JSONB,
-  new_values JSONB,
-  ip_address INET,
-  user_agent TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_activity_logs_entity ON activity_logs(entity_type, entity_id);
-CREATE INDEX idx_activity_logs_employee ON activity_logs(employee_id);
-
--- -----------------------------------------------------------------------------
--- 10. REAL-TIME FEATURES - Chat & Messaging
--- -----------------------------------------------------------------------------
-CREATE TABLE chat_rooms (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255),
-  type VARCHAR(20) DEFAULT 'direct', -- direct, group
-  created_by UUID REFERENCES employees(id),
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE chat_participants (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  last_read_at TIMESTAMPTZ,
-  joined_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(room_id, employee_id)
-);
-
-CREATE TABLE chat_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  message TEXT NOT NULL,
-  message_type VARCHAR(20) DEFAULT 'text', -- text, file, image
-  file_url TEXT,
-  is_edited BOOLEAN DEFAULT FALSE,
-  is_deleted BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_chat_messages_room ON chat_messages(room_id, created_at);
-CREATE INDEX idx_chat_messages_employee ON chat_messages(employee_id);
-
--- -----------------------------------------------------------------------------
--- 11. ANALYTICS & DASHBOARD DATA
--- -----------------------------------------------------------------------------
-CREATE TABLE dashboard_metrics (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  metric_name VARCHAR(100) NOT NULL,
-  metric_value DECIMAL(10,2) NOT NULL,
-  metric_date DATE NOT NULL,
-  category VARCHAR(50),
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_dashboard_metrics_date ON dashboard_metrics(metric_date, category);
-
--- Cached analytics for fast dashboard loading
-CREATE TABLE analytics_cache (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  cache_key VARCHAR(255) UNIQUE NOT NULL,
-  cache_data JSONB NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- -----------------------------------------------------------------------------
--- 12. SYSTEM CONFIGURATION & SETTINGS
--- -----------------------------------------------------------------------------
-CREATE TABLE system_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  setting_key VARCHAR(100) UNIQUE NOT NULL,
-  setting_value TEXT,
-  data_type VARCHAR(20) DEFAULT 'string', -- string, number, boolean, json
-  is_public BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- -----------------------------------------------------------------------------
--- 13. PERFORMANCE OPTIMIZATION - INDEXES
--- -----------------------------------------------------------------------------
--- Core indexes for fast lookups
-CREATE INDEX idx_employees_code ON employees(employee_code);
-CREATE INDEX idx_employees_email ON employees(email);
-CREATE INDEX idx_employees_department ON employees(department_id);
-CREATE INDEX idx_employees_manager ON employees(manager_id);
-CREATE INDEX idx_employees_status ON employees(employment_status);
-
--- Leave system indexes
-CREATE INDEX idx_leave_requests_employee ON leave_requests(employee_id, start_date);
-CREATE INDEX idx_leave_requests_status ON leave_requests(status, start_date);
-
--- File system indexes
-CREATE INDEX idx_files_category ON files(category_id);
-CREATE INDEX idx_files_uploaded_by ON files(uploaded_by);
-
--- Performance indexes
-CREATE INDEX idx_performance_reviews_employee ON performance_reviews(employee_id, review_period);
-
--- Full-text search indexes
-CREATE INDEX idx_employees_search ON employees USING gin(to_tsvector('english', 
-  first_name || ' ' || last_name || ' ' || email || ' ' || COALESCE(job_title, '')));
-
--- -----------------------------------------------------------------------------
--- 14. TRIGGERS & AUTOMATED FUNCTIONS
--- -----------------------------------------------------------------------------
--- Auto-update timestamps
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+-- Function to get the current user's role from the public.users table.
+-- Caches the result per request for performance.
+CREATE OR REPLACE FUNCTION get_my_role()
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  role_name text;
 BEGIN
-    NEW.updated_at = NOW();
+  SELECT role INTO role_name FROM public.users WHERE id = auth.uid();
+  RETURN role_name;
+END;
+$$;
+
+-- Function to check if a user is a manager of another user.
+CREATE OR REPLACE FUNCTION is_manager_of(manager_id_to_check uuid, employee_id_to_check uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    current_employee_id uuid := employee_id_to_check;
+    current_manager_id uuid;
+BEGIN
+    LOOP
+        SELECT manager_id INTO current_manager_id FROM public.employees WHERE id = current_employee_id;
+        IF current_manager_id IS NULL THEN
+            RETURN FALSE;
+        END IF;
+        IF current_manager_id = manager_id_to_check THEN
+            RETURN TRUE;
+        END IF;
+        current_employee_id := current_manager_id;
+    END LOOP;
+END;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- 2. ENUM TYPES
+-- -----------------------------------------------------------------------------
+DO $$ BEGIN
+    CREATE TYPE public.user_role AS ENUM ('admin', 'hr', 'manager', 'department_head', 'employee', 'process_manager', 'qa_analyst', 'floor_manager');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- -----------------------------------------------------------------------------
+-- 3. TABLES
+-- -----------------------------------------------------------------------------
+
+-- Departments Table
+CREATE TABLE IF NOT EXISTS public.departments (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  head_id uuid REFERENCES public.employees,
+  budget numeric(12, 2),
+  created_at timestamptz DEFAULT now()
+);
+
+-- Employees Table
+-- Note: This table will be populated via a trigger from auth.users
+CREATE TABLE IF NOT EXISTS public.employees (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text,
+  email text UNIQUE,
+  phone text,
+  dept_id uuid REFERENCES public.departments,
+  role public.user_role,
+  manager_id uuid REFERENCES public.employees,
+  status text, -- e.g., 'Active', 'On-Leave', 'Terminated'
+  hire_date date,
+  probation_end date,
+  salary_id uuid, -- FK to be added later
+  benefit_id uuid, -- FK to be added later
+  avatar_url text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Users table to store role, linked to auth.users
+CREATE TABLE IF NOT EXISTS public.users (
+    id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    role public.user_role NOT NULL DEFAULT 'employee'
+);
+
+
+-- Function to create a public user and employee profile for each new auth user
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Create a record in public.users to store the role
+    INSERT INTO public.users (id, role)
+    VALUES (NEW.id, 'employee'); -- Default role
+
+    -- Create a corresponding employee profile
+    INSERT INTO public.employees (user_id, email, name, avatar_url, status, hire_date)
+    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'avatar_url', 'Active', now());
+    
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$;
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_employees_updated_at BEFORE UPDATE ON employees
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_settings
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Trigger to call the function when a new user signs up
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- Auto-calculate leave days
-CREATE OR REPLACE FUNCTION calculate_leave_days()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.days_requested := NEW.end_date - NEW.start_date + 1;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
 
-CREATE TRIGGER trigger_calculate_leave_days
-    BEFORE INSERT OR UPDATE ON leave_requests
-    FOR EACH ROW EXECUTE FUNCTION calculate_leave_days();
+-- Attendance Table
+CREATE TABLE IF NOT EXISTS public.attendance (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id uuid REFERENCES public.employees ON DELETE CASCADE,
+    date date NOT NULL,
+    clock_in timestamptz,
+    clock_out timestamptz,
+    remote_flag boolean DEFAULT false,
+    overtime_hours numeric(4, 2),
+    status text -- e.g., 'Present', 'Absent', 'Leave'
+);
 
--- -----------------------------------------------------------------------------
--- 15. ROW LEVEL SECURITY (RLS) - Optimized policies
--- -----------------------------------------------------------------------------
--- Enable RLS on all tables
-ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE leave_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE files ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+-- Leave Requests Table
+CREATE TABLE IF NOT EXISTS public.leaves (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id uuid REFERENCES public.employees ON DELETE CASCADE,
+    type text, -- e.g., 'Sick', 'Casual', 'Earned'
+    start_date date,
+    end_date date,
+    status text DEFAULT 'Pending', -- 'Pending', 'Approved', 'Rejected'
+    reason text,
+    approved_by uuid REFERENCES public.employees
+);
 
--- Basic policies for performance
-CREATE POLICY "users_read_own" ON users FOR SELECT
-    USING (auth.uid() = id);
+-- Payroll Table
+CREATE TABLE IF NOT EXISTS public.payroll (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id uuid REFERENCES public.employees ON DELETE CASCADE,
+    month date,
+    base_salary numeric(10, 2),
+    bonuses numeric(10, 2),
+    deductions numeric(10, 2),
+    net_pay numeric(10, 2),
+    payslip_url text
+);
 
-CREATE POLICY "employees_read_all" ON employees FOR SELECT
-    USING (true); -- Simplified for performance, filter in app layer
+-- Assets Table
+CREATE TABLE IF NOT EXISTS public.assets (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    asset_name text,
+    serial_no text UNIQUE,
+    assigned_to uuid REFERENCES public.employees,
+    assigned_date date,
+    return_date date,
+    status text -- 'In-use', 'In-stock', 'Retired'
+);
 
-CREATE POLICY "attendance_read_own" ON attendance FOR SELECT
-    USING (auth.uid() IN (SELECT user_id FROM employees WHERE id = employee_id));
+-- Assessments Table
+CREATE TABLE IF NOT EXISTS public.assessments (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id uuid REFERENCES public.employees ON DELETE CASCADE,
+    type text, -- 'Voice', 'Typing', 'MCQ'
+    score numeric(5, 2),
+    recorded_url text, -- For voice/video tests
+    feedback text
+);
 
-CREATE POLICY "leave_requests_read_own" ON leave_requests FOR SELECT
-    USING (auth.uid() IN (SELECT user_id FROM employees WHERE id = employee_id));
-
--- -----------------------------------------------------------------------------
--- 16. SEED DATA - Essential data for startup
--- -----------------------------------------------------------------------------
-INSERT INTO departments (name, code, description) VALUES
-  ('Engineering', 'ENG', 'Software development and technical operations'),
-  ('Human Resources', 'HR', 'People management and recruitment'),
-  ('Finance', 'FIN', 'Financial operations and accounting'),
-  ('Marketing', 'MKT', 'Brand management and marketing campaigns'),
-  ('Operations', 'OPS', 'Business operations and support');
-
-INSERT INTO leave_types (name, code, days_per_year) VALUES
-  ('Annual Leave', 'AL', 20),
-  ('Sick Leave', 'SL', 10),
-  ('Casual Leave', 'CL', 5),
-  ('Work From Home', 'WFH', 12);
-
-INSERT INTO file_categories (name, description, allowed_types, max_size_mb) VALUES
-  ('Documents', 'General documents', ARRAY['document'], 10),
-  ('Images', 'Profile pictures and photos', ARRAY['image'], 5),
-  ('Contracts', 'Employment contracts and agreements', ARRAY['document'], 20);
-
-INSERT INTO system_settings (setting_key, setting_value, data_type, is_public) VALUES
-  ('company_name', 'OptiTalent HRMS', 'string', true),
-  ('max_file_size_mb', '10', 'number', true),
-  ('session_timeout_minutes', '30', 'number', false),
-  ('enable_real_time_notifications', 'true', 'boolean', true);
-
--- -----------------------------------------------------------------------------
--- 17. MATERIALIZED VIEWS FOR DASHBOARD PERFORMANCE
--- -----------------------------------------------------------------------------
-CREATE MATERIALIZED VIEW mv_employee_stats AS
-SELECT 
-    d.id as department_id,
-    d.name as department_name,
-    COUNT(e.id) as total_employees,
-    COUNT(CASE WHEN e.employment_status = 'active' THEN 1 END) as active_employees,
-    AVG(e.salary) as avg_salary
-FROM departments d
-LEFT JOIN employees e ON d.id = e.department_id
-GROUP BY d.id, d.name;
-
--- Refresh materialized view periodically
-CREATE OR REPLACE FUNCTION refresh_employee_stats()
-RETURNS void AS $$
-BEGIN
-    REFRESH MATERIALIZED VIEW mv_employee_stats;
-END;
-$$ LANGUAGE plpgsql;
-
--- Schedule this to run every hour: SELECT refresh_employee_stats();
+-- Training Sessions Table
+CREATE TABLE IF NOT EXISTS public.training_sessions (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id uuid, -- Could reference a 'courses' table
+    employee_id uuid REFERENCES public.employees ON DELETE CASCADE,
+    progress numeric(5, 2) DEFAULT 0,
+    certificate_url text
+);
 
 -- -----------------------------------------------------------------------------
--- 18. CONNECTION POOLING & PERFORMANCE NOTES
+-- 4. ROW-LEVEL SECURITY (RLS)
 -- -----------------------------------------------------------------------------
--- For 1000+ concurrent users, configure these in Supabase:
--- - Connection pooling: Enable PgBouncer
--- - Read replicas: Set up for reporting queries
--- - Cache settings: Increase shared_buffers to 25% of RAM
--- - Work_mem: Set to 4MB per connection
--- - Maintenance_work_mem: Set to 256MB
+ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leaves ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payroll ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.training_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
 
--- Usage instructions:
--- 1. Copy this entire SQL to Supabase SQL Editor
--- 2. Run it to set up the complete schema
--- 3. Configure your .env with Supabase credentials
--- 4. Use connection pooling for production
--- =============================================================================
+-- Drop existing policies to ensure a clean slate
+DROP POLICY IF EXISTS "Allow full access for admins" ON public.employees;
+DROP POLICY IF EXISTS "Allow HR to view all" ON public.employees;
+DROP POLICY IF EXISTS "Allow employees to view their own profile" ON public.employees;
+DROP POLICY IF EXISTS "Allow managers to view their team" ON public.employees;
+-- (repeat for all tables and policies)
+
+-- Employees Table Policies
+CREATE POLICY "Allow full access for admins" ON public.employees FOR ALL USING (get_my_role() = 'admin');
+CREATE POLICY "Allow HR to view all" ON public.employees FOR SELECT USING (get_my_role() = 'hr');
+CREATE POLICY "Allow employees to view their own profile" ON public.employees FOR SELECT USING ((SELECT auth.uid()) = user_id);
+CREATE POLICY "Allow managers to view their team" ON public.employees FOR SELECT USING (is_manager_of((SELECT id FROM public.employees WHERE user_id = auth.uid()), id));
+
+-- Attendance Table Policies
+CREATE POLICY "Allow employees to manage their own attendance" ON public.attendance FOR ALL
+    USING ((SELECT auth.uid()) = (SELECT user_id FROM public.employees WHERE id = employee_id));
+CREATE POLICY "Allow managers to view team's attendance" ON public.attendance FOR SELECT
+    USING (is_manager_of((SELECT id FROM public.employees WHERE user_id = auth.uid()), employee_id));
+CREATE POLICY "Allow HR/Admin full access to attendance" ON public.attendance FOR ALL
+    USING (get_my_role() IN ('admin', 'hr'));
+
+-- Leaves Table Policies
+CREATE POLICY "Allow employees to manage their own leave requests" ON public.leaves FOR ALL
+    USING ((SELECT auth.uid()) = (SELECT user_id FROM public.employees WHERE id = employee_id));
+CREATE POLICY "Allow managers to manage team's leave requests" ON public.leaves FOR ALL
+    USING (is_manager_of((SELECT id FROM public.employees WHERE user_id = auth.uid()), employee_id));
+CREATE POLICY "Allow HR/Admin full access to leaves" ON public.leaves FOR ALL
+    USING (get_my_role() IN ('admin', 'hr'));
+
+-- Payroll Table Policies (Highly Restricted)
+CREATE POLICY "Allow employees to view their own payroll" ON public.payroll FOR SELECT
+    USING ((SELECT auth.uid()) = (SELECT user_id FROM public.employees WHERE id = employee_id));
+CREATE POLICY "Allow HR/Admin/Finance full access to payroll" ON public.payroll FOR ALL
+    USING (get_my_role() IN ('admin', 'hr', 'finance'));
+
+-- Departments Table Policies
+CREATE POLICY "Allow authenticated users to view departments" ON public.departments FOR SELECT
+    USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow admin/hr to manage departments" ON public.departments FOR ALL
+    USING (get_my_role() IN ('admin', 'hr'));
+    
+-- Assessments Policies
+CREATE POLICY "Employees can see their own assessments" ON public.assessments FOR SELECT
+    USING ((SELECT auth.uid()) = (SELECT user_id FROM public.employees WHERE id = employee_id));
+CREATE POLICY "Managers can see their team's assessments" ON public.assessments FOR SELECT
+    USING (is_manager_of((SELECT id FROM public.employees WHERE user_id = auth.uid()), employee_id));
+CREATE POLICY "HR/QA can see all assessments" ON public.assessments FOR SELECT
+    USING (get_my_role() IN ('hr', 'qa_analyst', 'admin'));
+
+-- -----------------------------------------------------------------------------
+-- 5. VIEWS (Optional but recommended for performance)
+-- -----------------------------------------------------------------------------
+-- Example: A view for a manager's team
+CREATE OR REPLACE VIEW my_team AS
+SELECT * FROM public.employees
+WHERE is_manager_of((SELECT id FROM public.employees WHERE user_id = auth.uid()), id);
+
+
+-- -----------------------------------------------------------------------------
+-- Finalization
+-- -----------------------------------------------------------------------------
+-- Notify completion
+SELECT 'HR360+ Schema V2 deployment complete.' as status;

@@ -25,7 +25,7 @@ export default function LoginPage() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        const { error } = await login(identifier);
+        const { error } = await login(identifier, password);
         if (error) {
             toast({
                 title: "Login Failed",

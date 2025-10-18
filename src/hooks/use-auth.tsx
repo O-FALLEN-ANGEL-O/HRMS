@@ -3,14 +3,21 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers, type User, type UserProfile } from '@/lib/mock-data/employees';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
+
+type UserProfile = Database['public']['Tables']['employees']['Row'] & {
+  role: Database['public']['Tables']['users']['Row']['role'];
+};
 
 interface AuthContextType {
-  user: User | null;
+  user: SupabaseUser | null;
+  profile: UserProfile | null;
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (identifier: string) => Promise<{ error: { message: string } | null }>;
+  login: (email: string, password: string) => Promise<{ error: { message: string } | null }>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<{ error: { message: string } | null }>;
 }
@@ -18,96 +25,138 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    // Check for a user in session storage on initial load
-    try {
-      const storedUser = sessionStorage.getItem('authUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const { data: userProfile } = await supabase
+          .from('employees')
+          .select('*, users!inner(role)')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (userProfile) {
+            const enrichedProfile = {
+                ...userProfile,
+                role: userProfile.users.role,
+            };
+            // @ts-ignore
+            delete enrichedProfile.users;
+            setProfile(enrichedProfile as UserProfile);
+        }
       }
-    } catch (error) {
-      console.error("Could not parse auth user from session storage", error)
-      sessionStorage.removeItem('authUser');
-    } finally {
       setLoading(false);
-    }
-  }, []);
+    };
 
-  const login = async (identifier: string) => {
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+       if (!session?.user) {
+        setProfile(null);
+        router.push('/');
+      }
+      // You might want to re-fetch the profile here as well
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  const login = async (email: string, password: string) => {
     setLoading(true);
-    // Allow login with either employeeId or email
-    const userToLogin = mockUsers.find(u => 
-        u.profile.employee_id.toLowerCase() === identifier.toLowerCase() || 
-        u.email.toLowerCase() === identifier.toLowerCase()
-    );
-
-    if (userToLogin) {
-      setUser(userToLogin);
-      sessionStorage.setItem('authUser', JSON.stringify(userToLogin));
-      router.push(`/${userToLogin.role}/dashboard`);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (error) {
       setLoading(false);
-      return { error: null };
-    } else {
-      setLoading(false);
-      return { error: { message: "Invalid credentials." } };
+      return { error: { message: error.message } };
     }
+
+    // Fetch profile after successful sign-in
+    const { data: user, error: userError } = await supabase.auth.getUser();
+    if(user.user) {
+        const { data: userProfile, error: profileError } = await supabase
+          .from('employees')
+          .select('*, users!inner(role)')
+          .eq('user_id', user.user.id)
+          .single();
+
+        if (profileError) {
+             setLoading(false);
+             return { error: { message: "Could not find user profile." } };
+        }
+        
+        if (userProfile) {
+            const enrichedProfile = {
+                ...userProfile,
+                role: userProfile.users.role,
+            };
+            // @ts-ignore
+            delete enrichedProfile.users;
+            setProfile(enrichedProfile as UserProfile);
+            router.push(`/${enrichedProfile.role}/dashboard`);
+        }
+    } else {
+         setLoading(false);
+         return { error: { message: "Could not retrieve user after login." } };
+    }
+    
+    setLoading(false);
+    return { error: null };
   };
   
   const signUp = async (data: any) => {
     setLoading(true);
-    await new Promise(res => setTimeout(res, 500)); // Simulate network delay
     const { email, password, firstName, lastName } = data;
+    
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: `${firstName} ${lastName}`,
+        },
+      },
+    });
 
-    // Check if user already exists in our mock data
-    if (mockUsers.some(u => u.email === email)) {
+    if (error) {
         setLoading(false);
-        return { error: { message: "An account with this email already exists." } };
+        return { error: { message: error.message } };
     }
     
-    const newProfile: UserProfile = {
-        id: `profile-${Date.now()}`,
-        full_name: `${firstName} ${lastName}`,
-        department: { name: "Engineering" },
-        department_id: "d-001",
-        job_title: 'New Hire',
-        role: 'employee', // Default role for new signups
-        employee_id: `PEP${String(mockUsers.length + 1).padStart(4,'0')}`,
-        profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
-        phone_number: '123-456-7890',
-        status: 'Active',
-    };
+    // The trigger will handle profile creation.
+    // We can then navigate them to a "check your email" page or directly log them in
+    // if email confirmation is disabled. For now, let's just log them in.
+    if(signUpData.user) {
+        // Since we are using a trigger, we might need to wait a bit for the profile to be created
+        // A better approach would be to navigate to a waiting page or handle it more gracefully.
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await login(email, password);
+    }
     
-    const newUser: User = {
-        id: `user-${Date.now()}`,
-        email: email,
-        role: newProfile.role,
-        profile: newProfile
-    };
-    
-    // Add to our mock "database"
-    mockUsers.push(newUser);
-    
-    // Log the user in
-    setUser(newUser);
-    sessionStorage.setItem('authUser', JSON.stringify(newUser));
-    router.push(`/${newUser.role}/dashboard`);
     setLoading(false);
     return { error: null };
   }
 
   const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setProfile(null);
     setSearchTerm('');
-    sessionStorage.removeItem('authUser');
     router.push('/');
   };
 
-  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
+  const value = { user, profile, loading, searchTerm, setSearchTerm, login, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

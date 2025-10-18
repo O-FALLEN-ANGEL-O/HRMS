@@ -21,7 +21,7 @@ import { mockUsers } from '../mock-data/employees';
 import * as dotenv from 'dotenv';
 
 // Ensure environment variables are loaded from .env.local
-dotenv.config({ path: 'src/.env.local' });
+dotenv.config({ path: '.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
