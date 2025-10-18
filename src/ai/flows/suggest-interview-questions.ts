@@ -12,14 +12,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const SuggestInterviewQuestionsInputSchema = z.object({
+const SuggestInterviewQuestionsInputSchema = z.object({
   role: z.string().describe('The role for which interview questions are needed.'),
 });
 export type SuggestInterviewQuestionsInput = z.infer<
   typeof SuggestInterviewQuestionsInputSchema
 >;
 
-export const SuggestInterviewQuestionsOutputSchema = z.object({
+const SuggestInterviewQuestionsOutputSchema = z.object({
   questions: z
     .array(z.string())
     .describe('An array of suggested interview questions.'),
@@ -38,7 +38,6 @@ const prompt = ai.definePrompt({
   name: 'suggestInterviewQuestionsPrompt',
   input: {schema: SuggestInterviewQuestionsInputSchema},
   output: {schema: SuggestInterviewQuestionsOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR assistant. You are asked to suggest a list of interview questions for the role: {{{role}}}.
   
   Return only an array of questions, with no introduction or conclusion.

@@ -39,7 +39,6 @@ const prompt = ai.definePrompt({
   name: 'autoGenerateWelcomeEmailPrompt',
   input: {schema: AutoGenerateWelcomeEmailInputSchema},
   output: {schema: AutoGenerateWelcomeEmailOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR assistant. Your task is to generate a personalized welcome email for a new hire.
 
   Here is the new hire's information:

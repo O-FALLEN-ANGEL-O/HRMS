@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -37,7 +38,6 @@ const prompt = ai.definePrompt({
   name: 'scoreResumePrompt',
   input: {schema: ScoreResumeInputSchema},
   output: {schema: ScoreResumeOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR recruiter.
 
 You will be provided a job description and a resume. You will score the resume from 0-100 based on how well it matches the job description.

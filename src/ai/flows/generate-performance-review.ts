@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -38,7 +39,6 @@ const prompt = ai.definePrompt({
   name: 'generatePerformanceReviewPrompt',
   input: {schema: GeneratePerformanceReviewInputSchema},
   output: {schema: GeneratePerformanceReviewOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR Manager tasked with writing a fair and balanced performance review.
 
   Employee Details:

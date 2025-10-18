@@ -33,7 +33,7 @@ export function LoadingLogo({ className }: { className?: string }) {
             strokeWidth="2" 
             strokeLinecap="round" 
             strokeLinejoin="round" 
-            className="text-primary"
+            className="text-gray-400"
         >
             <motion.path
                 d="M12 2L2 7l10 5 10-5-10-5z"

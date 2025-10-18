@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -37,7 +38,6 @@ const prompt = ai.definePrompt({
   name: 'detectPayrollErrorsPrompt',
   input: {schema: DetectPayrollErrorsInputSchema},
   output: {schema: DetectPayrollErrorsOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert payroll auditor. Your job is to review payroll data and identify any potential errors or discrepancies before the payroll is processed.
 
   Here's the payroll data you need to review (in JSON format):

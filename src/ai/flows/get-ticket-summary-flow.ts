@@ -18,7 +18,6 @@ export async function getTicketSummaryAction(): Promise<TicketData> {
 const prompt = ai.definePrompt({
   name: 'getTicketDataPrompt',
   output: { schema: TicketDataSchema },
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR Data Analyst. Your task is to generate a realistic but fictional set of helpdesk ticket data for a mid-sized tech company. This data will be used to populate a pie chart on the Process Manager's dashboard.
 
   Please generate a count of tickets for the following categories:
