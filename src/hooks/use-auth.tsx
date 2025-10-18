@@ -3,15 +3,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { mockUsers, type User, type UserProfile } from '@/lib/mock-data/employees';
-import { LoadingLogo } from '@/components/loading-logo';
+import { mockUsers, type User } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (identifier: string, password?: string) => Promise<{ error: { message: string } | null }>;
+  login: (identifier: string) => Promise<{ error: { message: string } | null }>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<{ error: { message: string } | null }>;
 }
@@ -26,12 +25,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // This effect now simulates checking for a logged-in user from session storage
-    // In a real app with Supabase, this would check the Supabase session.
     try {
         const storedUserId = sessionStorage.getItem('loggedInUserId');
         if (storedUserId) {
-            const loggedInUser = mockUsers.find(u => u.id === storedUserId);
+            const loggedInUser = mockUsers.find(u => u.profile.employee_id === storedUserId || u.id === storedUserId);
             if(loggedInUser) {
                 setUser(loggedInUser);
             }
@@ -42,12 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = useCallback(async (identifier: string, password?: string) => {
+  const login = useCallback(async (identifier: string) => {
     setLoading(true);
-    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Find user by either email or employee ID
     const foundUser = mockUsers.find(
       u => u.email.toLowerCase() === identifier.toLowerCase() || u.profile.employee_id.toLowerCase() === identifier.toLowerCase()
     );
@@ -65,11 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
   
   const signUp = async (data: any) => {
-    // This is a mock implementation
     console.log("Mock sign up with:", data);
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // For now, just log the user in as a new 'employee' role user
     const newUser: User = {
         id: `user-${Date.now()}`,
         email: data.email,
@@ -83,7 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: 'employee',
             employee_id: `NEW-${String(mockUsers.length + 1).padStart(4,'0')}`,
             status: 'Active',
-            profile_picture_url: `https://ui-avatars.com/api/?name=${data.firstName}+${data.lastName}&background=random`
+            profile_picture_url: `https://ui-avatars.com/api/?name=${data.firstName}+${data.lastName}&background=random`,
+            phone_number: 'N/A'
         }
     };
     mockUsers.push(newUser);
@@ -100,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
-  const value = { user, profile: user?.profile || null, loading, searchTerm, setSearchTerm, login, logout, signUp };
+  const value = { user, loading, searchTerm, setSearchTerm, login, logout, signUp };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
