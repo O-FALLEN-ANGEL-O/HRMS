@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import * as roleController from './role.controller';
 import { validateCreateRole, validateUpdateRole } from './role.dto';

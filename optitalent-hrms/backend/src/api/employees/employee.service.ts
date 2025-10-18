@@ -1,3 +1,4 @@
+
 import { getSupabase, extractData } from '../../lib/supabase';
 
 export async function findAll() {

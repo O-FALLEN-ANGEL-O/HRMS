@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import * as departmentController from './department.controller';
 import { validateCreateDepartment, validateUpdateDepartment } from './department.dto';

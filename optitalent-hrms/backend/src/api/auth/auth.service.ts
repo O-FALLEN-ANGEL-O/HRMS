@@ -1,3 +1,4 @@
+
 import { supabase, extractData } from '../../lib/supabase';
 import bcrypt from 'bcryptjs';
 
