@@ -2,8 +2,6 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { Card, CardContent } from '@/components/ui/card';
 import { WelcomeDialog } from '@/components/welcome-dialog';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
@@ -12,7 +10,7 @@ import HROneCalendar from '@/components/HROneCalendar';
 // Reusable Components from the new design
 function Widget({ title, children }: { title: React.ReactNode, children: React.ReactNode }) {
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm p-4 h-full">
+    <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm p-4">
       <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-zinc-100">
         {title}
       </h3>
