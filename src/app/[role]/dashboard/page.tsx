@@ -14,70 +14,149 @@ import { Calendar } from '@/components/ui/calendar';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
+import { format, getDay, startOfMonth, endOfMonth, addMonths, subMonths, isSameDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 
-const DesktopDashboard = () => (
-    <div className="hidden md:grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Company Feed</CardTitle>
-                    <CardDescription>Latest news and announcements.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Card>
-                        <CardHeader className="flex flex-row justify-between items-start">
-                             <div className="flex items-center space-x-3">
-                                <Avatar className="w-10 h-10">
-                                    <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person avatar"/>
-                                    <AvatarFallback>JL</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-semibold text-sm">Jackson Lee</p>
-                                    <p className="text-xs text-muted-foreground">Head of HR • 1 day ago</p>
+
+// Function to generate mock attendance data for a given month and year
+const generateAttendanceLog = (year: number, month: number) => {
+    const log: Record<string, {
+        status: 'Present' | 'Absent' | 'Leave' | 'Week Off' | 'Holiday' | 'Half Day';
+    }> = {};
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        const dayOfWeek = getDay(date); // Sunday is 0, Saturday is 6
+
+        // Don't generate data for future days in the current month
+        if (isCurrentMonth && day > today.getDate()) {
+            continue;
+        }
+
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            log[dateKey] = { status: 'Week Off' };
+        } else if (day === 15) { 
+            log[dateKey] = { status: 'Holiday' };
+        } else if (day === 10) { 
+            log[dateKey] = { status: 'Leave' };
+        } else if (day === 18) { 
+            log[dateKey] = { status: 'Absent' };
+        } else if (isCurrentMonth && day === today.getDate()) {
+            log[dateKey] = { status: 'Present' };
+        } else if (day === 20) {
+            log[dateKey] = { status: 'Half Day'};
+        } else { 
+             log[dateKey] = { status: 'Present' };
+        }
+    }
+    return log;
+};
+
+
+const DesktopDashboard = () => {
+    const [attendanceLog, setAttendanceLog] = useState<Record<string, any> | null>(null);
+    const [currentDate, setCurrentDate] = useState(new Date());
+
+    useEffect(() => {
+        setAttendanceLog(generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth()));
+    }, [currentDate]);
+
+    const dayStatusClasses: Record<string, string> = {
+        'Present': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+        'Absent': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+        'Leave': 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+        'Holiday': 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+        'Week Off': 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+        'Half Day': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+    };
+
+    const modifiers = attendanceLog ? Object.keys(attendanceLog).reduce((acc, key) => {
+        const status = attendanceLog[key].status.toLowerCase().replace(/ /g, '-');
+        if (!acc[status]) {
+            acc[status] = [];
+        }
+        acc[status].push(new Date(key));
+        return acc;
+    }, {} as Record<string, Date[]>) : {};
+
+    const modifiersClassNames = Object.keys(dayStatusClasses).reduce((acc, key) => {
+        acc[key.toLowerCase().replace(/ /g, '-')] = dayStatusClasses[key];
+        return acc;
+    }, {} as Record<string,string>);
+
+
+    return (
+        <div className="hidden md:grid md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Company Feed</CardTitle>
+                        <CardDescription>Latest news and announcements.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Card>
+                            <CardHeader className="flex flex-row justify-between items-start">
+                                <div className="flex items-center space-x-3">
+                                    <Avatar className="w-10 h-10">
+                                        <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person avatar"/>
+                                        <AvatarFallback>JL</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold text-sm">Jackson Lee</p>
+                                        <p className="text-xs text-muted-foreground">Head of HR • 1 day ago</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4"/>
-                            </Button>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <p className="font-semibold leading-snug">Upcoming Holiday: Annual Company Retreat</p>
-                            <Image alt="Company retreat" data-ai-hint="company retreat beach" className="w-full rounded-lg aspect-video object-cover" width={800} height={400} src="https://placehold.co/800x400.png" />
-                        </CardContent>
-                         <CardFooter className="flex justify-between">
-                            <Button variant="ghost"><ThumbsUp className="mr-2 h-4 w-4"/> Like (74)</Button>
-                            <Button variant="ghost"><MessageSquare className="mr-2 h-4 w-4"/> Comment (5)</Button>
-                             <Button variant="ghost"><Share2 className="mr-2 h-4 w-4"/> Share</Button>
-                        </CardFooter>
-                    </Card>
-                </CardContent>
-            </Card>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4"/>
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <p className="font-semibold leading-snug">Upcoming Holiday: Annual Company Retreat</p>
+                                <Image alt="Company retreat" data-ai-hint="company retreat beach" className="w-full rounded-lg aspect-video object-cover" width={800} height={400} src="https://placehold.co/800x400.png" />
+                            </CardContent>
+                            <CardFooter className="flex justify-between">
+                                <Button variant="ghost"><ThumbsUp className="mr-2 h-4 w-4"/> Like (74)</Button>
+                                <Button variant="ghost"><MessageSquare className="mr-2 h-4 w-4"/> Comment (5)</Button>
+                                <Button variant="ghost"><Share2 className="mr-2 h-4 w-4"/> Share</Button>
+                            </CardFooter>
+                        </Card>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="md:col-span-1 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>My Calendar</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Calendar
+                            mode="single"
+                            selected={new Date()}
+                            onMonthChange={setCurrentDate}
+                            className="rounded-md"
+                            modifiers={modifiers}
+                            modifiersClassNames={modifiersClassNames}
+                        />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Quick Links</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <Button variant="outline" className="w-full justify-start">Submit Expense Report</Button>
+                        <Button variant="outline" className="w-full justify-start">Book Conference Room</Button>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
-        <div className="md:col-span-1 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>My Calendar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Calendar
-                      mode="single"
-                      selected={new Date()}
-                      className="rounded-md"
-                    />
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Quick Links</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start">Submit Expense Report</Button>
-                    <Button variant="outline" className="w-full justify-start">Book Conference Room</Button>
-                </CardContent>
-            </Card>
-        </div>
-    </div>
-);
+    )
+};
 
 
 const MobileDashboard = () => {
