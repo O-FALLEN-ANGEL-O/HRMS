@@ -5,17 +5,17 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare, Download, FileText, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar as CalendarIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import { format, getDay, startOfMonth, endOfMonth, addMonths, subMonths, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import dayjs from "dayjs";
 
 
 // Function to generate mock attendance data for a given month and year
@@ -60,34 +60,41 @@ const generateAttendanceLog = (year: number, month: number) => {
 
 const DesktopDashboard = () => {
     const [attendanceLog, setAttendanceLog] = useState<Record<string, any> | null>(null);
-    const [currentDate, setCurrentDate] = useState(new Date());
+    
+    const [currentMonth, setCurrentMonth] = useState(dayjs());
+    const [selectedDate, setSelectedDate] = useState(dayjs());
 
     useEffect(() => {
-        setAttendanceLog(generateAttendanceLog(currentDate.getFullYear(), currentDate.getMonth()));
-    }, [currentDate]);
+        setAttendanceLog(generateAttendanceLog(currentMonth.year(), currentMonth.month()));
+    }, [currentMonth]);
+    
+    const startOfMonth = currentMonth.startOf("month").startOf("week");
+    const endOfMonth = currentMonth.endOf("month").endOf("week");
 
+    const days = [];
+    let day = startOfMonth;
+    while (day.isBefore(endOfMonth, "day") || day.isSame(endOfMonth, "day")) {
+        days.push(day);
+        day = day.add(1, "day");
+    }
+
+    const prevMonth = () => setCurrentMonth(currentMonth.subtract(1, "month"));
+    const nextMonth = () => setCurrentMonth(currentMonth.add(1, "month"));
+    
     const dayStatusClasses: Record<string, string> = {
-        'Present': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-        'Absent': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
-        'Leave': 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-        'Holiday': 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
-        'Week Off': 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
-        'Half Day': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+        'Present': 'bg-green-500',
+        'Absent': 'bg-red-500',
+        'Leave': 'bg-blue-500',
+        'Holiday': 'bg-purple-500',
+        'Week Off': 'bg-gray-400',
+        'Half Day': 'bg-yellow-400',
     };
-
-    const modifiers = attendanceLog ? Object.keys(attendanceLog).reduce((acc, key) => {
-        const status = attendanceLog[key].status.toLowerCase().replace(/ /g, '-');
-        if (!acc[status]) {
-            acc[status] = [];
-        }
-        acc[status].push(new Date(key));
-        return acc;
-    }, {} as Record<string, Date[]>) : {};
-
-    const modifiersClassNames = Object.keys(dayStatusClasses).reduce((acc, key) => {
-        acc[key.toLowerCase().replace(/ /g, '-')] = dayStatusClasses[key];
-        return acc;
-    }, {} as Record<string,string>);
+    
+    const getDayStatus = (date: dayjs.Dayjs) => {
+        if (!attendanceLog) return null;
+        const dateKey = date.format('YYYY-MM-DD');
+        return attendanceLog[dateKey]?.status;
+    };
 
 
     return (
@@ -119,29 +126,72 @@ const DesktopDashboard = () => {
                                 <p className="font-semibold leading-snug">Upcoming Holiday: Annual Company Retreat</p>
                                 <Image alt="Company retreat" data-ai-hint="company retreat beach" className="w-full rounded-lg aspect-video object-cover" width={800} height={400} src="https://placehold.co/800x400.png" />
                             </CardContent>
-                            <CardFooter className="flex justify-between">
+                             <CardFooter className="flex justify-between">
                                 <Button variant="ghost"><ThumbsUp className="mr-2 h-4 w-4"/> Like (74)</Button>
                                 <Button variant="ghost"><MessageSquare className="mr-2 h-4 w-4"/> Comment (5)</Button>
-                                <Button variant="ghost"><Share2 className="mr-2 h-4 w-4"/> Share</Button>
+                                 <Button variant="ghost"><Share2 className="mr-2 h-4 w-4"/> Share</Button>
                             </CardFooter>
                         </Card>
                     </CardContent>
                 </Card>
             </div>
             <div className="md:col-span-1 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>My Calendar</CardTitle>
+                 <Card>
+                    <CardHeader className="flex items-center justify-between mb-2">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <CalendarIcon className="w-5 h-5 text-primary" />
+                            My Calendar
+                        </CardTitle>
+                        <div className="flex gap-1">
+                            <Button onClick={prevMonth} variant="ghost" size="icon" className="h-7 w-7">
+                                <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={nextMonth} variant="ghost" size="icon" className="h-7 w-7">
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <Calendar
-                            mode="single"
-                            selected={new Date()}
-                            onMonthChange={setCurrentDate}
-                            className="rounded-md"
-                            modifiers={modifiers}
-                            modifiersClassNames={modifiersClassNames}
-                        />
+                        <div className="text-center font-medium text-zinc-700 dark:text-zinc-200 mb-2">
+                            {currentMonth.format("MMMM YYYY")}
+                        </div>
+                        <div className="grid grid-cols-7 text-xs text-muted-foreground uppercase mb-1">
+                            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                                <div key={d} className="text-center py-1">{d}</div>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-7 gap-1">
+                            {days.map((dayItem, i) => {
+                                const isToday = dayItem.isSame(dayjs(), "day");
+                                const isSelected = dayItem.isSame(selectedDate, "day");
+                                const isCurrentMonth = dayItem.isSame(currentMonth, "month");
+                                const status = getDayStatus(dayItem);
+                                
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => setSelectedDate(dayItem)}
+                                        className={cn(
+                                            `aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all duration-150`,
+                                            isSelected ? "bg-primary text-primary-foreground font-semibold" :
+                                            isToday ? "border border-primary text-primary font-medium" :
+                                            isCurrentMonth ? "text-foreground" : "text-muted-foreground/50",
+                                            "hover:bg-accent"
+                                        )}
+                                    >
+                                        <span>{dayItem.date()}</span>
+                                         {isCurrentMonth && status && (
+                                            <div className={cn("w-2 h-2 rounded-full mt-0.5", dayStatusClasses[status])} />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="flex items-center justify-end space-x-2 mt-4 text-xs text-muted-foreground">
+                            {Object.entries(dayStatusClasses).map(([key, value]) => (
+                                <div key={key} className="flex items-center space-x-1"><div className={cn("w-2 h-2 rounded-full", value)}></div><span>{key}</span></div>
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -281,3 +331,4 @@ export default function DashboardPage() {
     
 
     
+
