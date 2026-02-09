@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Briefcase, FileText, Send, User, MessageSquare, Award, Calendar, Check, X } from "lucide-react";
+import { Briefcase, FileText, Send, User, MessageSquare, Award, Calendar, Check, X, ClipboardCheck } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useState, memo, useMemo } from "react";

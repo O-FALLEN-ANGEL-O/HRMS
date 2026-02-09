@@ -10,10 +10,9 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { Message, Part } from 'genkit/experimental/ai';
 
 const AiChatbotInputSchema = z.object({
-  history: z.array(z.custom<Message>()).describe("The history of the conversation so far."),
+  history: z.array(z.any()).describe("The history of the conversation so far."),
   query: z.string().describe("The user's latest query."),
 });
 export type AiChatbotInput = z.infer<typeof AiChatbotInputSchema>;
@@ -25,7 +24,12 @@ export async function aiChatbot(input: AiChatbotInput): Promise<AiChatbotOutput>
   return aiChatbotFlow(input);
 }
 
-const systemPrompt = `You are a friendly and helpful HR assistant chatbot for a company called OptiTalent.
+const prompt = ai.definePrompt(
+  {
+    name: 'aiChatbotPrompt',
+    input: { schema: AiChatbotInputSchema },
+    output: { schema: AiChatbotOutputSchema },
+    prompt: `You are a friendly and helpful HR assistant chatbot for a company called OptiTalent.
 
 Your goal is to answer employee questions about company policies, benefits, leave requests, and other HR-related topics.
 Be concise and clear in your answers.
@@ -33,7 +37,19 @@ Be concise and clear in your answers.
 Use the conversation history to maintain context.
 
 If you don't know the answer to a question, politely state that you don't have that information and suggest contacting the HR department directly at hr@optitalent.com.
-`;
+
+History:
+{{#each history}}
+{{#if (eq role 'user')}}User: {{content}}{{/if}}
+{{#if (eq role 'model')}}Assistant: {{content}}{{/if}}
+{{/each}}
+
+User's new query:
+{{{query}}}
+`,
+  }
+);
+
 
 const aiChatbotFlow = ai.defineFlow(
   {
@@ -41,17 +57,10 @@ const aiChatbotFlow = ai.defineFlow(
     inputSchema: AiChatbotInputSchema,
     outputSchema: AiChatbotOutputSchema,
   },
-  async ({ history, query }) => {
-    const systemMessage: Message = {
-        role: 'system',
-        content: [{ text: systemPrompt }]
-    };
-
-    const llmResponse = await ai.generate({
-      prompt: query,
-      history: [systemMessage, ...history],
-    });
-
-    return llmResponse.text;
+  async (input) => {
+    const { output } = await prompt(input);
+    return output!;
   }
 );
+
+    

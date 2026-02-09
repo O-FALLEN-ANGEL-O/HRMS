@@ -1,16 +1,16 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { mockUsers, type User, type UserProfile } from '@/lib/mock-data/employees';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { mockUsers, type User } from '@/lib/mock-data/employees';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  login: (employeeId: string) => Promise<{ error: { message: string } | null }>;
+  login: (identifier: string) => Promise<{ error: { message: string } | null }>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<{ error: { message: string } | null }>;
 }
@@ -22,84 +22,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Check for a user in session storage on initial load
     try {
-      const storedUser = sessionStorage.getItem('authUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.error("Could not parse auth user from session storage", error)
-      sessionStorage.removeItem('authUser');
-    } finally {
-      setLoading(false);
+        const storedUserId = sessionStorage.getItem('loggedInUserId');
+        if (storedUserId) {
+            const loggedInUser = mockUsers.find(u => u.profile.employee_id === storedUserId || u.id === storedUserId);
+            if(loggedInUser) {
+                setUser(loggedInUser);
+            }
+        }
+    } catch(e) {
+        console.error("Could not access session storage. This is expected in SSR.")
     }
+    setLoading(false);
   }, []);
 
-  const login = async (employeeId: string) => {
+  const login = useCallback(async (identifier: string) => {
     setLoading(true);
-    const userToLogin = mockUsers.find(u => u.profile.employee_id === employeeId);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (userToLogin) {
-      setUser(userToLogin);
-      sessionStorage.setItem('authUser', JSON.stringify(userToLogin));
-      router.push(`/${userToLogin.role}/dashboard`);
+    const foundUser = mockUsers.find(
+      u => u.email.toLowerCase() === identifier.toLowerCase() || u.profile.employee_id.toLowerCase() === identifier.toLowerCase()
+    );
+
+    if (foundUser) {
+      setUser(foundUser);
+      sessionStorage.setItem('loggedInUserId', foundUser.id);
+      router.push(`/${foundUser.role}/dashboard`);
       setLoading(false);
       return { error: null };
     } else {
       setLoading(false);
-      return { error: { message: "Invalid Employee ID." } };
+      return { error: { message: "Invalid credentials. Please try again." } };
     }
-  };
+  }, [router]);
   
   const signUp = async (data: any) => {
-    setLoading(true);
-    await new Promise(res => setTimeout(res, 500)); // Simulate network delay
-    const { email, password, firstName, lastName } = data;
-
-    // Check if user already exists in our mock data
-    if (mockUsers.some(u => u.email === email)) {
-        setLoading(false);
-        return { error: { message: "An account with this email already exists." } };
-    }
-    
-    const newProfile: UserProfile = {
-        id: `profile-${Date.now()}`,
-        full_name: `${firstName} ${lastName}`,
-        department: { name: "Engineering" },
-        department_id: "d-001",
-        job_title: 'New Hire',
-        role: 'employee', // Default role for new signups
-        employee_id: `PEP${String(mockUsers.length + 1).padStart(4,'0')}`,
-        profile_picture_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
-        phone_number: '123-456-7890',
-        status: 'Active',
-    };
+    console.log("Mock sign up with:", data);
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     const newUser: User = {
         id: `user-${Date.now()}`,
-        email: email,
-        role: newProfile.role,
-        profile: newProfile
+        email: data.email,
+        role: 'employee',
+        profile: {
+            id: `profile-${Date.now()}`,
+            full_name: `${data.firstName} ${data.lastName}`,
+            department: { name: 'Unassigned' },
+            department_id: 'd-tba',
+            job_title: 'New Hire',
+            role: 'employee',
+            employee_id: `NEW-${String(mockUsers.length + 1).padStart(4,'0')}`,
+            status: 'Active',
+            profile_picture_url: `https://ui-avatars.com/api/?name=${data.firstName}+${data.lastName}&background=random`,
+            phone_number: 'N/A'
+        }
     };
-    
-    // Add to our mock "database"
     mockUsers.push(newUser);
-    
-    // Log the user in
     setUser(newUser);
-    sessionStorage.setItem('authUser', JSON.stringify(newUser));
+    sessionStorage.setItem('loggedInUserId', newUser.id);
     router.push(`/${newUser.role}/dashboard`);
-    setLoading(false);
     return { error: null };
   }
 
   const logout = async () => {
     setUser(null);
     setSearchTerm('');
-    sessionStorage.removeItem('authUser');
+    sessionStorage.removeItem('loggedInUserId');
     router.push('/');
   };
 

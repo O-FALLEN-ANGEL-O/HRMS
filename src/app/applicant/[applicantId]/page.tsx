@@ -19,6 +19,7 @@ import { assessments, Assessment } from '@/lib/mock-data/assessments';
 import { Dialog, DialogHeader, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { mockUsers } from '@/lib/mock-data/employees';
 
 
 function ProfileTab({ applicant, setApplicant }: { applicant: WalkinApplicant; setApplicant: (app: WalkinApplicant) => void }) {
@@ -379,6 +380,58 @@ export default function ApplicantDashboardPage() {
         toast({title: "Logged Out", description: "You have been logged out of your temporary account."});
     };
 
+    const handleFinalSubmit = () => {
+        if (!applicant) return;
+        
+        // In a real app, this would trigger a backend process.
+        // Here we just update the mock data.
+        const updatedApplicant = { ...applicant, status: 'Onboarding Complete' as const };
+        handleSetApplicant(updatedApplicant);
+
+        // This is where the employee account is created in the mock DB
+        const existingEmployee = mockUsers.find(u => u.email === updatedApplicant.email);
+        if (!existingEmployee) {
+            const employeeId = `PEP${String(mockUsers.length + 1).padStart(4, '0')}`;
+            const newEmployee = {
+                id: `user-${Date.now()}`,
+                email: updatedApplicant.email,
+                role: 'employee' as const,
+                profile: {
+                    id: `profile-${Date.now()}`,
+                    full_name: updatedApplicant.fullName,
+                    employee_id: employeeId,
+                    department: { name: 'To Be Assigned' },
+                    department_id: 'd-tba',
+                    job_title: 'New Hire',
+                    role: 'employee' as const,
+                    status: 'Active' as const,
+                    profile_picture_url: updatedApplicant.profilePicture,
+                    phone_number: updatedApplicant.phone,
+                    professionalInfo: {
+                        experience: updatedApplicant.experience,
+                        education: updatedApplicant.education,
+                        skills: [], 
+                        certifications: [],
+                    },
+                    familyAndHealthInfo: { 
+                        dependents: [],
+                        health: { bloodGroup: '', allergies: '' },
+                        emergencyContact: { name: '', relationship: '', phone: '' }
+                    }
+                }
+            };
+            mockUsers.push(newEmployee);
+        }
+        
+        // Navigate to the "Welcome/Password Reset" page.
+        router.push(`/walkin-drive/welcome?applicantId=${applicant.id}`);
+
+        toast({
+            title: "Onboarding Submitted!",
+            description: "Your details have been submitted. Welcome to the team!",
+        });
+    };
+
     if (!applicant) {
         return <div className="flex h-screen items-center justify-center">Loading applicant profile...</div>;
     }
@@ -413,6 +466,9 @@ export default function ApplicantDashboardPage() {
                                 <h3 className="font-semibold text-blue-800 dark:text-blue-200">Your Application Status</h3>
                                 <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{applicant.status}</p>
                             </div>
+                            <Button onClick={handleFinalSubmit}>
+                                <Send className="mr-2 h-4 w-4" /> Finalize & Submit Onboarding
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -445,5 +501,3 @@ export default function ApplicantDashboardPage() {
         </div>
     );
 }
-
-    

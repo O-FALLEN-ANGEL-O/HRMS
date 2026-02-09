@@ -1,320 +1,114 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { ThumbsUp, Share2, Lightbulb, CalendarDays, ArrowRight, Search, Bell, MoreHorizontal, Grid2X2, Clock, CheckCircle, Wallet, Newspaper, LogOut, Home, User, Users, MessageSquare } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/hooks/use-auth';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState, useEffect, Suspense } from 'react';
+import { WelcomeDialog } from '@/components/welcome-dialog';
 import Image from 'next/image';
-import { DashboardCard } from '@/components/ui/dashboard-card';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import HROneCalendar from '@/components/HROneCalendar';
 
-const wallOfFame = [
-    { name: 'Rajesh T.', empId: 'EMP009', badges: 12, avatar: 'https://ui-avatars.com/api/?name=Rajesh+T&background=random', crown: 'gold' },
-    { name: 'Thiyagu B', empId: 'EMP010', badges: 10, avatar: 'https://ui-avatars.com/api/?name=Thiyagu+B&background=random', crown: 'silver' },
-    { name: 'Prajwal', empId: 'EMP011', badges: 8, avatar: 'https://ui-avatars.com/api/?name=Prajwal&background=random', crown: 'bronze' },
-];
+// Reusable Components from the new design
+function Widget({ title, children }: { title: React.ReactNode, children: React.ReactNode }) {
+  return (
+    <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm p-4">
+      <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-zinc-100">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
 
-const leaderboardList = [
-    { rank: 4, name: 'Srehanth Kumar', badges: 4, avatar: 'https://ui-avatars.com/api/?name=Srehanth+K&background=random' },
-    { rank: 5, name: 'Harshini K', badges: 2, avatar: 'https://ui-avatars.com/api/?name=Harshini+K&background=random' },
-    { rank: 6, name: 'Praisy S Shetty', badges: 1, avatar: 'https://ui-avatars.com/api/?name=Praisy+S&background=random' },
-]
-
-const feedPosts = [
-    {
-        author: 'Divyashree',
-        authorRole: 'Specialist',
-        timestamp: '1 month ago',
-        avatar: 'https://ui-avatars.com/api/?name=Divyashree&background=random',
-        title: 'Employee Referral Program is Active!',
-        image: 'https://placehold.co/800x400.png',
-        imageHint: 'employee referral program'
-    },
-    {
-        author: 'Jackson Lee',
-        authorRole: 'Head of HR',
-        timestamp: '2 months ago',
-        avatar: 'https://ui-avatars.com/api/?name=Jackson+Lee&background=random',
-        title: 'Annual Company Retreat Location Announced!',
-        image: 'https://placehold.co/800x400.png',
-        imageHint: 'company retreat beach'
-    }
-];
+function UserHighlight({ name, event }: { name: string, event: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm">{name} — {event}</span>
+      <button className="text-indigo-600 text-xs font-medium">Wish</button>
+    </div>
+  );
+}
 
 const DesktopDashboard = () => {
-    const { user } = useAuth();
-    const [date, setDate] = useState<Date | undefined>(new Date());
-    
     return (
-        <div className="space-y-6">
-       <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Hello, {user?.profile.full_name.split(' ')[0] || 'There'}!</h1>
-          <p className="text-gray-500 dark:text-gray-400">You are having a great day.</p>
-        </div>
+        <div className="grid grid-cols-12 gap-4">
+          {/* Left Sidebar Widgets */}
+          <div className="col-span-12 lg:col-span-3 space-y-4">
+            <Widget title="Today's Celebration">
+              <div className="space-y-2">
+                <UserHighlight name="Kavyashree" event="Birthday" />
+                <UserHighlight name="Mohammed" event="Birthday" />
+                <UserHighlight name="Nikhil M" event="Birthday" />
+              </div>
+              <button className="text-blue-600 text-xs mt-2">See more</button>
+            </Widget>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
-        {/* Left Column */}
-        <div className="hidden xl:flex xl:flex-col space-y-6">
-             <DashboardCard title="Wall of Fame">
-                <div className="flex justify-between items-center bg-gray-50 dark:bg-muted p-3 rounded-lg mb-4">
-                    <h3 className="text-md font-semibold">Badge received</h3>
-                    <span className="text-sm text-gray-500 dark:text-muted-foreground">This week</span>
-                </div>
-                <div className="flex justify-around items-center text-center mt-4">
-                    {wallOfFame.map((person, index) => (
-                         <div key={index}>
-                            <Avatar className={`w-16 h-16 mx-auto border-2 ${person.crown === 'gold' ? 'border-yellow-400' : person.crown === 'silver' ? 'border-gray-400' : 'border-amber-600'}`}>
-                                <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person portrait" />
-                                <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <p className="mt-2 font-semibold text-sm">{person.name}</p>
-                            <p className="text-xs text-gray-500">{person.badges} Badge</p>
-                        </div>
-                    ))}
-                </div>
-                <ul className="mt-6 space-y-4">
-                    {leaderboardList.map((person) => (
-                        <li key={person.rank} className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <span className="font-bold text-sm">{person.rank}</span>
-                                <Avatar className="w-10 h-10">
-                                    <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
-                                    <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <p className="text-sm">{person.name}</p>
-                            </div>
-                            <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges}</span>
-                        </li>
-                    ))}
-                </ul>
-                <Link href="#" className="text-primary hover:underline mt-4 block text-center text-sm">See more</Link>
-             </DashboardCard>
-             <DashboardCard title="Team planned leaves" icon={CalendarDays}>
-                <div className="text-center py-8">
-                     <p className="text-gray-500 mt-2 text-sm">No planned leaves today</p>
-                </div>
-             </DashboardCard>
-        </div>
-
-        {/* Main Content (Center) */}
-        <div className="lg:col-span-2 space-y-6">
-           <Card className="rounded-2xl shadow-lg">
-                <CardHeader>
-                    <div className="flex items-start space-x-4">
-                        <Avatar className="w-14 h-14">
-                            <AvatarImage src={feedPosts[0].avatar} alt={feedPosts[0].author} data-ai-hint="person portrait" />
-                            <AvatarFallback>{feedPosts[0].author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <div className="flex justify-between items-center w-full">
-                                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">{feedPosts[0].author}</h3>
-                            </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">People Operations</p>
-                            <p className="text-xs text-gray-400 mt-1">{feedPosts[0].timestamp}</p>
-                        </div>
-                         <span className="ml-auto bg-purple-100 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Featured</span>
-                    </div>
-                </CardHeader>
-                <CardContent className="border-t pt-4">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-lg">{feedPosts[0].title}</p>
-                    <Image alt={feedPosts[0].title} data-ai-hint={feedPosts[0].imageHint} className="w-full rounded-lg aspect-video object-cover" width={800} height={400} src={feedPosts[0].image} />
-                     <div className="mt-6 flex justify-between items-center text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center space-x-6">
-                            <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
-                                <ThumbsUp className="h-5 w-5" />
-                                <span className="font-medium">Like</span>
-                            </Button>
-                            <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
-                                <MessageSquare className="h-5 w-5" />
-                                <span className="font-medium">Comment</span>
-                            </Button>
-                        </div>
-                        <Button variant="ghost" className="flex items-center space-x-2 text-gray-500 hover:text-primary">
-                            <Share2 className="h-5 w-5" />
-                            <span className="font-medium">Share</span>
-                        </Button>
-                    </div>
-                     <div className="mt-4 border-t border-gray-200 dark:border-border pt-4">
-                        <div className="flex items-center space-x-3">
-                            <Avatar className="w-10 h-10">
-                                <AvatarImage src={user?.profile.profile_picture_url} alt="User avatar" data-ai-hint="person avatar"/>
-                                <AvatarFallback>{user?.profile.full_name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <Input className="w-full bg-gray-100 dark:bg-muted border-none rounded-full px-4 py-2 focus:ring-2 focus:ring-primary text-sm" placeholder="Write a comment..." type="text"/>
-                        </div>
-                    </div>
-                </CardContent>
-           </Card>
-        </div>
-
-        {/* Right Sidebar (becomes main column on smaller screens) */}
-        <div className="lg:col-span-1 space-y-6">
-            <DashboardCard title="Welcome!">
-                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <p className="text-sm text-gray-700 dark:text-blue-200 mt-2">Welcome to OptiTalent. We're thrilled to have you with us and look forward to your success and growth.</p>
-                    <div className="mt-4 flex items-center space-x-2 text-sm text-gray-600 dark:text-blue-300">
-                        <Users className="h-4 w-4" />
-                        <span>1 person wished you</span>
-                    </div>
-                </div>
-            </DashboardCard>
-
-            <DashboardCard title="Calendar">
-                <CalendarComponent
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="p-0"
-                     classNames={{
-                       day_selected: "bg-primary text-white rounded-full focus:bg-primary focus:text-white",
-                       day_today: "bg-blue-100 dark:bg-blue-900 text-primary rounded-full"
-                    }}
-                />
-                 <div className="flex flex-wrap justify-between text-xs mt-4 gap-2">
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-primary rounded-full"></span><span>Today</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span><span>Present</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-yellow-400 rounded-full"></span><span>Leave</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-full"></span><span>Absent</span></div>
-                    <div className="flex items-center space-x-1"><span className="w-2.5 h-2.5 bg-gray-300 rounded-full"></span><span>Holiday</span></div>
-                </div>
-                <Button variant="link" className="text-sm font-medium p-0 h-auto mt-4" asChild><Link href={`/${user?.role}/attendance`}>Go to calendar</Link></Button>
-            </DashboardCard>
-            
-            <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start space-x-4">
-                <Lightbulb className="text-3xl text-orange-500" />
+            <Widget title="Wall of Fame">
+              <div className="flex items-center gap-3">
+                <Image src="https://placehold.co/100x100?text=AS" width={40} height={40} className="w-10 h-10 rounded-full" alt="Adithya Sreedhar" data-ai-hint="person avatar"/>
                 <div>
-                    <h4 className="font-bold text-orange-800 dark:text-orange-200">Do you know?</h4>
-                    <p className="text-sm text-gray-700 dark:text-orange-300 mt-1">Our HR Chatbot can answer most of your policy questions instantly. Give it a try!</p>
+                  <p className="text-sm font-medium">Adithya Sreedhar</p>
+                  <p className="text-xs text-gray-500">6 Badges</p>
                 </div>
-            </div>
+              </div>
+            </Widget>
+          </div>
+
+          {/* Feed Section */}
+          <div className="col-span-12 lg:col-span-6 space-y-4">
+            <Widget title="Feed">
+              <div className="flex items-start gap-3">
+                 <Image src="https://placehold.co/100x100?text=VS" width={40} height={40} className="w-10 h-10 rounded-full" alt="Vijayalakshmi S." data-ai-hint="person avatar"/>
+                <div>
+                  <h4 className="font-medium">Vijayalakshmi S.</h4>
+                  <p className="text-xs text-gray-500">Senior HR Manager • 1 week ago</p>
+                  <p className="text-sm mt-2">
+                    We are delighted to announce the Performance Management System (PMS) for 2025.
+                  </p>
+                </div>
+              </div>
+            </Widget>
+          </div>
+
+          {/* Right Widgets (Inbox, Calendar, Stats) */}
+          <div className="col-span-12 lg:col-span-3 space-y-4">
+            <Widget title="Inbox">
+              <p className="text-sm font-medium">
+                <span className="font-bold text-indigo-600">4</span> Pending tasks
+              </p>
+            </Widget>
+
+            <Widget title="Calendar">
+              <HROneCalendar />
+            </Widget>
+
+            <Widget title="Did You Know?">
+              <p className="text-sm text-gray-600">
+                You can mark attendance, apply leave, or check AR directly with our AI Assistant 🤖
+              </p>
+            </Widget>
+          </div>
         </div>
-      </div>
-    </div>
     )
 };
 
+export default function DashboardPage() {
+    const { loading } = useAuth();
+    const [isClient, setIsClient] = useState(false);
+    
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
-const MobileDashboard = () => {
-    const { user } = useAuth();
-    if (!user) return null;
+    if (loading || !isClient) {
+        return <div>Loading...</div>
+    }
 
     return (
-        <div className="space-y-6">
-            <header className="flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                    <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.profile.profile_picture_url} />
-                        <AvatarFallback>{user.profile.full_name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-semibold text-lg">Hello, {user.profile.full_name.split(' ')[0]}!</p>
-                        <p className="text-sm text-muted-foreground">Welcome back</p>
-                    </div>
-                </div>
-                 <div className="flex items-center space-x-1">
-                    <Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button>
-                    <Button variant="ghost" size="icon" className="relative">
-                        <Bell className="h-5 w-5"/>
-                        <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-background"></span>
-                    </Button>
-                </div>
-            </header>
-            
-            <Card>
-                <CardContent className="p-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold text-sm">Profile Completion</span>
-                        <span className="text-sm font-bold text-primary">12.5%</span>
-                    </div>
-                    <Progress value={12.5} className="h-2" />
-                    <Link href={`/${user.role}/profile`} className="text-sm text-primary font-medium mt-3 inline-flex items-center">
-                        Complete your profile <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
-                </CardContent>
-            </Card>
-            
-            <Tabs defaultValue="feed" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="feed">Feed</TabsTrigger>
-                    <TabsTrigger value="fame">Wall of Fame</TabsTrigger>
-                </TabsList>
-                <TabsContent value="feed" className="space-y-4">
-                    {feedPosts.map((post, index) => (
-                        <Card key={index}>
-                            <CardHeader className="flex flex-row justify-between items-start p-4">
-                                <div className="flex items-center space-x-3">
-                                    <Avatar className="w-10 h-10">
-                                        <AvatarImage src={post.avatar} data-ai-hint="person avatar"/>
-                                        <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-semibold text-sm">{post.author}</p>
-                                        <p className="text-xs text-muted-foreground">{post.authorRole} • {post.timestamp}</p>
-                                    </div>
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4"/>
-                                </Button>
-                            </CardHeader>
-                            <CardContent className="px-4 pb-4 space-y-3">
-                                <p className="font-semibold leading-snug">{post.title}</p>
-                                <Image 
-                                    alt={post.title} 
-                                    data-ai-hint={post.imageHint} 
-                                    className="w-full rounded-lg aspect-video object-cover" 
-                                    width={800} height={400} 
-                                    src={post.image} />
-                            </CardContent>
-                        </Card>
-                    ))}
-                </TabsContent>
-                <TabsContent value="fame">
-                    <Card>
-                      <CardContent className="p-4">
-                        <ul className="space-y-4">
-                            {wallOfFame.concat(leaderboardList).map((person, index) => (
-                                <li key={index} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <span className="font-bold text-sm w-4">{index+1}</span>
-                                        <Avatar className="w-10 h-10">
-                                            <AvatarImage src={person.avatar} alt={person.name} data-ai-hint="person avatar" />
-                                            <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <p className="text-sm">{person.name}</p>
-                                    </div>
-                                    <span className="text-gray-600 dark:text-gray-400 font-semibold text-sm">{person.badges} Badges</span>
-                                </li>
-                            ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                 </TabsContent>
-            </Tabs>
-        </div>
-    )
-}
-
-
-export default function DashboardPage() {
-  return (
-    <>
-        <div className="hidden md:block">
-            <DesktopDashboard />
-        </div>
-        <div className="md:hidden">
-            <MobileDashboard />
-        </div>
-    </>
-  );
+        <>
+            <WelcomeDialog />
+            <div className="space-y-6">
+                <DesktopDashboard />
+            </div>
+        </>
+    );
 }

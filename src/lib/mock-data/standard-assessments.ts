@@ -1,7 +1,7 @@
 import type { ApplicantAssessment } from './walkin';
 
 export type ApplicantWithAssessments = {
-    applicantId: string;
+    applicantId: string; // Can be an applicant ID or an employee ID
     assessments: ApplicantAssessment[];
 };
 
@@ -43,5 +43,15 @@ export const standardApplicantAssessments: ApplicantWithAssessments[] = [
     {
         applicantId: 'app-003', // Rohan Gupta
         assessments: [] // No assessments assigned yet
+    },
+    {
+        applicantId: 'PEP0012', // Anika Sharma (existing employee)
+        assessments: [
+            {
+                assessmentId: 'asmt-001',
+                status: 'Completed',
+                attempts: [{ attemptNumber: 1, score: 92, completedAt: '2024-06-10T09:30:00Z'}]
+            }
+        ]
     }
 ];

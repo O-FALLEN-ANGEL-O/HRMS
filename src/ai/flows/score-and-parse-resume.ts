@@ -34,13 +34,6 @@ const EducationSchema = z.object({
   year: z.string().describe('The year of graduation or completion.'),
 });
 
-const ProjectSchema = z.object({
-    name: z.string().describe("The name or title of the project."),
-    description: z.string().describe("A brief description of the project."),
-    url: z.string().describe("A URL to the project if available.").optional(),
-});
-
-
 const ScoreAndParseResumeOutputSchema = z.object({
   score: z
     .number()
@@ -49,7 +42,7 @@ const ScoreAndParseResumeOutputSchema = z.object({
     .describe('The score (0-100) of the resume based on the job description.'),
   justification: z
     .string()
-    .describe('A concise justification for the assigned score, highlighting key strengths and weaknesses.'),
+    .describe('A concise justification for the assigned score.'),
   parsedData: z.object({
     name: z.string().describe("The candidate's full name."),
     email: z.string().describe("The candidate's email address.").optional(),
@@ -59,7 +52,6 @@ const ScoreAndParseResumeOutputSchema = z.object({
     skills: z.array(z.string()).describe('An array of key skills extracted from the resume.'),
     workExperience: z.array(WorkExperienceSchema).describe('An array of work experience objects.'),
     education: z.array(EducationSchema).describe('An array of education objects.'),
-    projects: z.array(ProjectSchema).describe("An array of personal or professional projects.").optional(),
     certifications: z.array(z.string()).describe('An array of relevant certifications.'),
     languages: z.array(z.string()).describe('An array of languages spoken by the candidate.'),
     hobbies: z.array(z.string()).describe("An array of hobbies or interests listed on the resume.").optional(),
@@ -75,13 +67,12 @@ const prompt = ai.definePrompt({
   name: 'scoreAndParseResumePrompt',
   input: {schema: ScoreAndParseResumeInputSchema},
   output: {schema: ScoreAndParseResumeOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert HR recruiter with experience in parsing resumes and matching candidates to job descriptions.
 
 You will be provided with a job description and a resume (as a data URI). Your tasks are:
-1.  Parse the resume to extract structured information. Be as accurate as possible. Extract all fields defined in the output schema.
+1.  Parse the resume to extract structured information. Be as accurate as possible.
 2.  Score the resume from 0 to 100 based on how well the candidate's skills and experience match the provided job description.
-3.  Provide a concise justification for the score. Explain the reasoning behind your score, noting how the candidate aligns with the requirements.
+3.  Provide a concise justification for the score.
 
 Job Description:
 \`\`\`
@@ -91,7 +82,7 @@ Job Description:
 Resume Content:
 {{media url=resumeDataUri}}
 
-Please return the extracted data, score, and justification as per the defined output schema. If a field is not present in the resume, return an empty string or array for it.
+Please return the extracted data, score, and justification as per the defined output schema.
 `,
 });
 
@@ -106,3 +97,5 @@ const scoreAndParseResumeFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
