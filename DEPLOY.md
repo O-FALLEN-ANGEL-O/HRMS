@@ -8,7 +8,7 @@ The app sets up its own database: on first run it applies any pending migrations
 
 ### 1. Create the database
 
-dash.cloudflare.com → Storage & databases → D1 SQL database → Create → name it `hr-plus` → Create. Put its Database ID into `database_id` in `wrangler.jsonc` and push to `master`.
+dash.cloudflare.com → Storage & databases → D1 SQL database → Create → name it `hrplus` → Create. Put its Database ID into `database_id` in `wrangler.jsonc` and push to `master`.
 
 ### 2. Connect the repo
 

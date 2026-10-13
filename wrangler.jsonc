@@ -18,10 +18,10 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "hr-plus",
-			// The id of the D1 database named "hr-plus" (Storage & databases > D1 in the dashboard).
+			"database_name": "hrplus",
+			// The id of the D1 database named "hrplus" (Storage & databases > D1 in the dashboard).
 			// The app creates its tables and demo data itself on first run.
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_id": "e5024672-fb35-4343-8e1a-3feb2624636d",
 			"migrations_dir": "drizzle/migrations"
 		}
 	],
