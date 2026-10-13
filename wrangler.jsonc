@@ -1,0 +1,41 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "hr-plus",
+	"main": "worker.ts",
+	"compatibility_date": "2026-10-01",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Self-reference used by OpenNext; must match "name" above.
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "hr-plus"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "hrplus",
+			// The id of the D1 database named "hrplus" (Storage & databases > D1 in the dashboard).
+			// The app creates its tables and demo data itself on first run.
+			"database_id": "e5024672-fb35-4343-8e1a-3feb2624636d",
+			"migrations_dir": "drizzle/migrations"
+		}
+	],
+	"ai": {
+		"binding": "AI"
+	},
+	"vars": {
+		"DEMO_MODE": "true"
+	},
+	"triggers": {
+		// 02:00 IST every day: reset the demo data.
+		"crons": ["30 20 * * *"]
+	},
+	"observability": {
+		"enabled": true
+	}
+}

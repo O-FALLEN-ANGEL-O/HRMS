@@ -1,76 +1,15 @@
+import Link from "next/link";
 
-"use client";
-
-import React from 'react';
-import { motion } from "framer-motion";
-import { cn } from '@/lib/utils';
-
-interface LogoProps {
-  className?: string;
-  showText?: boolean;
-}
-
-const LogoComponent = ({ className, showText }: LogoProps) => {
-
-  const iconVariants = {
-    hidden: {
-      pathLength: 0,
-    },
-    visible: {
-      pathLength: 1,
-    }
-  }
+export function Logo({ href = "/", compact = false }: { href?: string; compact?: boolean }) {
   return (
-    <div className={cn("inline-flex items-center gap-2 font-headline text-xl font-bold", className)}>
-        <motion.svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="28" 
-            height="28" 
-            viewBox="0 0 24 24" 
-            fill="none"
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-primary"
-        >
-            <motion.path
-                d="M12 2L2 7l10 5 10-5-10-5z"
-                strokeDasharray="1"
-                strokeDashoffset="0"
-                variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                transition={{
-                    default: { duration: 1, ease: "easeInOut" },
-                }}
-            />
-            <motion.path
-                d="M2 17l10 5 10-5"
-                strokeDasharray="1"
-                strokeDashoffset="0"
-                 variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                transition={{
-                    default: { duration: 1, ease: "easeInOut", delay: 0.2 },
-                }}
-            />
-            <motion.path
-                d="M2 12l10 5 10-5"
-                strokeDasharray="1"
-                strokeDashoffset="0"
-                 variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                transition={{
-                    default: { duration: 1, ease: "easeInOut", delay: 0.4 },
-                }}
-            />
-        </motion.svg>
-        <span className={cn('hidden', { 'group-hover/sidebar:inline': !showText, 'inline': showText })}>OptiTalent</span>
-    </div>
+    <Link href={href} className="inline-flex items-center gap-2.5 rounded-md" aria-label="HR+ home">
+      <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden>
+        <rect width="64" height="64" rx="16" fill="var(--ink)" />
+        <circle cx="32" cy="32" r="19" fill="none" stroke="color-mix(in oklab, var(--paper) 25%, var(--ink))" strokeWidth="6" />
+        <path d="M32 13a19 19 0 0 1 18.07 13.13" fill="none" stroke="var(--marigold)" strokeWidth="6" strokeLinecap="round" />
+        <path d="M32 24v16M24 32h16" stroke="var(--paper)" strokeWidth="4.5" strokeLinecap="round" />
+      </svg>
+      {compact ? null : <span className="font-display text-xl font-bold tracking-tight">HR+</span>}
+    </Link>
   );
 }
-
-export const Logo = React.memo(LogoComponent);

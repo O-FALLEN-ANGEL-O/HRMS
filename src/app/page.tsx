@@ -1,123 +1,94 @@
+import Link from "next/link";
+import { eq, and, isNotNull, ne } from "drizzle-orm";
+import { getDb, schema } from "@/db/client";
+import { getCurrentUser } from "@/lib/auth";
+import { todayIST } from "@/lib/utils";
+import { Landing, type Persona } from "./landing";
 
-"use client";
+export const dynamic = "force-dynamic";
 
-import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { ArrowRight, ShieldQuestion } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMemo, useState, useEffect, memo } from 'react';
-import { mockUsers } from '@/lib/mock-data/employees';
-import { navConfig } from '@/hooks/use-nav';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { LoadingLogo } from '@/components/loading-logo';
-import { Logo } from '@/components/logo';
+const PERSONAS: Omit<Persona, "hue">[] = [
+  {
+    code: "E001",
+    role: "admin",
+    name: "Meera Iyer",
+    title: "Head of Operations",
+    does: "Runs payroll, sees company-wide analytics, manages assets and resets the demo.",
+  },
+  { code: "E002", role: "hr", name: "Arjun Rao", title: "HR Business Partner", does: "Onboards two new joiners, offboards one, handles tickets and surveys." },
+  {
+    code: "E005",
+    role: "recruiter",
+    name: "Sana Qureshi",
+    title: "Talent Partner",
+    does: "Moves candidates through four open roles with resume match scores.",
+  },
+  {
+    code: "E003",
+    role: "manager",
+    name: "Kavya Nair",
+    title: "Engineering Manager",
+    does: "Has leave, attendance and expense requests waiting, plus reviews to write.",
+  },
+  {
+    code: "E004",
+    role: "employee",
+    name: "Rohan Desai",
+    title: "Frontend Engineer",
+    does: "Clocks in, applies for leave, files expenses, reads payslips, asks the HR assistant.",
+  },
+];
 
-export default function RoleSelectorPage() {
-    const { login, loading: authLoading } = useAuth();
-    const { toast } = useToast();
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
+async function loadLanding() {
+  try {
+    const db = await getDb();
+    const today = todayIST();
+    const [people, present, everyone] = await Promise.all([
+      db.$count(schema.employees, ne(schema.employees.status, "exited")),
+      db.$count(schema.attendance, and(eq(schema.attendance.date, today), isNotNull(schema.attendance.checkIn))),
+      db
+        .select({
+          code: schema.employees.code,
+          name: schema.employees.name,
+          title: schema.employees.title,
+          role: schema.employees.role,
+          hue: schema.employees.hue,
+        })
+        .from(schema.employees)
+        .where(ne(schema.employees.status, "exited"))
+        .orderBy(schema.employees.name),
+    ]);
+    return { people, present, everyone, ok: true as const };
+  } catch (err) {
+    console.error("landing: database unavailable", err);
+    return { people: 0, present: 0, everyone: [], ok: false as const };
+  }
+}
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsInitialLoading(false);
-        }, 1500);
-        return () => clearTimeout(timer);
-    }, []);
-
-    const allRoles = useMemo(() => {
-        return Object.keys(navConfig)
-            .filter(role => role !== 'guest')
-            .map(role => {
-                const userForRole = mockUsers.find(u => u.role === role);
-                return {
-                    role,
-                    name: userForRole ? userForRole.profile.full_name : 'Default ' + role.charAt(0).toUpperCase() + role.slice(1),
-                    employeeId: userForRole ? userForRole.profile.employee_id : ''
-                }
-            });
-    }, []);
-
-    const handleLogin = async (employeeId: string) => {
-        if (!employeeId) {
-            toast({
-                title: "Login Error",
-                description: "This role does not have a valid Employee ID to log in with.",
-                variant: "destructive",
-            });
-            return;
-        }
-        const { error } = await login(employeeId);
-        if (error) {
-            toast({
-                title: "Login Failed",
-                description: error.message,
-                variant: "destructive",
-            });
-        }
-    };
-    
-    if (authLoading || isInitialLoading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
-                <LoadingLogo />
-            </div>
-        )
-    }
+export default async function Page({ searchParams }: { searchParams: Promise<{ error?: string; reset?: string }> }) {
+  const [user, data, sp] = await Promise.all([getCurrentUser().catch(() => null), loadLanding(), searchParams]);
+  const hueByCode = new Map(data.everyone.map((e) => [e.code, e.hue]));
+  const personas = PERSONAS.map((p) => ({ ...p, hue: hueByCode.get(p.code) ?? 210 }));
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-2xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
-            <Logo className="inline-flex text-3xl mb-2" showText={true} />
-            <h1 className="text-4xl font-bold font-headline leading-tight text-foreground">The Future of HR is Here.</h1>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">One platform to manage your entire workforce, from hiring to retiring. Powered by AI, designed for humans.</p>
-        </div>
-
-        <Card className="w-full shadow-lg border">
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline text-2xl"><ShieldQuestion className="text-primary"/> Select a Role to Demo</CardTitle>
-            <CardDescription>Click any role to directly access its role-based dashboard and features.</CardDescription>
-        </CardHeader>
-        <CardContent>
-                <ScrollArea className="h-96">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Example User</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {allRoles.map(account => (
-                            <TableRow key={account.role}>
-                                <TableCell className="font-medium capitalize">{account.role.replace(/-/g, ' ')}</TableCell>
-                                <TableCell className="text-muted-foreground">{account.name}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button 
-                                        size="sm"
-                                        disabled={authLoading}
-                                        onClick={() => handleLogin(account.employeeId)}
-                                    >
-                                        View Dashboard
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </ScrollArea>
-        </CardContent>
-        </Card>
-        <div className="text-center text-sm text-muted-foreground">
-             &copy; {new Date().getFullYear()} OptiTalent Inc. All Rights Reserved. This is a frontend prototype.
-        </div>
-      </div>
-    </div>
+    <Landing
+      personas={personas}
+      everyone={data.everyone}
+      people={data.people}
+      present={data.present}
+      dbOk={data.ok}
+      error={sp.error}
+      reset={sp.reset === "1"}
+      continueAs={user ? { name: user.name, href: "/home" } : null}
+      footer={
+        <p>
+          A demo HRMS built by{" "}
+          <Link className="link" href="https://praxel.space/">
+            Prajwal DL
+          </Link>
+          . Northwind Labs and everyone in it are fictional; data resets every night.
+        </p>
+      }
+    />
   );
 }

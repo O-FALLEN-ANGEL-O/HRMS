@@ -1,127 +1,73 @@
-# OptiTalent HRMS: A Next-Generation AI-Powered HR Platform
+# HR+
 
-OptiTalent is a comprehensive, AI-enhanced Human Resource Management System (HRMS) built with a modern tech stack. It's designed to streamline every aspect of the employee lifecycle, from recruitment and onboarding to performance management and payroll, leveraging the power of Google's Gemini models through the Genkit framework.
+An HRMS for a small Indian company, built as a working demo: attendance, time off, expenses, Indian payroll, hiring, onboarding, goals, a helpdesk and an HR assistant that answers from the company's own policies.
 
-This is a frontend prototype designed to showcase a full range of HRMS features with mocked data and simulated AI interactions.
+Pick a person on the landing page (admin, HR, manager, employee or recruiter) and the app shows what that role can see and do. Everything is real: requests flow up the reporting line, approvals change balances, payroll reads approved leave and expenses, and every change is stored in Cloudflare D1. The fictional company, Northwind Labs, resets every night.
 
-## Core Technologies
+![Landing page with the shift dial and the five demo people](docs/screenshots/01-landing.png)
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [Shadcn UI](https://ui.shadcn.com/)
-- **AI Integration**: [Genkit](https://firebase.google.com/docs/genkit) (with Google Gemini)
-- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+| | |
+| --- | --- |
+| ![Manager's home](docs/screenshots/02-home-manager.png) | ![Approvals inbox](docs/screenshots/03-approvals.png) |
+| ![Payroll run with checks](docs/screenshots/06-payroll.png) | ![Recruitment pipeline and resume match](docs/screenshots/05-recruitment.png) |
+| ![Analytics](docs/screenshots/07-analytics.png) | ![Attendance in dark mode](docs/screenshots/10-attendance-dark.png) |
 
----
+## What's in it
 
-## Features Overview
+| Area | What works |
+| --- | --- |
+| Workday | Clock in/out (office, remote, field, optional location), monthly attendance heatmap, corrections with manager approval, CSV export |
+| Time off | Balances per leave type, half days, holiday-aware day counts, overlap and balance checks, team calendar, cancel |
+| Approvals | One inbox for leave, attendance and expenses, with who-else-is-off context and bulk approve |
+| Expenses | Claims with policy limits (internet ₹1,000, 30-day window), learning budget, paid through payroll |
+| Payroll | Salary structures from CTC, PF, ESI, Karnataka PT, new-regime TDS estimate, LOP and joiner proration, reimbursements, payroll check, finalize and printable payslips |
+| People | Directory, profiles with reporting line, editable org chart, add employee, start exit |
+| Joiners & leavers | Onboarding/offboarding checklists created automatically; status updates when the last step is done |
+| Recruitment | Roles, drag-and-drop pipeline, resume match scores with interview questions, hiring creates the employee and onboarding checklist |
+| Goals & reviews | OKRs with key results, team and company goals, manager reviews with an AI-drafted summary |
+| Helpdesk | Tickets sorted into IT/HR/Payroll/Facilities and prioritised automatically, routed, threaded replies |
+| HR assistant | Chat answers grounded in the policies in Settings plus your own leave balance |
+| Engagement | Announcements, kudos, eNPS and pulse surveys (anonymous totals) |
+| Analytics | Headcount, attrition, tenure, attendance and leave trends, each chart with a table view |
+| Admin | Policies (the assistant's knowledge), leave types, holidays, activity log, demo reset |
 
-OptiTalent provides a role-based experience, offering different tools and views for various user types like Admin, HR, Manager, Recruiter, Employee, and more specialized roles.
+## Stack
 
-### 1. **Role-Based Dashboards**
-- **Personalized KPIs**: Each role has a unique dashboard with Key Performance Indicators (KPIs) relevant to their function.
-- **Quick Actions**: Easy access to common tasks.
-- **At-a-glance Information**: Widgets for celebrations, company feed, team leave, and more.
+- Next.js 16 (App Router, server actions) and React 19, TypeScript
+- Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare)
+- Cloudflare D1 (SQLite) with Drizzle ORM and migrations
+- Cloudflare Workers AI (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`) for resume matching, ticket triage, review drafts, payroll checks and the assistant. Each feature has a rule-based fallback and the UI says which one answered.
+- Tailwind CSS 4, Radix primitives, Motion, Recharts, cmdk, dnd-kit
+- Vitest for the payroll engine and AI fallbacks
 
-### 2. **AI-Powered Recruitment**
-- **Resume Parsing & Scoring**: (`score-and-parse-resume` flow) Upload a resume (PDF, DOCX, or image) and have the AI extract structured data (contact info, skills, experience, education) and score it against a job description.
-- **AI-Suggested Interview Questions**: (`suggest-interview-questions` flow) Based on the job title from a parsed resume, the AI generates a list of relevant interview questions.
-- **Walk-in Drive Management**: A public-facing portal for walk-in candidates to register. The registration form also uses the AI resume parser to pre-fill candidate details.
+## Run it locally
 
-### 3. **Streamlined Onboarding**
-- **AI Welcome Email Generation**: (`auto-generate-welcome-email` flow) HR professionals can input new hire details, and the AI generates a personalized and professional welcome email, including subject and body.
-
-### 4. **Intelligent Performance Management**
-- **AI Performance Review Generation**: (`generate-performance-review` flow) Managers can input an employee's goals, achievements, and areas for improvement to have the AI draft a comprehensive and constructive performance review summary, along with a suggested performance rating.
-
-### 5. **Automated Payroll**
-- **AI Payroll Error Detection**: (`detect-payroll-errors` flow) Finance professionals can paste payroll data in JSON format, and the AI will audit it, flagging potential errors like negative salaries, unusual bonuses, or deviations from historical data.
-
-### 6. **Efficient Leave Management**
-- **Leave Application & Approval**: Standard workflow for applying for, approving, or rejecting leave requests.
-- **Balance Tracking**: Automated tracking of leave balances (Sick, Casual, PTO).
-- **Team Calendar View**: A visual representation of team absences for better resource planning.
-
-### 7. **Smart Helpdesk**
-- **AI Ticket Categorization**: (`categorize-ticket` flow) When a user submits a helpdesk ticket, the AI analyzes the subject and description to automatically assign a category (e.g., IT Support, HR Query) and a priority (High, Medium, Low).
-- **Conversational Interface**: A real-time chat interface for viewing tickets and interacting with support.
-
-### 8. **AI Tools & Assistance**
-- **AI HR Chatbot**: (`ai-chatbot` flow) An assistant available to all employees to answer questions about company policies, benefits, and other HR-related topics. It maintains conversation history for context.
-- **AI-Powered Role Assignment**: (`auto-assign-roles` flow) When adding a new employee, the system can suggest an appropriate user role based on their department and job title.
-
-### 9. **Walk-in Drive & Assessment Portal**
-- **Public Registration**: A dedicated flow for walk-in candidates to register for hiring events.
-- **Applicant Dashboard**: Once registered, candidates get a temporary login to their own dashboard where they can update their profile and take assigned tests.
-- **Online Assessments**: A proctored testing environment (simulated) for various assessments like MCQs and typing tests.
-- **Retry & Approval Workflow**: A system for candidates to request a test retry and for HR to approve or deny it.
-
-### 10. **Attendance & Security**
-- **AI Face Verification**: (`verify-face` flow) For clocking in and out, the system simulates facial recognition by comparing a live camera capture with the user's stored profile picture, returning a match decision and confidence score.
-
----
-
-## How the AI Works (Genkit)
-
-All AI functionalities are powered by **Genkit**, an open-source framework for building AI-powered applications.
-
-- **Location**: AI logic is centralized in the `src/ai/` directory.
-- **Flows**: Each AI feature is implemented as a Genkit "flow" (e.g., `src/ai/flows/score-and-parse-resume.ts`). A flow is a server-side function that orchestrates AI model calls and other logic.
-- **Structured I/O**: We use **Zod** to define strict input and output schemas for each flow. This ensures that the data sent to and received from the AI model is predictable and type-safe. The model is instructed to return JSON matching the Zod schema.
-- **Model Interaction**: Flows use the `ai.generate()` or `ai.definePrompt()` methods from Genkit to interact with the configured Gemini model. The prompts are crafted to instruct the model on its task and the expected output format.
-- **Server Actions**: The Genkit flows are exposed to the Next.js frontend via Server Actions, allowing client components to securely call these server-side AI functions without needing to create explicit API endpoints.
-
----
-
-## Getting Started
-
-### 1. Prerequisites
-- [Node.js](https://nodejs.org/) (v20 or later)
-- [npm](https://www.npmjs.com/) or a compatible package manager
-- [Supabase](https://supabase.com/) account for the database
-
-### 2. Environment Setup
-
-1.  **Clone the repository.**
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-3.  **Set up Supabase:**
-    - Create a new project on Supabase.
-    - In your Supabase project, go to the **SQL Editor**.
-    - Copy the entire content of `src/lib/supabase/schema.sql` and run it. This will create all the necessary tables, roles, policies, and seed data.
-4.  **Configure Environment Variables:**
-    - Rename the `src/.env.local.example` file to `src/.env.local`.
-    - Go to your Supabase project's **Settings > API**.
-    - Find your **Project URL** and **anon public key**.
-    - Find your **Service Role** key (choose the `service_role` secret).
-    - Paste these values into the `src/.env.local` file.
-    - You will also need a **Google AI (Gemini) API Key**. Get one from [Google AI Studio](https://aistudio.google.com/app/apikey) and add it to `src/.env.local`.
-
-### 3. Running the Application
-
-- **Start the development server:**
-  ```bash
-  npm run dev
-  ```
-- **Access the application:**
-  Open [http://localhost:9002](http://localhost:9002) in your browser.
-
-- **(Optional) Run the Genkit developer UI:**
-  To inspect your AI flows, view traces, and debug prompts, you can run the Genkit UI in a separate terminal:
-  ```bash
-  npm run genkit:watch
-  ```
-  This will start the UI, typically on [http://localhost:4000](http://localhost:4000).
-
-### 4. Seeding the Database
-
-If you want to reset your database with fresh, randomized data at any time, run the seeding script:
+Needs Node 20+.
 
 ```bash
-npm run db:seed
+npm install
+npm run db:migrate:local     # create the local D1 database
+npm run db:seed:local        # load Northwind Labs
+npm run dev                  # http://localhost:3000
 ```
 
-**Warning**: This is a destructive operation and will erase all existing data in your public tables before re-populating them.
+Local D1 runs on your machine with no Cloudflare account. Workers AI only runs on Cloudflare, so locally the AI features use their fallbacks. To use the real models in dev, log in with `npx wrangler login` and start with `HRP_REMOTE_AI=1 npm run dev`.
+
+Other scripts: `npm test`, `npm run typecheck`, `npm run format`, `npm run preview` (production build in the Workers runtime), `npm run db:generate` (new migration after editing `src/db/schema.ts`).
+
+## Deploy
+
+See [DEPLOY.md](DEPLOY.md) for Cloudflare setup, Git-based deploys and the custom domain.
+
+## Project layout
+
+```
+src/app/              routes; (app)/ is everything behind sign-in
+src/app/actions/      server actions, one file per area, all validated with zod
+src/db/               schema, client, seed and reset
+src/lib/              auth and permissions, payroll engine, AI helpers, queries
+worker.ts             Worker entry: the Next.js app plus the nightly reset cron
+drizzle/migrations/   SQL migrations applied by wrangler
+```
+
+Built by [Prajwal DL](https://praxel.space/).
