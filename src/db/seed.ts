@@ -1444,26 +1444,22 @@ export function buildSeedStatements(today: string, opts: { includeDeletes?: bool
   const responders = DEMO_PEOPLE.filter((p) => !["E004", "E022", "E023"].includes(p.code) && p.status !== "exited");
   out.push(
     ...insert("survey_responses", [
-      ...responders
-        .slice(0, 19)
-        .map((p, i) => ({
-          id: `sr_e_${i}`,
-          survey_id: "srv_enps",
-          employee_id: empId(p.code),
-          score: [10, 9, 9, 8, 7, 10, 9, 6, 8, 9, 10, 5, 9, 7, 8, 9, 10, 4, 9][i]!,
-          comment: i === 7 ? "Too many meetings on Mondays." : i === 0 ? "Great team and flexible hours." : null,
-          created_at: created(9 - (i % 9)),
-        })),
-      ...responders
-        .slice(3, 15)
-        .map((p, i) => ({
-          id: `sr_p_${i}`,
-          survey_id: "srv_pulse",
-          employee_id: empId(p.code),
-          score: [4, 3, 5, 2, 4, 3, 4, 5, 3, 2, 4, 4][i]!,
-          comment: null,
-          created_at: created(i % 2),
-        })),
+      ...responders.slice(0, 19).map((p, i) => ({
+        id: `sr_e_${i}`,
+        survey_id: "srv_enps",
+        employee_id: empId(p.code),
+        score: [10, 9, 9, 8, 7, 10, 9, 6, 8, 9, 10, 5, 9, 7, 8, 9, 10, 4, 9][i]!,
+        comment: i === 7 ? "Too many meetings on Mondays." : i === 0 ? "Great team and flexible hours." : null,
+        created_at: created(9 - (i % 9)),
+      })),
+      ...responders.slice(3, 15).map((p, i) => ({
+        id: `sr_p_${i}`,
+        survey_id: "srv_pulse",
+        employee_id: empId(p.code),
+        score: [4, 3, 5, 2, 4, 3, 4, 5, 3, 2, 4, 4][i]!,
+        comment: null,
+        created_at: created(i % 2),
+      })),
     ]),
   );
 
