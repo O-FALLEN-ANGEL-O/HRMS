@@ -1,47 +1,59 @@
 # Deploying HR+ to Cloudflare
 
-HR+ runs as one Cloudflare Worker with a D1 database and the Workers AI binding. Everything below fits in the free plan.
+HR+ runs as one Cloudflare Worker with a D1 database and the Workers AI binding, at `hr.praxel.space`. Everything fits in the free plan.
 
-## 1. Create the database (once)
+Deploys run from GitHub Actions (`.github/workflows/deploy.yml`) on every push to `master`. The workflow finds or creates the `hr-plus` D1 database, applies migrations, loads the demo company if the database is empty, builds and deploys. The custom domain is declared in `wrangler.jsonc`, so Cloudflare creates the DNS record and certificate on the first deploy.
 
-On your computer, in this repo:
+## One-time setup (works from a phone browser)
 
-```bash
-npm install
-npx wrangler login
-npx wrangler d1 create hr-plus
-```
+### 1. Create a Cloudflare API token
 
-Copy the `database_id` it prints into `wrangler.jsonc` (replace the `00000000-…` placeholder), commit and push.
+dash.cloudflare.com → My Profile → API Tokens → Create Token → **Create Custom Token**, with these permissions:
 
-Then create the tables and load the demo company:
+| Scope   | Permission       | Access |
+| ------- | ---------------- | ------ |
+| Account | Workers Scripts  | Edit   |
+| Account | D1               | Edit   |
+| Account | Workers AI       | Read   |
+| Account | Account Settings | Read   |
+| Zone    | Workers Routes   | Edit   |
+| Zone    | DNS              | Edit   |
+| Zone    | Zone             | Read   |
 
-```bash
-npm run db:migrate:remote
-npm run db:seed:remote
-```
+Account resources: your account. Zone resources: `praxel.space`. Create it and copy the token (it's shown once).
 
-## 2. Connect the repo (Workers Builds)
+Your **Account ID** is on the right-hand side of any zone's Overview page in the dashboard (or under Workers & Pages).
 
-1. Cloudflare dashboard → Workers & Pages → Create → Import a repository → pick `O-FALLEN-ANGEL-O/HRMS`.
-2. Project name: `hr-plus` (must match `name` in `wrangler.jsonc`).
-3. Production branch: `master`.
-4. Build command: `npx opennextjs-cloudflare build`
-5. Deploy command: `npx wrangler d1 migrations apply DB --remote && npx opennextjs-cloudflare deploy`
-6. Save and deploy.
+### 2. Add both as GitHub secrets
 
-Every push to `master` now builds and deploys; pushes to other branches get preview URLs. New migrations in `drizzle/migrations/` are applied before each deploy. If the build token lacks D1 permission, the migration step fails; then run `npm run db:migrate:remote` yourself and use `npx opennextjs-cloudflare deploy` as the deploy command.
+github.com/O-FALLEN-ANGEL-O/HRMS → Settings → Secrets and variables → Actions → New repository secret:
 
-## 3. Custom domain
+- `CLOUDFLARE_API_TOKEN`: the token
+- `CLOUDFLARE_ACCOUNT_ID`: the account ID
 
-Worker → Settings → Domains & Routes → Add → Custom domain → `hr.praxel.space`. This works because `praxel.space` is already a zone on your Cloudflare account; the DNS record and certificate are created for you.
+### 3. Deploy
 
-## 4. Check it
+Merge the PR, or open Actions → "Check and deploy" → Run workflow on `master`. When it finishes, https://hr.praxel.space is live.
 
-- Open https://hr.praxel.space and sign in as Rohan; clock in.
+## Check it
+
+- Sign in as Rohan and clock in.
 - Ask the HR assistant a question: the source chip should say "Workers AI".
-- Worker → Settings → Triggers shows the cron `30 20 * * *` (02:00 IST), which resets the demo data nightly. Remove it, or set the `DEMO_MODE` variable to `false`, to keep data.
+- The Worker's Triggers tab shows the cron `30 20 * * *` (02:00 IST), which resets the demo data nightly. Set the `DEMO_MODE` variable to `false` to keep data.
+
+## Deploying by hand instead
+
+```bash
+npx wrangler login
+npx wrangler d1 create hr-plus        # put the id into wrangler.jsonc
+npm run db:migrate:remote && npm run db:seed:remote
+npm run deploy
+```
 
 ## Updating the schema
 
-Edit `src/db/schema.ts`, run `npm run db:generate`, commit the new file in `drizzle/migrations/`, push. The deploy command applies it.
+Edit `src/db/schema.ts`, run `npm run db:generate`, commit the new file in `drizzle/migrations/`, push to `master`. The workflow applies it before deploying.
+
+## Vercel
+
+The old Vercel project (hrms-five-alpha.vercel.app) can't run this version, which needs Cloudflare's runtime. Disconnect the repo in Vercel (or delete the project) after the first Cloudflare deploy.

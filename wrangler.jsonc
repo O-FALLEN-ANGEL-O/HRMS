@@ -19,10 +19,14 @@
 		{
 			"binding": "DB",
 			"database_name": "hr-plus",
-			// Replace with the id printed by `npx wrangler d1 create hr-plus` (see DEPLOY.md).
+			// The deploy workflow fills this in (finding or creating the database). For a manual
+			// deploy, replace it with the id from `npx wrangler d1 create hr-plus`.
 			"database_id": "00000000-0000-0000-0000-000000000000",
 			"migrations_dir": "drizzle/migrations"
 		}
+	],
+	"routes": [
+		{ "pattern": "hr.praxel.space", "custom_domain": true }
 	],
 	"ai": {
 		"binding": "AI"
