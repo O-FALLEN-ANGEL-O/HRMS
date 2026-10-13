@@ -4,6 +4,14 @@ An HRMS for a small Indian company, built as a working demo: attendance, time of
 
 Pick a person on the landing page (admin, HR, manager, employee or recruiter) and the app shows what that role can see and do. Everything is real: requests flow up the reporting line, approvals change balances, payroll reads approved leave and expenses, and every change is stored in Cloudflare D1. The fictional company, Northwind Labs, resets every night.
 
+![Landing page with the shift dial and the five demo people](docs/screenshots/01-landing.png)
+
+| | |
+| --- | --- |
+| ![Manager's home](docs/screenshots/02-home-manager.png) | ![Approvals inbox](docs/screenshots/03-approvals.png) |
+| ![Payroll run with checks](docs/screenshots/06-payroll.png) | ![Recruitment pipeline and resume match](docs/screenshots/05-recruitment.png) |
+| ![Analytics](docs/screenshots/07-analytics.png) | ![Attendance in dark mode](docs/screenshots/10-attendance-dark.png) |
+
 ## What's in it
 
 | Area | What works |
