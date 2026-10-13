@@ -1,133 +1,198 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/instrument-sans";
 
-@tailwind base;
-@tailwind utilities;
+@custom-variant dark (&:where(.dark, .dark *));
 
-@layer base {
-  :root {
-    --background: 240 5% 96%; /* Very light gray - F5F5F5 */
-    --foreground: 222.2 84% 4.9%;
+/*
+  HR+ palette: paper and ink-indigo, with marigold reserved for "now" and the
+  one primary action on a screen. Teal = approved/positive, rose = rejected/alert.
+*/
+:root {
+  --paper: #f5f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f5;
+  --ink: #18203a;
+  --ink-2: #4a536e;
+  --ink-3: #7c859c;
+  --line: #e1e4eb;
+  --line-strong: #c9cedb;
+  --marigold: #e39b12;
+  --marigold-ink: #8a5a00;
+  --marigold-soft: #fdf0d5;
+  --teal: #0d7a6e;
+  --teal-soft: #dcf1ec;
+  --rose: #be3d57;
+  --rose-soft: #fbe3e8;
+  --sky: #2f6bd8;
+  --sky-soft: #e2ecfc;
+  --focus: #2f6bd8;
+  --shadow: 0 1px 0 rgb(24 32 58 / 0.04), 0 8px 24px -12px rgb(24 32 58 / 0.18);
+}
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+.dark {
+  --paper: #0f1528;
+  --surface: #151d35;
+  --surface-2: #1b2442;
+  --ink: #eceff7;
+  --ink-2: #b0b7cb;
+  --ink-3: #7c849b;
+  --line: #253053;
+  --line-strong: #34406a;
+  --marigold: #f3b23a;
+  --marigold-ink: #f3b23a;
+  --marigold-soft: #3a2f17;
+  --teal: #45c4b0;
+  --teal-soft: #13342f;
+  --rose: #f07c92;
+  --rose-soft: #3a1d27;
+  --sky: #7aa5f5;
+  --sky-soft: #1a2a4d;
+  --focus: #7aa5f5;
+  --shadow: 0 1px 0 rgb(0 0 0 / 0.2), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+}
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-marigold: var(--marigold);
+  --color-marigold-ink: var(--marigold-ink);
+  --color-marigold-soft: var(--marigold-soft);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-sky: var(--sky);
+  --color-sky-soft: var(--sky-soft);
 
-    --primary: 262.1 83.3% 57.8%; /* A richer purple */
-    --primary-foreground: 210 40% 98%;
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+  --radius-panel: 14px;
+  --radius-control: 8px;
+  --shadow-panel: var(--shadow);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    
-    --accent: 210 40% 96.1%; /* More subtle accent */
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262.1 83.3% 57.8%;
-
-    --radius: 0.5rem; /* Standardized radius */
-
-    --chart-1: 262 80% 56%;
-    --chart-2: 190 84% 66%;
-    --chart-3: 340 84% 66%;
-    --chart-4: 20 84% 66%;
-    --chart-5: 220 84% 66%;
-
-    --brand-blue: #3b82f6;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 263.4 95.2% 66.3%; /* Brighter purple for dark mode */
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 263.4 95.2% 66.3%;
-    
-    --chart-1: 263.4 95.2% 66.3%;
-    --chart-2: 190 84% 76%;
-    --chart-3: 340 84% 76%;
-    --chart-4: 20 84% 76%;
-    --chart-5: 220 84% 76%;
-
-    --brand-blue: #3b82f6;
-  }
+  /* Type scale, roughly a 1.2 ratio */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.35rem;
+  --text-2xl: 1.62rem;
+  --text-3xl: 1.95rem;
+  --text-4xl: 2.6rem;
+  --text-5xl: 3.6rem;
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
-    @apply bg-gray-50 dark:bg-background text-foreground;
-    font-family: 'Poppins', sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    font-weight: 620;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--marigold-soft);
+    color: var(--ink);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-.detailed-calendar .rdp-table {
-    background-color: #f7fafc; /* gray-100 */
-    border-radius: 0.5rem;
-    overflow: hidden;
-    gap: 1px;
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+@layer components {
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+  }
+  .field {
+    width: 100%;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    padding: 0.55rem 0.75rem;
+    font-size: var(--text-sm);
+    color: var(--ink);
+    transition: border-color 120ms, box-shadow 120ms;
+  }
+  .field::placeholder {
+    color: var(--ink-3);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 22%, transparent);
+  }
+  .field:user-invalid {
+    border-color: var(--rose);
+  }
+  .label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 560;
+    color: var(--ink-2);
+    margin-bottom: 0.35rem;
+  }
+  .link {
+    color: var(--sky);
+    text-underline-offset: 3px;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
 }
 
-.dark .detailed-calendar .rdp-table {
-    background-color: #374151; /* gray-700 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-.detailed-calendar .rdp-head_cell {
-    text-align: center;
-    padding: 0.75rem 0; /* py-3 */
-    background-color: #ffffff; /* white */
-    font-weight: 600; /* semibold */
-    color: #4b5563; /* gray-600 */
-    font-size: 0.875rem; /* text-sm */
-    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
-}
-.dark .detailed-calendar .rdp-head_cell {
-    background-color: hsl(var(--card));
-    color: hsl(var(--muted-foreground));
-    border-bottom: 1px solid hsl(var(--border));
-}
-
-.detailed-calendar .rdp-cell {
-    background-color: #ffffff; /* white */
-}
-.dark .detailed-calendar .rdp-cell {
-    background-color: hsl(var(--card));
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
 }
