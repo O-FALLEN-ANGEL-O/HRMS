@@ -27,8 +27,12 @@ export const employees = sqliteTable(
     departmentId: text("department_id").references(() => departments.id),
     managerId: text("manager_id"),
     location: text("location").notNull().default("Bengaluru"),
-    employmentType: text("employment_type", { enum: ["full_time", "contract", "intern"] }).notNull().default("full_time"),
-    status: text("status", { enum: ["active", "onboarding", "offboarding", "exited"] }).notNull().default("active"),
+    employmentType: text("employment_type", { enum: ["full_time", "contract", "intern"] })
+      .notNull()
+      .default("full_time"),
+    status: text("status", { enum: ["active", "onboarding", "offboarding", "exited"] })
+      .notNull()
+      .default("active"),
     joinedOn: text("joined_on").notNull(),
     exitOn: text("exit_on"),
     birthday: text("birthday"),
@@ -42,7 +46,9 @@ export const employees = sqliteTable(
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
-  employeeId: text("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+  employeeId: text("employee_id")
+    .notNull()
+    .references(() => employees.id, { onDelete: "cascade" }),
   expiresAt: text("expires_at").notNull(),
   createdAt: createdAt(),
 });
@@ -61,14 +67,20 @@ export const leaveRequests = sqliteTable(
   "leave_requests",
   {
     id: text("id").primaryKey(),
-    employeeId: text("employee_id").notNull().references(() => employees.id),
-    leaveTypeId: text("leave_type_id").notNull().references(() => leaveTypes.id),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    leaveTypeId: text("leave_type_id")
+      .notNull()
+      .references(() => leaveTypes.id),
     startDate: text("start_date").notNull(),
     endDate: text("end_date").notNull(),
     days: real("days").notNull(),
     halfDay: integer("half_day", { mode: "boolean" }).notNull().default(false),
     reason: text("reason").notNull(),
-    status: text("status", { enum: ["pending", "approved", "rejected", "cancelled"] }).notNull().default("pending"),
+    status: text("status", { enum: ["pending", "approved", "rejected", "cancelled"] })
+      .notNull()
+      .default("pending"),
     approverId: text("approver_id"),
     decisionNote: text("decision_note"),
     decidedAt: text("decided_at"),
@@ -90,11 +102,15 @@ export const attendance = sqliteTable(
   "attendance",
   {
     id: text("id").primaryKey(),
-    employeeId: text("employee_id").notNull().references(() => employees.id),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
     date: text("date").notNull(),
     checkIn: text("check_in"),
     checkOut: text("check_out"),
-    mode: text("mode", { enum: ["office", "remote", "field"] }).notNull().default("office"),
+    mode: text("mode", { enum: ["office", "remote", "field"] })
+      .notNull()
+      .default("office"),
     lat: real("lat"),
     lng: real("lng"),
     note: text("note"),
@@ -104,12 +120,16 @@ export const attendance = sqliteTable(
 
 export const regularizations = sqliteTable("regularizations", {
   id: text("id").primaryKey(),
-  employeeId: text("employee_id").notNull().references(() => employees.id),
+  employeeId: text("employee_id")
+    .notNull()
+    .references(() => employees.id),
   date: text("date").notNull(),
   checkIn: text("check_in").notNull(),
   checkOut: text("check_out").notNull(),
   reason: text("reason").notNull(),
-  status: text("status", { enum: ["pending", "approved", "rejected"] }).notNull().default("pending"),
+  status: text("status", { enum: ["pending", "approved", "rejected"] })
+    .notNull()
+    .default("pending"),
   approverId: text("approver_id"),
   decidedAt: text("decided_at"),
   createdAt: createdAt(),
@@ -119,28 +139,38 @@ export const regularizations = sqliteTable("regularizations", {
 
 export const expenses = sqliteTable("expenses", {
   id: text("id").primaryKey(),
-  employeeId: text("employee_id").notNull().references(() => employees.id),
+  employeeId: text("employee_id")
+    .notNull()
+    .references(() => employees.id),
   category: text("category", { enum: ["travel", "meals", "internet", "equipment", "learning", "other"] }).notNull(),
   amount: integer("amount").notNull(), // whole rupees
   spentOn: text("spent_on").notNull(),
   description: text("description").notNull(),
-  status: text("status", { enum: ["pending", "approved", "rejected", "reimbursed"] }).notNull().default("pending"),
+  status: text("status", { enum: ["pending", "approved", "rejected", "reimbursed"] })
+    .notNull()
+    .default("pending"),
   approverId: text("approver_id"),
   decidedAt: text("decided_at"),
   createdAt: createdAt(),
 });
 
 export const salaryStructures = sqliteTable("salary_structures", {
-  employeeId: text("employee_id").primaryKey().references(() => employees.id),
+  employeeId: text("employee_id")
+    .primaryKey()
+    .references(() => employees.id),
   annualCtc: integer("annual_ctc").notNull(),
-  taxRegime: text("tax_regime", { enum: ["new", "old"] }).notNull().default("new"),
+  taxRegime: text("tax_regime", { enum: ["new", "old"] })
+    .notNull()
+    .default("new"),
   effectiveFrom: text("effective_from").notNull(),
 });
 
 export const payrollRuns = sqliteTable("payroll_runs", {
   id: text("id").primaryKey(),
   month: text("month").notNull(), // YYYY-MM
-  status: text("status", { enum: ["draft", "finalized"] }).notNull().default("draft"),
+  status: text("status", { enum: ["draft", "finalized"] })
+    .notNull()
+    .default("draft"),
   createdBy: text("created_by").notNull(),
   finalizedAt: text("finalized_at"),
   aiReview: text("ai_review"),
@@ -151,8 +181,12 @@ export const payslips = sqliteTable(
   "payslips",
   {
     id: text("id").primaryKey(),
-    runId: text("run_id").notNull().references(() => payrollRuns.id, { onDelete: "cascade" }),
-    employeeId: text("employee_id").notNull().references(() => employees.id),
+    runId: text("run_id")
+      .notNull()
+      .references(() => payrollRuns.id, { onDelete: "cascade" }),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
     daysPayable: real("days_payable").notNull(),
     basic: integer("basic").notNull(),
     hra: integer("hra").notNull(),
@@ -176,7 +210,9 @@ export const assets = sqliteTable("assets", {
   name: text("name").notNull(),
   category: text("category", { enum: ["laptop", "monitor", "phone", "accessory", "furniture"] }).notNull(),
   serial: text("serial"),
-  status: text("status", { enum: ["available", "assigned", "repair", "retired"] }).notNull().default("available"),
+  status: text("status", { enum: ["available", "assigned", "repair", "retired"] })
+    .notNull()
+    .default("available"),
   assignedTo: text("assigned_to"),
   assignedOn: text("assigned_on"),
   cost: integer("cost").notNull().default(0),
@@ -189,11 +225,15 @@ export const jobs = sqliteTable("jobs", {
   title: text("title").notNull(),
   departmentId: text("department_id").references(() => departments.id),
   location: text("location").notNull(),
-  workMode: text("work_mode", { enum: ["onsite", "hybrid", "remote"] }).notNull().default("hybrid"),
+  workMode: text("work_mode", { enum: ["onsite", "hybrid", "remote"] })
+    .notNull()
+    .default("hybrid"),
   description: text("description").notNull(),
   requirements: text("requirements").notNull(),
   openings: integer("openings").notNull().default(1),
-  status: text("status", { enum: ["open", "paused", "closed"] }).notNull().default("open"),
+  status: text("status", { enum: ["open", "paused", "closed"] })
+    .notNull()
+    .default("open"),
   hiringManagerId: text("hiring_manager_id"),
   createdAt: createdAt(),
 });
@@ -202,7 +242,9 @@ export const CANDIDATE_STAGES = ["applied", "screening", "interview", "offer", "
 
 export const candidates = sqliteTable("candidates", {
   id: text("id").primaryKey(),
-  jobId: text("job_id").notNull().references(() => jobs.id),
+  jobId: text("job_id")
+    .notNull()
+    .references(() => jobs.id),
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
@@ -218,7 +260,9 @@ export const candidates = sqliteTable("candidates", {
 
 export const lifecycleTasks = sqliteTable("lifecycle_tasks", {
   id: text("id").primaryKey(),
-  employeeId: text("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+  employeeId: text("employee_id")
+    .notNull()
+    .references(() => employees.id, { onDelete: "cascade" }),
   kind: text("kind", { enum: ["onboarding", "offboarding"] }).notNull(),
   title: text("title").notNull(),
   ownerRole: text("owner_role", { enum: ROLES }).notNull(),
@@ -231,7 +275,9 @@ export const lifecycleTasks = sqliteTable("lifecycle_tasks", {
 
 export const objectives = sqliteTable("objectives", {
   id: text("id").primaryKey(),
-  ownerId: text("owner_id").notNull().references(() => employees.id),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => employees.id),
   title: text("title").notNull(),
   quarter: text("quarter").notNull(),
   createdAt: createdAt(),
@@ -239,7 +285,9 @@ export const objectives = sqliteTable("objectives", {
 
 export const keyResults = sqliteTable("key_results", {
   id: text("id").primaryKey(),
-  objectiveId: text("objective_id").notNull().references(() => objectives.id, { onDelete: "cascade" }),
+  objectiveId: text("objective_id")
+    .notNull()
+    .references(() => objectives.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   start: real("start").notNull().default(0),
   target: real("target").notNull(),
@@ -249,14 +297,20 @@ export const keyResults = sqliteTable("key_results", {
 
 export const reviews = sqliteTable("reviews", {
   id: text("id").primaryKey(),
-  employeeId: text("employee_id").notNull().references(() => employees.id),
-  reviewerId: text("reviewer_id").notNull().references(() => employees.id),
+  employeeId: text("employee_id")
+    .notNull()
+    .references(() => employees.id),
+  reviewerId: text("reviewer_id")
+    .notNull()
+    .references(() => employees.id),
   cycle: text("cycle").notNull(),
   rating: integer("rating"),
   strengths: text("strengths"),
   growth: text("growth"),
   summary: text("summary"),
-  status: text("status", { enum: ["draft", "submitted"] }).notNull().default("draft"),
+  status: text("status", { enum: ["draft", "submitted"] })
+    .notNull()
+    .default("draft"),
   createdAt: createdAt(),
 });
 
@@ -265,12 +319,20 @@ export const reviews = sqliteTable("reviews", {
 export const tickets = sqliteTable("tickets", {
   id: text("id").primaryKey(),
   number: integer("number").notNull(),
-  requesterId: text("requester_id").notNull().references(() => employees.id),
+  requesterId: text("requester_id")
+    .notNull()
+    .references(() => employees.id),
   subject: text("subject").notNull(),
   description: text("description").notNull(),
-  category: text("category", { enum: ["IT", "HR", "Payroll", "Facilities", "General"] }).notNull().default("General"),
-  priority: text("priority", { enum: ["low", "medium", "high"] }).notNull().default("medium"),
-  status: text("status", { enum: ["open", "in_progress", "resolved"] }).notNull().default("open"),
+  category: text("category", { enum: ["IT", "HR", "Payroll", "Facilities", "General"] })
+    .notNull()
+    .default("General"),
+  priority: text("priority", { enum: ["low", "medium", "high"] })
+    .notNull()
+    .default("medium"),
+  status: text("status", { enum: ["open", "in_progress", "resolved"] })
+    .notNull()
+    .default("open"),
   assigneeId: text("assignee_id"),
   triagedBy: text("triaged_by", { enum: ["ai", "rules", "person"] }),
   createdAt: createdAt(),
@@ -279,8 +341,12 @@ export const tickets = sqliteTable("tickets", {
 
 export const ticketComments = sqliteTable("ticket_comments", {
   id: text("id").primaryKey(),
-  ticketId: text("ticket_id").notNull().references(() => tickets.id, { onDelete: "cascade" }),
-  authorId: text("author_id").notNull().references(() => employees.id),
+  ticketId: text("ticket_id")
+    .notNull()
+    .references(() => tickets.id, { onDelete: "cascade" }),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => employees.id),
   body: text("body").notNull(),
   createdAt: createdAt(),
 });
@@ -289,7 +355,9 @@ export const ticketComments = sqliteTable("ticket_comments", {
 
 export const announcements = sqliteTable("announcements", {
   id: text("id").primaryKey(),
-  authorId: text("author_id").notNull().references(() => employees.id),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => employees.id),
   title: text("title").notNull(),
   body: text("body").notNull(),
   pinned: integer("pinned", { mode: "boolean" }).notNull().default(false),
@@ -300,8 +368,12 @@ export const KUDOS_VALUES = ["ownership", "craft", "kindness", "customers"] as c
 
 export const kudos = sqliteTable("kudos", {
   id: text("id").primaryKey(),
-  fromId: text("from_id").notNull().references(() => employees.id),
-  toId: text("to_id").notNull().references(() => employees.id),
+  fromId: text("from_id")
+    .notNull()
+    .references(() => employees.id),
+  toId: text("to_id")
+    .notNull()
+    .references(() => employees.id),
   value: text("value", { enum: KUDOS_VALUES }).notNull(),
   message: text("message").notNull(),
   createdAt: createdAt(),
@@ -312,7 +384,9 @@ export const surveys = sqliteTable("surveys", {
   title: text("title").notNull(),
   question: text("question").notNull(),
   kind: text("kind", { enum: ["enps", "pulse"] }).notNull(),
-  status: text("status", { enum: ["open", "closed"] }).notNull().default("open"),
+  status: text("status", { enum: ["open", "closed"] })
+    .notNull()
+    .default("open"),
   createdAt: createdAt(),
 });
 
@@ -320,8 +394,12 @@ export const surveyResponses = sqliteTable(
   "survey_responses",
   {
     id: text("id").primaryKey(),
-    surveyId: text("survey_id").notNull().references(() => surveys.id, { onDelete: "cascade" }),
-    employeeId: text("employee_id").notNull().references(() => employees.id),
+    surveyId: text("survey_id")
+      .notNull()
+      .references(() => surveys.id, { onDelete: "cascade" }),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
     score: integer("score").notNull(),
     comment: text("comment"),
     createdAt: createdAt(),
@@ -341,7 +419,9 @@ export const notifications = sqliteTable(
   "notifications",
   {
     id: text("id").primaryKey(),
-    employeeId: text("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     href: text("href"),
     readAt: text("read_at"),

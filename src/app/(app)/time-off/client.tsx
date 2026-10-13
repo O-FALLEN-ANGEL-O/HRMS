@@ -9,7 +9,17 @@ import { FormDialog } from "@/components/form-dialog";
 import { Button, EmptyState, Field, StatusPill, SubmitButton } from "@/components/ui";
 import { addDays, cn, formatDate, isWeekend, plural, workingDays } from "@/lib/utils";
 
-export function ApplyLeave({ types, balances, today, holidays }: { types: { id: string; name: string; code: string }[]; balances: { id: string; remaining: number }[]; today: string; holidays: string[] }) {
+export function ApplyLeave({
+  types,
+  balances,
+  today,
+  holidays,
+}: {
+  types: { id: string; name: string; code: string }[];
+  balances: { id: string; remaining: number }[];
+  today: string;
+  holidays: string[];
+}) {
   const [typeId, setTypeId] = useState(types[0]?.id ?? "");
   const [start, setStart] = useState(addDays(today, 1));
   const [end, setEnd] = useState(addDays(today, 1));
@@ -58,14 +68,37 @@ export function ApplyLeave({ types, balances, today, holidays }: { types: { id: 
               />
             </Field>
             <Field label="To" htmlFor="endDate">
-              <input id="endDate" name="endDate" type="date" required min={start} className="field" value={end} onChange={(e) => setEnd(e.target.value)} aria-invalid={!!fieldErrors?.endDate} />
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                required
+                min={start}
+                className="field"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                aria-invalid={!!fieldErrors?.endDate}
+              />
             </Field>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="halfDay" className="size-4 accent-[var(--ink)]" checked={half} disabled={start !== end} onChange={(e) => setHalf(e.target.checked)} />
+            <input
+              type="checkbox"
+              name="halfDay"
+              className="size-4 accent-[var(--ink)]"
+              checked={half}
+              disabled={start !== end}
+              onChange={(e) => setHalf(e.target.checked)}
+            />
             Half day
           </label>
-          <p className={cn("rounded-lg px-3 py-2 text-sm", !isLop && remaining !== undefined && days > remaining ? "bg-rose-soft text-rose" : "bg-surface-2 text-ink-2")} aria-live="polite">
+          <p
+            className={cn(
+              "rounded-lg px-3 py-2 text-sm",
+              !isLop && remaining !== undefined && days > remaining ? "bg-rose-soft text-rose" : "bg-surface-2 text-ink-2",
+            )}
+            aria-live="polite"
+          >
             {days === 0 ? "Those dates are weekends or holidays." : `${plural(days, "working day")}`}
             {!isLop && remaining !== undefined ? `, ${Math.max(0, remaining - days)} left after this` : isLop ? ", deducted from salary" : ""}
           </p>
@@ -83,7 +116,11 @@ export function ApplyLeave({ types, balances, today, holidays }: { types: { id: 
   );
 }
 
-export function Balances({ balances }: { balances: { id: string; name: string; code: string; quota: number; used: number; pending: number; remaining: number; hue: number }[] }) {
+export function Balances({
+  balances,
+}: {
+  balances: { id: string; name: string; code: string; quota: number; used: number; pending: number; remaining: number; hue: number }[];
+}) {
   return (
     <section aria-label="Balances" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {balances.map((b, i) => {
@@ -92,23 +129,35 @@ export function Balances({ balances }: { balances: { id: string; name: string; c
         const pendPct = b.quota ? b.pending / b.quota : 0;
         return (
           <div key={b.id} className="panel p-4">
-            <p className="text-sm text-ink-2">{b.name}</p>
+            <p className="text-ink-2 text-sm">{b.name}</p>
             {isLop ? (
               <>
-                <p className="mt-1 font-display text-3xl font-semibold tabular">{b.used}</p>
-                <p className="text-xs text-ink-3">days taken this year</p>
+                <p className="font-display tabular mt-1 text-3xl font-semibold">{b.used}</p>
+                <p className="text-ink-3 text-xs">days taken this year</p>
               </>
             ) : (
               <>
-                <p className="mt-1 font-display text-3xl font-semibold tabular">
+                <p className="font-display tabular mt-1 text-3xl font-semibold">
                   {b.remaining}
-                  <span className="ml-1 text-base font-normal text-ink-3">/ {b.quota}</span>
+                  <span className="text-ink-3 ml-1 text-base font-normal">/ {b.quota}</span>
                 </p>
-                <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-surface-2" aria-hidden>
-                  <motion.div className="h-full" style={{ background: `oklch(0.62 0.12 ${b.hue})` }} initial={{ width: 0 }} animate={{ width: `${usedPct * 100}%` }} transition={{ delay: i * 0.06, type: "spring", stiffness: 120, damping: 20 }} />
-                  <motion.div className="h-full opacity-40" style={{ background: `oklch(0.62 0.12 ${b.hue})` }} initial={{ width: 0 }} animate={{ width: `${pendPct * 100}%` }} transition={{ delay: 0.2 + i * 0.06 }} />
+                <div className="bg-surface-2 mt-3 flex h-2 overflow-hidden rounded-full" aria-hidden>
+                  <motion.div
+                    className="h-full"
+                    style={{ background: `oklch(0.62 0.12 ${b.hue})` }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${usedPct * 100}%` }}
+                    transition={{ delay: i * 0.06, type: "spring", stiffness: 120, damping: 20 }}
+                  />
+                  <motion.div
+                    className="h-full opacity-40"
+                    style={{ background: `oklch(0.62 0.12 ${b.hue})` }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pendPct * 100}%` }}
+                    transition={{ delay: 0.2 + i * 0.06 }}
+                  />
                 </div>
-                <p className="mt-1.5 text-xs text-ink-3">
+                <p className="text-ink-3 mt-1.5 text-xs">
                   {b.used} used{b.pending ? `, ${b.pending} pending` : ""}
                 </p>
               </>
@@ -120,7 +169,24 @@ export function Balances({ balances }: { balances: { id: string; name: string; c
   );
 }
 
-export function MyRequests({ rows, today }: { rows: { id: string; type: string; hue: number; start: string; end: string; days: number; status: string; reason: string; approver: string | null; note: string | null }[]; today: string }) {
+export function MyRequests({
+  rows,
+  today,
+}: {
+  rows: {
+    id: string;
+    type: string;
+    hue: number;
+    start: string;
+    end: string;
+    days: number;
+    status: string;
+    reason: string;
+    approver: string | null;
+    note: string | null;
+  }[];
+  today: string;
+}) {
   const [pending, start] = useTransition();
   if (!rows.length)
     return (
@@ -129,7 +195,7 @@ export function MyRequests({ rows, today }: { rows: { id: string; type: string; 
       </EmptyState>
     );
   return (
-    <ul className="divide-y divide-line">
+    <ul className="divide-line divide-y">
       {rows.map((r) => (
         <li key={r.id} className="px-5 py-3">
           <div className="flex items-start justify-between gap-3">
@@ -138,17 +204,21 @@ export function MyRequests({ rows, today }: { rows: { id: string; type: string; 
                 <span className="size-2 rounded-full" style={{ background: `oklch(0.62 0.12 ${r.hue})` }} aria-hidden />
                 {r.type}, {plural(r.days, "day")}
               </p>
-              <p className="text-sm text-ink-2">
+              <p className="text-ink-2 text-sm">
                 {formatDate(r.start)}
                 {r.end !== r.start ? ` to ${formatDate(r.end)}` : ""}
               </p>
-              {r.note ? <p className="mt-1 text-sm text-ink-2">{r.approver?.split(" ")[0]}: &ldquo;{r.note}&rdquo;</p> : null}
+              {r.note ? (
+                <p className="text-ink-2 mt-1 text-sm">
+                  {r.approver?.split(" ")[0]}: &ldquo;{r.note}&rdquo;
+                </p>
+              ) : null}
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1.5">
               <StatusPill status={r.status} />
               {r.status === "pending" || (r.status === "approved" && r.start > today) ? (
                 <button
-                  className="text-xs text-ink-3 underline-offset-2 hover:text-rose hover:underline disabled:opacity-50"
+                  className="text-ink-3 hover:text-rose text-xs underline-offset-2 hover:underline disabled:opacity-50"
                   disabled={pending}
                   onClick={() =>
                     start(async () => {
@@ -170,7 +240,21 @@ export function MyRequests({ rows, today }: { rows: { id: string; type: string; 
 
 type CalLeave = { id: string; employeeId: string; name: string; hue: number; start: string; end: string; status: string; type: string };
 
-export function TeamCalendar({ start, month, today, leave, holidays, meId }: { start: string; month: string; today: string; leave: CalLeave[]; holidays: { date: string; name: string }[]; meId: string }) {
+export function TeamCalendar({
+  start,
+  month,
+  today,
+  leave,
+  holidays,
+  meId,
+}: {
+  start: string;
+  month: string;
+  today: string;
+  leave: CalLeave[];
+  holidays: { date: string; name: string }[];
+  meId: string;
+}) {
   const [offset, setOffset] = useState(0); // weeks shown start at `start`; arrows move a week
   const days = useMemo(() => Array.from({ length: 35 }, (_, i) => addDays(start, i + offset * 7)), [start, offset]);
   const hol = new Map(holidays.map((h) => [h.date, h.name]));
@@ -193,9 +277,13 @@ export function TeamCalendar({ start, month, today, leave, holidays, meId }: { s
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[10px] border border-line bg-line text-xs" role="grid" aria-label={`Leave calendar, ${label}`}>
+      <div
+        className="border-line bg-line grid grid-cols-7 gap-px overflow-hidden rounded-[10px] border text-xs"
+        role="grid"
+        aria-label={`Leave calendar, ${label}`}
+      >
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} role="columnheader" className="bg-surface-2 px-2 py-1.5 text-center font-medium text-ink-3">
+          <div key={d} role="columnheader" className="bg-surface-2 text-ink-3 px-2 py-1.5 text-center font-medium">
             {d}
           </div>
         ))}
@@ -208,26 +296,43 @@ export function TeamCalendar({ start, month, today, leave, holidays, meId }: { s
               key={d}
               role="gridcell"
               aria-label={`${formatDate(d, { weekday: "long", day: "numeric", month: "long" })}${holiday ? `, ${holiday}` : ""}${out.length ? `, off: ${out.map((o) => o.name).join(", ")}` : ""}`}
-              className={cn("min-h-[84px] bg-surface p-1.5", (weekend || d.slice(0, 7) !== month) && "bg-surface/60", weekend && "bg-[repeating-linear-gradient(135deg,transparent_0_6px,var(--surface-2)_6px_7px)]")}
+              className={cn(
+                "bg-surface min-h-[84px] p-1.5",
+                (weekend || d.slice(0, 7) !== month) && "bg-surface/60",
+                weekend && "bg-[repeating-linear-gradient(135deg,transparent_0_6px,var(--surface-2)_6px_7px)]",
+              )}
             >
               <div className="mb-1 flex items-center justify-between">
-                <span className={cn("grid size-6 place-items-center rounded-full tabular", d === today ? "bg-marigold font-semibold text-[#2a1b00]" : d.slice(0, 7) === month ? "text-ink" : "text-ink-3")}>{Number(d.slice(8))}</span>
+                <span
+                  className={cn(
+                    "tabular grid size-6 place-items-center rounded-full",
+                    d === today ? "bg-marigold font-semibold text-[#2a1b00]" : d.slice(0, 7) === month ? "text-ink" : "text-ink-3",
+                  )}
+                >
+                  {Number(d.slice(8))}
+                </span>
               </div>
-              {holiday ? <p className="truncate rounded bg-sky-soft px-1 py-0.5 text-[0.7rem] text-sky">{holiday}</p> : null}
+              {holiday ? <p className="bg-sky-soft text-sky truncate rounded px-1 py-0.5 text-[0.7rem]">{holiday}</p> : null}
               <div className="space-y-0.5">
                 {out.slice(0, 3).map((o) => (
-                  <div key={o.id} className={cn("flex items-center gap-1 truncate rounded px-1 py-0.5 text-[0.7rem]", o.status === "pending" ? "border border-dashed border-line-strong" : "")} style={o.status === "approved" ? { background: `oklch(0.93 0.04 ${o.hue})`, color: `oklch(0.35 0.08 ${o.hue})` } : undefined}>
+                  <div
+                    key={o.id}
+                    className={cn(
+                      "flex items-center gap-1 truncate rounded px-1 py-0.5 text-[0.7rem]",
+                      o.status === "pending" ? "border-line-strong border border-dashed" : "",
+                    )}
+                    style={o.status === "approved" ? { background: `oklch(0.93 0.04 ${o.hue})`, color: `oklch(0.35 0.08 ${o.hue})` } : undefined}
+                  >
                     <span className="truncate">{o.employeeId === meId ? "You" : o.name.split(" ")[0]}</span>
                   </div>
                 ))}
-                {out.length > 3 ? <p className="px-1 text-[0.7rem] text-ink-3">+{out.length - 3} more</p> : null}
+                {out.length > 3 ? <p className="text-ink-3 px-1 text-[0.7rem]">+{out.length - 3} more</p> : null}
               </div>
             </div>
           );
         })}
       </div>
-      <p className="mt-2 px-2 text-xs text-ink-3">Dashed means waiting for approval.</p>
+      <p className="text-ink-3 mt-2 px-2 text-xs">Dashed means waiting for approval.</p>
     </div>
   );
 }
-

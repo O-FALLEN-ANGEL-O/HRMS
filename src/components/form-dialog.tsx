@@ -61,7 +61,7 @@ export function FormDialog({
         <form ref={formRef} action={formAction} className="space-y-4" noValidate={false}>
           {children({ fieldErrors: state && !state.ok ? state.fieldErrors : undefined })}
           {state && !state.ok ? (
-            <p role="alert" className="rounded-lg bg-rose-soft px-3 py-2 text-sm text-rose">
+            <p role="alert" className="bg-rose-soft text-rose rounded-lg px-3 py-2 text-sm">
               {state.error}
             </p>
           ) : null}

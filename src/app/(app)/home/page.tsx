@@ -14,7 +14,24 @@ export const metadata = { title: "Home" };
 const fromEmp = alias(schema.employees, "from_emp");
 const toEmp = alias(schema.employees, "to_emp");
 
-const { attendance, leaveRequests, employees, holidays, announcements, kudos, payslips, payrollRuns, objectives, keyResults, tickets, candidates, jobs, lifecycleTasks, surveyResponses, leaveTypes } = schema;
+const {
+  attendance,
+  leaveRequests,
+  employees,
+  holidays,
+  announcements,
+  kudos,
+  payslips,
+  payrollRuns,
+  objectives,
+  keyResults,
+  tickets,
+  candidates,
+  jobs,
+  lifecycleTasks,
+  surveyResponses,
+  leaveTypes,
+} = schema;
 
 function greeting() {
   const h = (new Date().getUTCHours() + 5.5) % 24;
@@ -41,7 +58,12 @@ async function roleStats(user: CurrentUser, today: string) {
       { label: "In today", value: `${present}/${headcount}`, sub: `${onLeave} on leave`, href: "/attendance" },
       { label: "Joiners & leavers", value: joining, sub: "in progress", href: "/lifecycle" },
       { label: "Open tickets", value: openTickets, sub: "helpdesk", href: "/helpdesk" },
-      { label: `Payroll, ${monthLabel(month).split(" ")[0]}`, value: run ? (run.status === "finalized" ? "Paid" : "Draft") : "Not run", sub: run ? "" : "ready to run", href: "/payroll" },
+      {
+        label: `Payroll, ${monthLabel(month).split(" ")[0]}`,
+        value: run ? (run.status === "finalized" ? "Paid" : "Draft") : "Not run",
+        sub: run ? "" : "ready to run",
+        href: "/payroll",
+      },
       { label: "eNPS", value: enpsScore === null ? "—" : enpsScore > 0 ? `+${enpsScore}` : enpsScore, sub: `${enps.length} responses`, href: "/surveys" },
     ];
   }
@@ -74,7 +96,10 @@ async function roleStats(user: CurrentUser, today: string) {
   if (user.reportCount > 0) {
     const team = await db.select({ id: employees.id }).from(employees).where(eq(employees.managerId, user.id));
     const ids = team.map((t) => t.id);
-    const out = await db.$count(leaveRequests, and(inArray(leaveRequests.employeeId, ids), eq(leaveRequests.status, "approved"), lte(leaveRequests.startDate, today), gte(leaveRequests.endDate, today)));
+    const out = await db.$count(
+      leaveRequests,
+      and(inArray(leaveRequests.employeeId, ids), eq(leaveRequests.status, "approved"), lte(leaveRequests.startDate, today), gte(leaveRequests.endDate, today)),
+    );
     stats.unshift({ label: "Team out today", value: `${out}/${ids.length}`, sub: "on leave", href: "/time-off" });
   }
   return stats;
@@ -94,15 +119,29 @@ export default async function HomePage() {
       .from(leaveRequests)
       .innerJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id))
       .where(and(eq(leaveRequests.employeeId, user.id), eq(leaveRequests.status, "pending"))),
-    db.select().from(holidays).where(and(gte(holidays.date, today), lte(holidays.date, addDays(today, 45)))).orderBy(holidays.date),
+    db
+      .select()
+      .from(holidays)
+      .where(and(gte(holidays.date, today), lte(holidays.date, addDays(today, 45))))
+      .orderBy(holidays.date),
     db
       .select({ r: leaveRequests, name: employees.name, hue: employees.hue })
       .from(leaveRequests)
       .innerJoin(employees, eq(leaveRequests.employeeId, employees.id))
-      .where(and(eq(leaveRequests.status, "approved"), lte(leaveRequests.startDate, weekAhead), gte(leaveRequests.endDate, today), user.reportCount > 0 || isPeopleTeam(user) ? sql`1=1` : eq(employees.departmentId, user.departmentId ?? "")))
+      .where(
+        and(
+          eq(leaveRequests.status, "approved"),
+          lte(leaveRequests.startDate, weekAhead),
+          gte(leaveRequests.endDate, today),
+          user.reportCount > 0 || isPeopleTeam(user) ? sql`1=1` : eq(employees.departmentId, user.departmentId ?? ""),
+        ),
+      )
       .orderBy(leaveRequests.startDate)
       .limit(6),
-    db.select({ id: employees.id, name: employees.name, hue: employees.hue, birthday: employees.birthday, joinedOn: employees.joinedOn }).from(employees).where(ne(employees.status, "exited")),
+    db
+      .select({ id: employees.id, name: employees.name, hue: employees.hue, birthday: employees.birthday, joinedOn: employees.joinedOn })
+      .from(employees)
+      .where(ne(employees.status, "exited")),
     db
       .select({ a: announcements, name: employees.name })
       .from(announcements)
@@ -200,11 +239,29 @@ export default async function HomePage() {
           bodyClassName="p-0"
         >
           {waiting ? (
-            <ul className="divide-y divide-line">
+            <ul className="divide-line divide-y">
               {[
-                ...approvals.leave.map((a) => ({ id: a.r.id, name: a.name, hue: a.hue, what: `${a.r.days === 1 ? "1 day" : `${a.r.days} days`} ${a.type.toLowerCase()}, from ${formatDate(a.r.startDate)}`, when: a.r.createdAt })),
-                ...approvals.regularizations.map((a) => ({ id: a.r.id, name: a.name, hue: a.hue, what: `Attendance correction for ${formatDate(a.r.date)}`, when: a.r.createdAt })),
-                ...approvals.expenses.map((a) => ({ id: a.r.id, name: a.name, hue: a.hue, what: `${formatINR(a.r.amount)} ${a.r.category} expense`, when: a.r.createdAt })),
+                ...approvals.leave.map((a) => ({
+                  id: a.r.id,
+                  name: a.name,
+                  hue: a.hue,
+                  what: `${a.r.days === 1 ? "1 day" : `${a.r.days} days`} ${a.type.toLowerCase()}, from ${formatDate(a.r.startDate)}`,
+                  when: a.r.createdAt,
+                })),
+                ...approvals.regularizations.map((a) => ({
+                  id: a.r.id,
+                  name: a.name,
+                  hue: a.hue,
+                  what: `Attendance correction for ${formatDate(a.r.date)}`,
+                  when: a.r.createdAt,
+                })),
+                ...approvals.expenses.map((a) => ({
+                  id: a.r.id,
+                  name: a.name,
+                  hue: a.hue,
+                  what: `${formatINR(a.r.amount)} ${a.r.category} expense`,
+                  when: a.r.createdAt,
+                })),
               ]
                 .slice(0, 5)
                 .map((i) => (
@@ -212,20 +269,20 @@ export default async function HomePage() {
                     <Avatar name={i.name} hue={i.hue} size={32} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{i.name}</p>
-                      <p className="truncate text-sm text-ink-2">{i.what}</p>
+                      <p className="text-ink-2 truncate text-sm">{i.what}</p>
                     </div>
-                    <span className="shrink-0 text-xs text-ink-3">{timeAgo(i.when)}</span>
+                    <span className="text-ink-3 shrink-0 text-xs">{timeAgo(i.when)}</span>
                   </li>
                 ))}
-              {waiting > 5 ? <li className="px-5 py-3 text-sm text-ink-2">and {plural(waiting - 5, "more request")}</li> : null}
+              {waiting > 5 ? <li className="text-ink-2 px-5 py-3 text-sm">and {plural(waiting - 5, "more request")}</li> : null}
             </ul>
           ) : myPending.length ? (
-            <ul className="divide-y divide-line">
+            <ul className="divide-line divide-y">
               {myPending.map((p) => (
                 <li key={p.r.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div>
                     <p className="text-sm font-medium">{p.type}</p>
-                    <p className="text-sm text-ink-2">
+                    <p className="text-ink-2 text-sm">
                       {formatDate(p.r.startDate)}
                       {p.r.endDate !== p.r.startDate ? ` to ${formatDate(p.r.endDate)}` : ""}, {plural(p.r.days, "day")}
                     </p>
@@ -235,7 +292,7 @@ export default async function HomePage() {
               ))}
             </ul>
           ) : (
-            <div className="px-5 py-8 text-sm text-ink-2">
+            <div className="text-ink-2 px-5 py-8 text-sm">
               Nothing pending. Plan a break from{" "}
               <Link className="link" href="/time-off?new=1">
                 Time off
@@ -250,7 +307,7 @@ export default async function HomePage() {
         </Panel>
       </div>
 
-      <section aria-label="At a glance" className="panel grid grid-cols-2 gap-px overflow-hidden bg-line sm:grid-cols-3 lg:grid-cols-5">
+      <section aria-label="At a glance" className="panel bg-line grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((s) => (
           <div key={s.label} className="bg-surface px-4 py-4">
             <Stat {...s} />
@@ -260,28 +317,66 @@ export default async function HomePage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Panel title="Coming up" bodyClassName="p-0">
-          <ul className="divide-y divide-line">
+          <ul className="divide-line divide-y">
             {[
-              ...hol.slice(0, 2).map((h) => ({ key: h.id, icon: <CalendarDays aria-hidden />, title: h.name, sub: h.optional ? "Optional holiday" : "Company holiday", date: h.date })),
-              ...upcomingLeave.slice(0, 4).map((l) => ({ key: l.r.id, icon: <Plane aria-hidden />, title: l.r.employeeId === user.id ? "You're off" : `${l.name} is off`, sub: l.r.startDate < today ? `Back after ${formatDate(l.r.endDate)}` : plural(l.r.days, "day"), date: l.r.startDate < today ? today : l.r.startDate })),
-              ...celebrations.map((c) => ({ key: c.id + c.kind, icon: c.kind === "birthday" ? <Cake aria-hidden /> : <PartyPopper aria-hidden />, title: c.id === user.id ? (c.kind === "birthday" ? "Your birthday" : `Your ${plural(c.years!, "year")} at Northwind`) : c.kind === "birthday" ? `${c.name}'s birthday` : `${c.name}, ${plural(c.years!, "year")} at Northwind`, sub: c.kind === "birthday" ? "Birthday" : "Work anniversary", date: c.date })),
+              ...hol
+                .slice(0, 2)
+                .map((h) => ({
+                  key: h.id,
+                  icon: <CalendarDays aria-hidden />,
+                  title: h.name,
+                  sub: h.optional ? "Optional holiday" : "Company holiday",
+                  date: h.date,
+                })),
+              ...upcomingLeave
+                .slice(0, 4)
+                .map((l) => ({
+                  key: l.r.id,
+                  icon: <Plane aria-hidden />,
+                  title: l.r.employeeId === user.id ? "You're off" : `${l.name} is off`,
+                  sub: l.r.startDate < today ? `Back after ${formatDate(l.r.endDate)}` : plural(l.r.days, "day"),
+                  date: l.r.startDate < today ? today : l.r.startDate,
+                })),
+              ...celebrations.map((c) => ({
+                key: c.id + c.kind,
+                icon: c.kind === "birthday" ? <Cake aria-hidden /> : <PartyPopper aria-hidden />,
+                title:
+                  c.id === user.id
+                    ? c.kind === "birthday"
+                      ? "Your birthday"
+                      : `Your ${plural(c.years!, "year")} at Northwind`
+                    : c.kind === "birthday"
+                      ? `${c.name}'s birthday`
+                      : `${c.name}, ${plural(c.years!, "year")} at Northwind`,
+                sub: c.kind === "birthday" ? "Birthday" : "Work anniversary",
+                date: c.date,
+              })),
             ]
               .sort((a, b) => a.date.localeCompare(b.date))
               .slice(0, 7)
               .map((i) => (
                 <li key={i.key} className="flex items-center gap-3 px-5 py-3">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-2 text-ink-2 [&_svg]:size-4">{i.icon}</span>
+                  <span className="bg-surface-2 text-ink-2 grid size-8 shrink-0 place-items-center rounded-full [&_svg]:size-4">{i.icon}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{i.title}</p>
-                    <p className="text-xs text-ink-3">{i.sub}</p>
+                    <p className="text-ink-3 text-xs">{i.sub}</p>
                   </div>
-                  <span className="shrink-0 text-sm text-ink-2 tabular">{i.date === today ? "Today" : formatDate(i.date, { weekday: "short", day: "numeric", month: "short" })}</span>
+                  <span className="text-ink-2 tabular shrink-0 text-sm">
+                    {i.date === today ? "Today" : formatDate(i.date, { weekday: "short", day: "numeric", month: "short" })}
+                  </span>
                 </li>
               ))}
           </ul>
         </Panel>
 
-        <Panel title={myTasks.length ? "Your lifecycle tasks" : "Your goals"} action={<Link className="link text-sm" href={myTasks.length ? "/lifecycle" : "/performance"}>Open</Link>}>
+        <Panel
+          title={myTasks.length ? "Your lifecycle tasks" : "Your goals"}
+          action={
+            <Link className="link text-sm" href={myTasks.length ? "/lifecycle" : "/performance"}>
+              Open
+            </Link>
+          }
+        >
           {myTasks.length ? (
             <ul className="space-y-3">
               {myTasks.map((t) => (
@@ -289,7 +384,7 @@ export default async function HomePage() {
                   <p className="font-medium">{t.t.title}</p>
                   <p className="text-ink-2">
                     {t.name}, due {formatDate(t.t.dueOn)}
-                    {t.t.dueOn < today ? <span className="ml-1 text-rose">overdue</span> : null}
+                    {t.t.dueOn < today ? <span className="text-rose ml-1">overdue</span> : null}
                   </p>
                 </li>
               ))}
@@ -310,7 +405,7 @@ export default async function HomePage() {
               })}
             </ul>
           ) : (
-            <p className="text-sm text-ink-2">
+            <p className="text-ink-2 text-sm">
               No goals yet this quarter.{" "}
               <Link className="link" href="/performance">
                 Set your first goal
@@ -320,12 +415,19 @@ export default async function HomePage() {
           )}
         </Panel>
 
-        <Panel title="Around the company" action={<Link className="link text-sm" href="/feed">Feed</Link>}>
+        <Panel
+          title="Around the company"
+          action={
+            <Link className="link text-sm" href="/feed">
+              Feed
+            </Link>
+          }
+        >
           {pinned[0] ? (
-            <article className="border-b border-line pb-4">
+            <article className="border-line border-b pb-4">
               <p className="font-medium">{pinned[0].a.title}</p>
-              <p className="mt-1 line-clamp-3 text-sm text-ink-2">{pinned[0].a.body}</p>
-              <p className="mt-1.5 text-xs text-ink-3">
+              <p className="text-ink-2 mt-1 line-clamp-3 text-sm">{pinned[0].a.body}</p>
+              <p className="text-ink-3 mt-1.5 text-xs">
                 {pinned[0].name}, {timeAgo(pinned[0].a.createdAt)}
               </p>
             </article>
@@ -335,7 +437,8 @@ export default async function HomePage() {
               <li key={k.k.id} className="flex gap-3 text-sm">
                 <Avatar name={k.toName} hue={k.toHue} size={28} />
                 <p className="text-ink-2">
-                  <span className="font-medium text-ink">{k.fromName.split(" ")[0]}</span> to <span className="font-medium text-ink">{k.toName.split(" ")[0]}</span>: {k.k.message}
+                  <span className="text-ink font-medium">{k.fromName.split(" ")[0]}</span> to{" "}
+                  <span className="text-ink font-medium">{k.toName.split(" ")[0]}</span>: {k.k.message}
                 </p>
               </li>
             ))}

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import { MotionProvider } from "@/components/motion-provider";
 import "./globals.css";
@@ -6,7 +7,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "HR+", template: "%s · HR+" },
   description: "HR+ — people, time off, attendance, payroll, hiring and performance in one place. A demo HRMS by Prajwal DL.",
-  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {
@@ -22,10 +22,10 @@ const themeScript = `(()=>{try{const t=localStorage.getItem('hrp-theme');const d
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-IN" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body>
+        <Script id="theme" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
         <MotionProvider>{children}</MotionProvider>
         <Toaster position="bottom-right" toastOptions={{ className: "!rounded-[10px] !border-line !bg-surface !text-ink !font-sans" }} />
       </body>

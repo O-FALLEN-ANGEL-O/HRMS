@@ -37,7 +37,7 @@ function Row({ row, onDone }: { row: ApprovalRow; onDone: (id: string) => void }
     });
 
   return (
-    <AnimatedItem className="border-b border-line last:border-b-0">
+    <AnimatedItem className="border-line border-b last:border-b-0">
       <div className="grid gap-4 px-5 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
         <div className="flex min-w-0 gap-3">
           <Avatar name={row.name} hue={row.hue} size={38} />
@@ -45,20 +45,20 @@ function Row({ row, onDone }: { row: ApprovalRow; onDone: (id: string) => void }
             <p className="text-sm">
               <span className="font-semibold">{row.name}</span> <span className="text-ink-3">{row.title}</span>
             </p>
-            <p className="mt-0.5 font-display text-[1.05rem] font-semibold">{row.headline}</p>
-            <p className="text-sm text-ink-2">{row.detail}</p>
+            <p className="font-display mt-0.5 text-[1.05rem] font-semibold">{row.headline}</p>
+            <p className="text-ink-2 text-sm">{row.detail}</p>
             <p className="mt-2 max-w-[60ch] text-sm">&ldquo;{row.reason}&rdquo;</p>
             {row.context.length ? (
-              <ul className="mt-2 space-y-0.5 text-sm text-ink-2">
+              <ul className="text-ink-2 mt-2 space-y-0.5 text-sm">
                 {row.context.map((c, i) => (
-                  <li key={i} className={row.warn && c.startsWith("Also off") ? "flex items-center gap-1.5 text-marigold-ink" : ""}>
+                  <li key={i} className={row.warn && c.startsWith("Also off") ? "text-marigold-ink flex items-center gap-1.5" : ""}>
                     {row.warn && c.startsWith("Also off") ? <AlertTriangle className="size-3.5" aria-hidden /> : null}
                     {c}
                   </li>
                 ))}
               </ul>
             ) : null}
-            <p className="mt-2 text-xs text-ink-3">Requested {timeAgo(row.createdAt)}</p>
+            <p className="text-ink-3 mt-2 text-xs">Requested {timeAgo(row.createdAt)}</p>
           </div>
         </div>
         <div className="flex flex-col gap-2 md:w-56">
@@ -73,7 +73,14 @@ function Row({ row, onDone }: { row: ApprovalRow; onDone: (id: string) => void }
               <label className="sr-only" htmlFor={`note-${row.id}`}>
                 Reason for declining
               </label>
-              <textarea id={`note-${row.id}`} autoFocus className="field min-h-20 text-sm" placeholder="Tell them why, or suggest other dates" value={note} onChange={(e) => setNote(e.target.value)} />
+              <textarea
+                id={`note-${row.id}`}
+                autoFocus
+                className="field min-h-20 text-sm"
+                placeholder="Tell them why, or suggest other dates"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
               <div className="flex gap-2">
                 <Button type="submit" variant="danger" size="sm" className="flex-1" disabled={pending}>
                   Decline
@@ -99,7 +106,17 @@ function Row({ row, onDone }: { row: ApprovalRow; onDone: (id: string) => void }
   );
 }
 
-export function ApprovalsBoard({ leave, regularizations, expenses, peopleTeam }: { leave: ApprovalRow[]; regularizations: ApprovalRow[]; expenses: ApprovalRow[]; peopleTeam: boolean }) {
+export function ApprovalsBoard({
+  leave,
+  regularizations,
+  expenses,
+  peopleTeam,
+}: {
+  leave: ApprovalRow[];
+  regularizations: ApprovalRow[];
+  expenses: ApprovalRow[];
+  peopleTeam: boolean;
+}) {
   const [tab, setTab] = useState<Tab>(leave.length ? "leave" : regularizations.length ? "regularization" : "expense");
   const [hidden, hide] = useOptimistic<string[], string>([], (s, id) => [...s, id]);
   const [, start] = useTransition();
@@ -120,7 +137,7 @@ export function ApprovalsBoard({ leave, regularizations, expenses, peopleTeam }:
   const section = (title: string | null, list: ApprovalRow[]) =>
     list.length ? (
       <section className="panel overflow-hidden">
-        {title ? <h2 className="border-b border-line px-5 py-3 font-display font-semibold">{title}</h2> : null}
+        {title ? <h2 className="border-line font-display border-b px-5 py-3 font-semibold">{title}</h2> : null}
         <AnimatedList>
           {list.map((r) => (
             <Row key={r.id} row={r} onDone={(id) => start(() => hide(id))} />

@@ -6,7 +6,9 @@ import { Button } from "./ui";
 
 export function ThemeToggle() {
   const [dark, setDark] = useState<boolean | null>(null);
-  useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
   const toggle = () => {
     const next = !document.documentElement.classList.contains("dark");
     document.documentElement.classList.toggle("dark", next);

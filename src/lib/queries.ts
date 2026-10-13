@@ -54,12 +54,7 @@ export async function approvalsCount(user: CurrentUser) {
 
 export async function unreadNotifications(userId: string) {
   const db = await getDb();
-  return db
-    .select()
-    .from(schema.notifications)
-    .where(eq(schema.notifications.employeeId, userId))
-    .orderBy(desc(schema.notifications.createdAt))
-    .limit(12);
+  return db.select().from(schema.notifications).where(eq(schema.notifications.employeeId, userId)).orderBy(desc(schema.notifications.createdAt)).limit(12);
 }
 
 export async function directory() {
@@ -98,7 +93,13 @@ export async function leaveBalances(employeeId: string, year: string) {
   const used = await db
     .select({ typeId: leaveRequests.leaveTypeId, status: leaveRequests.status, days: sql<number>`sum(${leaveRequests.days})` })
     .from(leaveRequests)
-    .where(and(eq(leaveRequests.employeeId, employeeId), inArray(leaveRequests.status, ["approved", "pending"]), sql`substr(${leaveRequests.startDate},1,4) = ${year}`))
+    .where(
+      and(
+        eq(leaveRequests.employeeId, employeeId),
+        inArray(leaveRequests.status, ["approved", "pending"]),
+        sql`substr(${leaveRequests.startDate},1,4) = ${year}`,
+      ),
+    )
     .groupBy(leaveRequests.leaveTypeId, leaveRequests.status);
   return types.map((t) => {
     const approved = used.find((u) => u.typeId === t.id && u.status === "approved")?.days ?? 0;

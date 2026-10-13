@@ -57,7 +57,17 @@ export function ShiftDial({
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90" aria-hidden>
         <circle cx={c} cy={c} r={r} fill="none" stroke="var(--surface-2)" strokeWidth={stroke} />
-        <circle cx={c} cy={c} r={r} fill="none" stroke="var(--line-strong)" strokeWidth={stroke} strokeLinecap="butt" style={arc(core.start, core.len)} opacity={0.7} />
+        <circle
+          cx={c}
+          cy={c}
+          r={r}
+          fill="none"
+          stroke="var(--line-strong)"
+          strokeWidth={stroke}
+          strokeLinecap="butt"
+          style={arc(core.start, core.len)}
+          opacity={0.7}
+        />
         {inF !== null ? (
           <motion.circle
             cx={c}
@@ -79,15 +89,24 @@ export function ShiftDial({
           return <line key={h} {...t} stroke="var(--ink-3)" strokeWidth={1.5} strokeLinecap="round" />;
         })}
         {nowF !== null ? (
-          <motion.g initial={animateIn ? { opacity: 0, scale: 0.6 } : false} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.1, type: "spring", stiffness: 260, damping: 18 }} style={{ originX: `${c}px`, originY: `${c}px` }}>
+          <motion.g
+            initial={animateIn ? { opacity: 0, scale: 0.6 } : false}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.1, type: "spring", stiffness: 260, damping: 18 }}
+            style={{ originX: `${c}px`, originY: `${c}px` }}
+          >
             <line {...tick(nowF, r - stroke * 0.95, r + stroke * 0.95)} stroke="var(--marigold)" strokeWidth={stroke * 0.42} strokeLinecap="round" />
           </motion.g>
         ) : null}
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
-          {label ? <div className="font-display text-[1.9rem] leading-none font-semibold tabular" style={{ fontSize: size * 0.13 }}>{label}</div> : null}
-          {sublabel ? <div className="mt-1.5 text-sm text-ink-2">{sublabel}</div> : null}
+          {label ? (
+            <div className="font-display tabular text-[1.9rem] leading-none font-semibold" style={{ fontSize: size * 0.13 }}>
+              {label}
+            </div>
+          ) : null}
+          {sublabel ? <div className="text-ink-2 mt-1.5 text-sm">{sublabel}</div> : null}
         </div>
       </div>
     </div>

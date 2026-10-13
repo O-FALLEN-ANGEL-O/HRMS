@@ -20,7 +20,10 @@ export default async function AttendancePage() {
   const monthStart = `${month}-01`;
 
   const [rows, leave, hol, corrections] = await Promise.all([
-    db.select().from(schema.attendance).where(and(eq(schema.attendance.employeeId, user.id), gte(schema.attendance.date, addDays(monthStart, -7)))),
+    db
+      .select()
+      .from(schema.attendance)
+      .where(and(eq(schema.attendance.employeeId, user.id), gte(schema.attendance.date, addDays(monthStart, -7)))),
     db
       .select()
       .from(schema.leaveRequests)
@@ -30,12 +33,33 @@ export default async function AttendancePage() {
   ]);
 
   const todayRow = rows.find((r) => r.date === today) ?? null;
-  const days: { date: string; state: "office" | "remote" | "field" | "leave" | "holiday" | "missing" | "weekend" | "future" | "partial"; hours: number | null; checkIn: string | null; checkOut: string | null }[] = [];
+  const days: {
+    date: string;
+    state: "office" | "remote" | "field" | "leave" | "holiday" | "missing" | "weekend" | "future" | "partial";
+    hours: number | null;
+    checkIn: string | null;
+    checkOut: string | null;
+  }[] = [];
   for (let d = monthStart; d.slice(0, 7) === month; d = addDays(d, 1)) {
     const r = rows.find((x) => x.date === d);
     const onLeave = leave.some((l) => l.startDate <= d && l.endDate >= d);
     const hours = r?.checkIn && r.checkOut ? (Date.parse(r.checkOut) - Date.parse(r.checkIn)) / 3_600_000 : null;
-    const state = d > today ? "future" : isWeekend(d) ? "weekend" : hol.includes(d) ? "holiday" : onLeave ? "leave" : r?.checkIn ? (r.checkOut || d === today ? r.mode : "partial") : d === today ? "future" : "missing";
+    const state =
+      d > today
+        ? "future"
+        : isWeekend(d)
+          ? "weekend"
+          : hol.includes(d)
+            ? "holiday"
+            : onLeave
+              ? "leave"
+              : r?.checkIn
+                ? r.checkOut || d === today
+                  ? r.mode
+                  : "partial"
+                : d === today
+                  ? "future"
+                  : "missing";
     days.push({ date: d, state, hours, checkIn: r?.checkIn ?? null, checkOut: r?.checkOut ?? null });
   }
   const worked = days.filter((d) => d.hours !== null);
@@ -45,7 +69,8 @@ export default async function AttendancePage() {
 
   // Team today (managers see reports, People team sees everyone)
   const showTeam = isPeopleTeam(user) || user.reportCount > 0;
-  let team: { id: string; name: string; hue: number; title: string; checkIn: string | null; checkOut: string | null; mode: string | null; leave: boolean }[] = [];
+  let team: { id: string; name: string; hue: number; title: string; checkIn: string | null; checkOut: string | null; mode: string | null; leave: boolean }[] =
+    [];
   if (showTeam) {
     const people = await db
       .select({ id: schema.employees.id, name: schema.employees.name, hue: schema.employees.hue, title: schema.employees.title })
@@ -54,9 +79,24 @@ export default async function AttendancePage() {
       .orderBy(schema.employees.name);
     const ids = people.map((p) => p.id);
     const [att, lv] = await Promise.all([
-      ids.length ? db.select().from(schema.attendance).where(and(eq(schema.attendance.date, today), inArray(schema.attendance.employeeId, ids))) : [],
       ids.length
-        ? db.select({ employeeId: schema.leaveRequests.employeeId }).from(schema.leaveRequests).where(and(inArray(schema.leaveRequests.employeeId, ids), eq(schema.leaveRequests.status, "approved"), lte(schema.leaveRequests.startDate, today), gte(schema.leaveRequests.endDate, today)))
+        ? db
+            .select()
+            .from(schema.attendance)
+            .where(and(eq(schema.attendance.date, today), inArray(schema.attendance.employeeId, ids)))
+        : [],
+      ids.length
+        ? db
+            .select({ employeeId: schema.leaveRequests.employeeId })
+            .from(schema.leaveRequests)
+            .where(
+              and(
+                inArray(schema.leaveRequests.employeeId, ids),
+                eq(schema.leaveRequests.status, "approved"),
+                lte(schema.leaveRequests.startDate, today),
+                gte(schema.leaveRequests.endDate, today),
+              ),
+            )
         : [],
     ]);
     team = people
@@ -90,22 +130,28 @@ export default async function AttendancePage() {
       />
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <Panel className="flex flex-col" bodyClassName="flex flex-1 items-center p-6">
-          <ClockCard today={todayRow ? { checkIn: todayRow.checkIn, checkOut: todayRow.checkOut, mode: todayRow.mode } : null} isWorkday={!isWeekend(today) && !hol.includes(today)} holiday={hol.includes(today) ? "Company holiday" : null} />
+          <ClockCard
+            today={todayRow ? { checkIn: todayRow.checkIn, checkOut: todayRow.checkOut, mode: todayRow.mode } : null}
+            isWorkday={!isWeekend(today) && !hol.includes(today)}
+            holiday={hol.includes(today) ? "Company holiday" : null}
+          />
         </Panel>
         <Panel title={formatDate(monthStart, { month: "long", year: "numeric" })}>
           <MonthGrid days={days} today={today} />
-          <dl className="mt-5 grid grid-cols-3 gap-4 border-t border-line pt-4 text-sm">
+          <dl className="border-line mt-5 grid grid-cols-3 gap-4 border-t pt-4 text-sm">
             <div>
               <dt className="text-ink-2">Average day</dt>
-              <dd className="font-display text-xl font-semibold tabular">{avg ? `${Math.floor(avg)}h ${String(Math.round((avg % 1) * 60)).padStart(2, "0")}m` : "—"}</dd>
+              <dd className="font-display tabular text-xl font-semibold">
+                {avg ? `${Math.floor(avg)}h ${String(Math.round((avg % 1) * 60)).padStart(2, "0")}m` : "—"}
+              </dd>
             </div>
             <div>
               <dt className="text-ink-2">After 11:00</dt>
-              <dd className="font-display text-xl font-semibold tabular">{late}</dd>
+              <dd className="font-display tabular text-xl font-semibold">{late}</dd>
             </div>
             <div>
               <dt className="text-ink-2">To correct</dt>
-              <dd className={`font-display text-xl font-semibold tabular ${missing.length ? "text-rose" : ""}`}>{missing.length}</dd>
+              <dd className={`font-display tabular text-xl font-semibold ${missing.length ? "text-rose" : ""}`}>{missing.length}</dd>
             </div>
           </dl>
         </Panel>
@@ -113,22 +159,30 @@ export default async function AttendancePage() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         {showTeam ? (
-          <Panel title={`${isPeopleTeam(user) ? "Everyone" : "Your team"} today`} action={<span className="text-sm text-ink-2 tabular">{inCount} of {team.length} in</span>} bodyClassName="p-0">
-            <ul className="max-h-[420px] divide-y divide-line overflow-y-auto">
+          <Panel
+            title={`${isPeopleTeam(user) ? "Everyone" : "Your team"} today`}
+            action={
+              <span className="text-ink-2 tabular text-sm">
+                {inCount} of {team.length} in
+              </span>
+            }
+            bodyClassName="p-0"
+          >
+            <ul className="divide-line max-h-[420px] divide-y overflow-y-auto">
               {team.map((t) => (
                 <li key={t.id} className="flex items-center gap-3 px-5 py-2.5">
                   <Avatar name={t.name} hue={t.hue} size={30} />
                   <Link href={`/people/${t.id}`} className="min-w-0 flex-1 text-sm hover:underline">
                     <span className="block truncate font-medium">{t.name}</span>
-                    <span className="block truncate text-xs text-ink-3">{t.title}</span>
+                    <span className="text-ink-3 block truncate text-xs">{t.title}</span>
                   </Link>
                   {t.leave ? (
                     <Pill t="good">On leave</Pill>
                   ) : t.checkIn ? (
-                    <span className="text-right text-sm tabular">
+                    <span className="tabular text-right text-sm">
                       {formatTime(t.checkIn)}
                       {t.checkOut ? ` – ${formatTime(t.checkOut)}` : ""}
-                      <span className="block text-xs text-ink-3 capitalize">{t.mode}</span>
+                      <span className="text-ink-3 block text-xs capitalize">{t.mode}</span>
                     </span>
                   ) : (
                     <Pill>Not in yet</Pill>
@@ -140,7 +194,7 @@ export default async function AttendancePage() {
         ) : null}
         <Panel title="Your corrections" bodyClassName="p-0" className={showTeam ? "" : "xl:col-span-2"}>
           {corrections.length ? (
-            <ul className="divide-y divide-line">
+            <ul className="divide-line divide-y">
               {corrections.map((c) => (
                 <li key={c.id} className="flex items-start justify-between gap-3 px-5 py-3 text-sm">
                   <div>
@@ -154,7 +208,9 @@ export default async function AttendancePage() {
               ))}
             </ul>
           ) : (
-            <p className="px-5 py-6 text-sm text-ink-2">Forgot to clock in or out? Raise a correction for any of the last 7 days and your manager will review it.</p>
+            <p className="text-ink-2 px-5 py-6 text-sm">
+              Forgot to clock in or out? Raise a correction for any of the last 7 days and your manager will review it.
+            </p>
           )}
         </Panel>
       </div>

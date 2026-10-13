@@ -87,3 +87,8 @@ export function initials(name: string) {
 export function plural(n: number, word: string, pluralWord = `${word}s`) {
   return `${n} ${n === 1 ? word : pluralWord}`;
 }
+
+export function quarterLabel(date: string) {
+  const m = Number(date.slice(5, 7));
+  return `Q${Math.ceil(m / 3)} ${date.slice(0, 4)}`;
+}

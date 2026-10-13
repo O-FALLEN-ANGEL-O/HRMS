@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "hr-plus",
-	"main": ".open-next/worker.js",
+	"main": "worker.ts",
 	"compatibility_date": "2026-10-01",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
@@ -29,6 +29,10 @@
 	},
 	"vars": {
 		"DEMO_MODE": "true"
+	},
+	"triggers": {
+		// 02:00 IST every day: reset the demo data.
+		"crons": ["30 20 * * *"]
 	},
 	"observability": {
 		"enabled": true

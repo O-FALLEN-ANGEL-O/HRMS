@@ -18,7 +18,9 @@ export default async function ExpensesPage() {
   const mine = await db.select().from(schema.expenses).where(eq(schema.expenses.employeeId, user.id)).orderBy(desc(schema.expenses.spentOn));
   const thisYear = mine.filter((e) => e.spentOn.startsWith(year));
   const sum = (s: string[]) => thisYear.filter((e) => s.includes(e.status)).reduce((a, e) => a + e.amount, 0);
-  const learning = thisYear.filter((e) => e.category === "learning" && ["approved", "reimbursed", "pending"].includes(e.status)).reduce((a, e) => a + e.amount, 0);
+  const learning = thisYear
+    .filter((e) => e.category === "learning" && ["approved", "reimbursed", "pending"].includes(e.status))
+    .reduce((a, e) => a + e.amount, 0);
 
   const queue = isPeopleTeam(user)
     ? await db
@@ -40,7 +42,7 @@ export default async function ExpensesPage() {
           </Suspense>
         }
       />
-      <section className="panel mb-6 grid grid-cols-2 gap-px overflow-hidden bg-line md:grid-cols-4" aria-label="Summary">
+      <section className="panel bg-line mb-6 grid grid-cols-2 gap-px overflow-hidden md:grid-cols-4" aria-label="Summary">
         {[
           { label: "Waiting for approval", value: formatINR(sum(["pending"])) },
           { label: "Approved, paid next payroll", value: formatINR(sum(["approved"])) },
@@ -58,8 +60,8 @@ export default async function ExpensesPage() {
           {mine.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-left text-ink-3">
-                  <tr className="border-b border-line">
+                <thead className="text-ink-3 text-left">
+                  <tr className="border-line border-b">
                     <th className="px-5 py-2.5 font-medium">Date</th>
                     <th className="px-3 py-2.5 font-medium">What for</th>
                     <th className="px-3 py-2.5 font-medium">Category</th>
@@ -67,13 +69,13 @@ export default async function ExpensesPage() {
                     <th className="px-5 py-2.5 text-right font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line">
+                <tbody className="divide-line divide-y">
                   {mine.map((e) => (
                     <tr key={e.id}>
-                      <td className="px-5 py-3 whitespace-nowrap text-ink-2 tabular">{formatDate(e.spentOn)}</td>
+                      <td className="text-ink-2 tabular px-5 py-3 whitespace-nowrap">{formatDate(e.spentOn)}</td>
                       <td className="max-w-[28ch] px-3 py-3">{e.description}</td>
-                      <td className="px-3 py-3 text-ink-2">{CAT[e.category]}</td>
-                      <td className="px-3 py-3 text-right font-medium tabular">{formatINR(e.amount)}</td>
+                      <td className="text-ink-2 px-3 py-3">{CAT[e.category]}</td>
+                      <td className="tabular px-3 py-3 text-right font-medium">{formatINR(e.amount)}</td>
                       <td className="px-5 py-3 text-right">
                         <StatusPill status={e.status} />
                       </td>
@@ -91,14 +93,14 @@ export default async function ExpensesPage() {
         {isPeopleTeam(user) ? (
           <Panel title="Approved, going into payroll" bodyClassName="p-0">
             {queue.length ? (
-              <ul className="divide-y divide-line">
+              <ul className="divide-line divide-y">
                 {queue.map((q) => (
                   <li key={q.e.id} className="flex items-center gap-3 px-5 py-3 text-sm">
                     <Avatar name={q.name} hue={q.hue} size={28} />
                     <span className="min-w-0 flex-1 truncate">
                       <span className="font-medium">{q.name}</span> <span className="text-ink-2">{q.e.description}</span>
                     </span>
-                    <span className="font-medium tabular">{formatINR(q.e.amount)}</span>
+                    <span className="tabular font-medium">{formatINR(q.e.amount)}</span>
                   </li>
                 ))}
                 <li className="flex justify-between px-5 py-3 text-sm font-semibold">
@@ -107,7 +109,7 @@ export default async function ExpensesPage() {
                 </li>
               </ul>
             ) : (
-              <p className="px-5 py-6 text-sm text-ink-2">No approved claims waiting. They&apos;ll be added to payslips when you run payroll.</p>
+              <p className="text-ink-2 px-5 py-6 text-sm">No approved claims waiting. They&apos;ll be added to payslips when you run payroll.</p>
             )}
           </Panel>
         ) : null}

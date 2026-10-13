@@ -33,14 +33,32 @@ export function NewExpense({ today }: { today: string }) {
               </select>
             </Field>
             <Field label="Amount (₹)" htmlFor="amount">
-              <input id="amount" name="amount" type="number" inputMode="numeric" min={1} step={1} required className="field tabular" placeholder="0" aria-invalid={!!fieldErrors?.amount} />
+              <input
+                id="amount"
+                name="amount"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                required
+                className="field tabular"
+                placeholder="0"
+                aria-invalid={!!fieldErrors?.amount}
+              />
             </Field>
           </div>
           <Field label="Date spent" htmlFor="spentOn">
             <input id="spentOn" name="spentOn" type="date" className="field" required defaultValue={today} max={today} min={addDays(today, -30)} />
           </Field>
           <Field label="What was it for?" htmlFor="description">
-            <textarea id="description" name="description" className="field min-h-20" required minLength={4} placeholder="e.g. Cab to the client office in Hebbal" />
+            <textarea
+              id="description"
+              name="description"
+              className="field min-h-20"
+              required
+              minLength={4}
+              placeholder="e.g. Cab to the client office in Hebbal"
+            />
           </Field>
           <div className="flex justify-end">
             <SubmitButton variant="accent" pendingLabel="Filing">

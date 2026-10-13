@@ -12,7 +12,15 @@ export async function GET(req: Request) {
 
   const db = await getDb();
   const rows = await db
-    .select({ code: schema.employees.code, name: schema.employees.name, date: schema.attendance.date, checkIn: schema.attendance.checkIn, checkOut: schema.attendance.checkOut, mode: schema.attendance.mode, note: schema.attendance.note })
+    .select({
+      code: schema.employees.code,
+      name: schema.employees.name,
+      date: schema.attendance.date,
+      checkIn: schema.attendance.checkIn,
+      checkOut: schema.attendance.checkOut,
+      mode: schema.attendance.mode,
+      note: schema.attendance.note,
+    })
     .from(schema.attendance)
     .innerJoin(schema.employees, eq(schema.attendance.employeeId, schema.employees.id))
     .where(and(like(schema.attendance.date, `${month}-%`)))
@@ -25,7 +33,11 @@ export async function GET(req: Request) {
   const hours = (a: string | null, b: string | null) => (a && b ? ((Date.parse(b) - Date.parse(a)) / 3_600_000).toFixed(2) : "");
   const csv = [
     ["Employee ID", "Name", "Date", "In (IST)", "Out (IST)", "Hours", "Mode", "Note"].join(","),
-    ...rows.map((r) => [r.code, r.name, r.date, r.checkIn ? formatTime(r.checkIn) : "", r.checkOut ? formatTime(r.checkOut) : "", hours(r.checkIn, r.checkOut), r.mode, r.note].map(esc).join(",")),
+    ...rows.map((r) =>
+      [r.code, r.name, r.date, r.checkIn ? formatTime(r.checkIn) : "", r.checkOut ? formatTime(r.checkOut) : "", hours(r.checkIn, r.checkOut), r.mode, r.note]
+        .map(esc)
+        .join(","),
+    ),
   ].join("\n");
 
   return new Response(csv, {

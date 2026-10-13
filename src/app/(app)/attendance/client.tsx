@@ -21,14 +21,20 @@ const STYLE: Record<DayState, { cls: string; label: string }> = {
   future: { cls: "bg-surface-2 text-ink-3", label: "" },
 };
 
-export function MonthGrid({ days, today }: { days: { date: string; state: DayState; hours: number | null; checkIn: string | null; checkOut: string | null }[]; today: string }) {
+export function MonthGrid({
+  days,
+  today,
+}: {
+  days: { date: string; state: DayState; hours: number | null; checkIn: string | null; checkOut: string | null }[];
+  today: string;
+}) {
   const lead = new Date(`${days[0]!.date}T00:00:00Z`).getUTCDay();
   const legend: DayState[] = ["office", "remote", "leave", "holiday", "missing", "partial"];
   return (
     <div>
       <div className="grid grid-cols-7 gap-1.5 text-center text-xs" role="grid" aria-label="This month's attendance">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <div key={i} className="pb-1 text-ink-3" aria-hidden>
+          <div key={i} className="text-ink-3 pb-1" aria-hidden>
             {d}
           </div>
         ))}
@@ -44,13 +50,17 @@ export function MonthGrid({ days, today }: { days: { date: string; state: DaySta
             transition={{ delay: i * 0.012, duration: 0.2 }}
             title={`${formatDate(d.date, { weekday: "long", day: "numeric", month: "long" })}: ${STYLE[d.state].label || "Upcoming"}${d.checkIn ? `, ${formatTime(d.checkIn)}–${formatTime(d.checkOut)}` : ""}`}
             aria-label={`${formatDate(d.date, { day: "numeric", month: "long" })}, ${STYLE[d.state].label || "upcoming"}${d.hours ? `, ${d.hours.toFixed(1)} hours` : ""}`}
-            className={cn("grid aspect-square place-items-center rounded-[7px] text-[0.8rem] font-medium tabular", STYLE[d.state].cls, d.date === today && "ring-2 ring-marigold ring-offset-2 ring-offset-surface")}
+            className={cn(
+              "tabular grid aspect-square place-items-center rounded-[7px] text-[0.8rem] font-medium",
+              STYLE[d.state].cls,
+              d.date === today && "ring-marigold ring-offset-surface ring-2 ring-offset-2",
+            )}
           >
             {Number(d.date.slice(8))}
           </motion.div>
         ))}
       </div>
-      <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-2">
+      <ul className="text-ink-2 mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
         {legend.map((s) => (
           <li key={s} className="flex items-center gap-1.5">
             <span className={cn("size-3 rounded-[3px]", STYLE[s].cls)} aria-hidden />
@@ -77,7 +87,16 @@ export function CorrectionDialog({ today, suggest }: { today: string; suggest: s
       {() => (
         <>
           <Field label="Day" htmlFor="date">
-            <input id="date" name="date" type="date" className="field" required defaultValue={suggest < today ? suggest : addDays(today, -1)} min={addDays(today, -7)} max={addDays(today, -1)} />
+            <input
+              id="date"
+              name="date"
+              type="date"
+              className="field"
+              required
+              defaultValue={suggest < today ? suggest : addDays(today, -1)}
+              min={addDays(today, -7)}
+              max={addDays(today, -1)}
+            />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Clocked in at" htmlFor="checkIn">
@@ -88,7 +107,14 @@ export function CorrectionDialog({ today, suggest }: { today: string; suggest: s
             </Field>
           </div>
           <Field label="What happened?" htmlFor="reason">
-            <textarea id="reason" name="reason" className="field min-h-20" required minLength={8} placeholder="e.g. At a client site all day and forgot to clock in" />
+            <textarea
+              id="reason"
+              name="reason"
+              className="field min-h-20"
+              required
+              minLength={8}
+              placeholder="e.g. At a client site all day and forgot to clock in"
+            />
           </Field>
           <div className="flex justify-end">
             <SubmitButton pendingLabel="Sending">Send to manager</SubmitButton>

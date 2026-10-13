@@ -46,6 +46,13 @@ describe("policy assistant fallback", () => {
     expect(r.sources).toEqual(["Leave policy"]);
     expect(r.answer).toContain("10 days");
   });
+  it("prefers the policy with the rarer matching words", () => {
+    const r = ai.retrievePolicies("Can I claim my internet bill?", [
+      { title: "Leave policy", body: "You can apply for leave. HR can approve it." },
+      { title: "Expenses", body: "Claim internet up to ₹1,000 a month." },
+    ]);
+    expect(r[0]?.title).toBe("Expenses");
+  });
   it("admits when nothing matches", async () => {
     const r = await ai.askAssistant({ question: "Quantum zebra?", history: [], policies, context: "" });
     expect(r.answer).toMatch(/couldn't find/);

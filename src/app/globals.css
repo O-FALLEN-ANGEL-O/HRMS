@@ -23,6 +23,7 @@
   --marigold-soft: #fdf0d5;
   --teal: #0d7a6e;
   --teal-soft: #dcf1ec;
+  --on-teal: #ffffff;
   --rose: #be3d57;
   --rose-soft: #fbe3e8;
   --sky: #2f6bd8;
@@ -45,6 +46,7 @@
   --marigold-soft: #3a2f17;
   --teal: #45c4b0;
   --teal-soft: #13342f;
+  --on-teal: #06231f;
   --rose: #f07c92;
   --rose-soft: #3a1d27;
   --sky: #7aa5f5;
@@ -67,6 +69,7 @@
   --color-marigold-soft: var(--marigold-soft);
   --color-teal: var(--teal);
   --color-teal-soft: var(--teal-soft);
+  --color-on-teal: var(--on-teal);
   --color-rose: var(--rose);
   --color-rose-soft: var(--rose-soft);
   --color-sky: var(--sky);
@@ -148,7 +151,9 @@
     padding: 0.55rem 0.75rem;
     font-size: var(--text-sm);
     color: var(--ink);
-    transition: border-color 120ms, box-shadow 120ms;
+    transition:
+      border-color 120ms,
+      box-shadow 120ms;
   }
   .field::placeholder {
     color: var(--ink-3);

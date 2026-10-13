@@ -78,10 +78,14 @@ export async function requestRegularization(_: unknown, fd: FormData) {
     if (v.date >= today) throw new UserError("Pick a past day. Today you can clock in and out directly.");
     if (daysBetween(v.date, today) > 7) throw new UserError("Corrections can be raised for the last 7 days only.");
     const db = await getDb();
-    const dup = await db.query.regularizations.findFirst({ where: and(eq(regularizations.employeeId, user.id), eq(regularizations.date, v.date), eq(regularizations.status, "pending")) });
+    const dup = await db.query.regularizations.findFirst({
+      where: and(eq(regularizations.employeeId, user.id), eq(regularizations.date, v.date), eq(regularizations.status, "pending")),
+    });
     if (dup) throw new UserError("You already have a pending correction for that day.");
     const id = newId("reg");
-    await db.insert(regularizations).values({ id, employeeId: user.id, date: v.date, checkIn: istToIso(v.date, v.checkIn), checkOut: istToIso(v.date, v.checkOut), reason: v.reason });
+    await db
+      .insert(regularizations)
+      .values({ id, employeeId: user.id, date: v.date, checkIn: istToIso(v.date, v.checkIn), checkOut: istToIso(v.date, v.checkOut), reason: v.reason });
     if (user.managerId) await notify(user.managerId, `${user.name.split(" ")[0]} asked to correct attendance for ${formatDate(v.date)}`, "/approvals");
     refresh("/attendance");
     return { message: "Correction sent to your manager." };
@@ -116,7 +120,12 @@ export async function applyLeave(_: unknown, fd: FormData) {
     const days = halfDay ? 0.5 : working;
 
     const overlap = await db.query.leaveRequests.findFirst({
-      where: and(eq(leaveRequests.employeeId, user.id), inArray(leaveRequests.status, ["pending", "approved"]), lte(leaveRequests.startDate, v.endDate), gte(leaveRequests.endDate, v.startDate)),
+      where: and(
+        eq(leaveRequests.employeeId, user.id),
+        inArray(leaveRequests.status, ["pending", "approved"]),
+        lte(leaveRequests.startDate, v.endDate),
+        gte(leaveRequests.endDate, v.startDate),
+      ),
     });
     if (overlap) throw new UserError(`This overlaps your ${overlap.status} leave from ${formatDate(overlap.startDate)}.`);
 
@@ -126,8 +135,11 @@ export async function applyLeave(_: unknown, fd: FormData) {
     }
 
     const id = newId("lr");
-    await db.insert(leaveRequests).values({ id, employeeId: user.id, leaveTypeId: type.id, startDate: v.startDate, endDate: v.endDate, days, halfDay, reason: v.reason });
-    if (user.managerId) await notify(user.managerId, `${user.name.split(" ")[0]} requested ${days === 1 ? "1 day" : `${days} days`} of ${type.name.toLowerCase()}`, "/approvals");
+    await db
+      .insert(leaveRequests)
+      .values({ id, employeeId: user.id, leaveTypeId: type.id, startDate: v.startDate, endDate: v.endDate, days, halfDay, reason: v.reason });
+    if (user.managerId)
+      await notify(user.managerId, `${user.name.split(" ")[0]} requested ${days === 1 ? "1 day" : `${days} days`} of ${type.name.toLowerCase()}`, "/approvals");
     await audit(user.id, "leave.apply", "leave_request", id, { days });
     refresh("/time-off");
     return { message: `Requested ${days === 1 ? "1 day" : `${days} days`} of ${type.name.toLowerCase()}.` };
@@ -140,7 +152,8 @@ export async function cancelLeave(id: string) {
     const db = await getDb();
     const r = await db.query.leaveRequests.findFirst({ where: eq(leaveRequests.id, id) });
     assert(r && r.employeeId === user.id, "You can only cancel your own requests.");
-    if (r.status !== "pending" && !(r.status === "approved" && r.startDate > todayIST())) throw new UserError("Only pending or upcoming leave can be cancelled.");
+    if (r.status !== "pending" && !(r.status === "approved" && r.startDate > todayIST()))
+      throw new UserError("Only pending or upcoming leave can be cancelled.");
     await db.update(leaveRequests).set({ status: "cancelled" }).where(eq(leaveRequests.id, id));
     refresh("/time-off");
     return { message: "Leave cancelled." };
@@ -151,7 +164,11 @@ export async function cancelLeave(id: string) {
 
 const expenseSchema = z.object({
   category: z.enum(["travel", "meals", "internet", "equipment", "learning", "other"], { message: "Choose a category." }),
-  amount: z.coerce.number({ message: "Enter an amount." }).int("Use whole rupees.").min(1, "Enter an amount.").max(5_00_000, "Claims over ₹5,00,000 need Finance approval offline."),
+  amount: z.coerce
+    .number({ message: "Enter an amount." })
+    .int("Use whole rupees.")
+    .min(1, "Enter an amount.")
+    .max(5_00_000, "Claims over ₹5,00,000 need Finance approval offline."),
   spentOn: dateStr,
   description: z.string().min(4, "Describe what this was for.").max(300),
 });
@@ -196,7 +213,10 @@ export async function decide(kind: "leave" | "regularization" | "expense", input
       if (!r || r.status !== "pending") throw new UserError("This request was already handled.");
       const emp = await loadSubject(r.employeeId);
       assert(canApproveFor(user, emp), "Only their manager or the People team can decide this.");
-      await db.update(leaveRequests).set({ status: v.decision, approverId: user.id, decidedAt, decisionNote: v.note || null }).where(eq(leaveRequests.id, v.id));
+      await db
+        .update(leaveRequests)
+        .set({ status: v.decision, approverId: user.id, decidedAt, decisionNote: v.note || null })
+        .where(eq(leaveRequests.id, v.id));
       await notify(emp.id, `${user.name.split(" ")[0]} ${verb} your leave from ${formatDate(r.startDate)}`, "/time-off");
       await audit(user.id, `leave.${v.decision}`, "leave_request", v.id);
       refresh("/time-off");
@@ -212,7 +232,10 @@ export async function decide(kind: "leave" | "regularization" | "expense", input
       if (v.decision === "approved") {
         const existing = await db.query.attendance.findFirst({ where: and(eq(attendance.employeeId, emp.id), eq(attendance.date, r.date)) });
         if (existing) await db.update(attendance).set({ checkIn: r.checkIn, checkOut: r.checkOut, note: "Corrected" }).where(eq(attendance.id, existing.id));
-        else await db.insert(attendance).values({ id: newId("att"), employeeId: emp.id, date: r.date, checkIn: r.checkIn, checkOut: r.checkOut, mode: "office", note: "Corrected" });
+        else
+          await db
+            .insert(attendance)
+            .values({ id: newId("att"), employeeId: emp.id, date: r.date, checkIn: r.checkIn, checkOut: r.checkOut, mode: "office", note: "Corrected" });
       }
       await notify(emp.id, `${user.name.split(" ")[0]} ${verb} your attendance correction for ${formatDate(r.date)}`, "/attendance");
       await audit(user.id, `regularization.${v.decision}`, "regularization", v.id);
@@ -237,5 +260,7 @@ export async function approveAll(kind: "leave" | "regularization" | "expense", i
   const results = [];
   for (const id of ids.slice(0, 50)) results.push(await decide(kind, { id, decision: "approved" }));
   const ok = results.filter((r) => r.ok).length;
-  return ok === ids.length ? { ok: true as const, message: `Approved ${ok}.` } : { ok: false as const, error: `Approved ${ok} of ${ids.length}; the rest were already handled.` };
+  return ok === ids.length
+    ? { ok: true as const, message: `Approved ${ok}.` }
+    : { ok: false as const, error: `Approved ${ok} of ${ids.length}; the rest were already handled.` };
 }

@@ -74,12 +74,7 @@ export function professionalTax(monthlyGross: number): number {
   return monthlyGross >= 25_000 ? 200 : 0;
 }
 
-export function computePayslip(input: {
-  annualCtc: number;
-  daysInMonth: number;
-  unpaidDays: number;
-  reimbursements?: number;
-}): PayslipFigures {
+export function computePayslip(input: { annualCtc: number; daysInMonth: number; unpaidDays: number; reimbursements?: number }): PayslipFigures {
   const b = salaryBreakup(input.annualCtc);
   const daysPayable = Math.max(0, input.daysInMonth - input.unpaidDays);
   const factor = input.daysInMonth > 0 ? daysPayable / input.daysInMonth : 0;

@@ -20,7 +20,7 @@ const buttonVariants = cva(
         accent: "bg-marigold text-[#2a1b00] hover:brightness-105 shadow-[0_1px_0_rgb(0_0_0/0.08)]",
         outline: "border border-line-strong bg-surface text-ink hover:bg-surface-2",
         ghost: "text-ink-2 hover:bg-surface-2 hover:text-ink",
-        approve: "bg-teal text-white hover:brightness-110 dark:text-[#06231f]",
+        approve: "bg-teal text-on-teal hover:brightness-110",
         danger: "border border-rose/40 text-rose hover:bg-rose-soft",
       },
       size: {
@@ -61,7 +61,7 @@ export function Avatar({ name, hue, size = 36, className }: { name: string; hue:
   return (
     <span
       aria-hidden
-      className={cn("inline-grid shrink-0 place-items-center rounded-full font-display font-semibold select-none", className)}
+      className={cn("font-display inline-grid shrink-0 place-items-center rounded-full font-semibold select-none", className)}
       style={{
         width: size,
         height: size,
@@ -87,7 +87,11 @@ const tone = {
 export type Tone = keyof typeof tone;
 
 export function Pill({ children, t = "neutral", className }: { children: React.ReactNode; t?: Tone; className?: string }) {
-  return <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap", tone[t], className)}>{children}</span>;
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap", tone[t], className)}>
+      {children}
+    </span>
+  );
 }
 
 export function statusTone(status: string): Tone {
@@ -111,18 +115,30 @@ export function PageHeader({ title, description, actions }: { title: string; des
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         <h1 className="text-3xl">{title}</h1>
-        {description ? <p className="mt-1 max-w-[62ch] text-ink-2">{description}</p> : null}
+        {description ? <p className="text-ink-2 mt-1 max-w-[62ch]">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }
 
-export function Panel({ title, action, children, className, bodyClassName }: { title?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string; bodyClassName?: string }) {
+export function Panel({
+  title,
+  action,
+  children,
+  className,
+  bodyClassName,
+}: {
+  title?: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  bodyClassName?: string;
+}) {
   return (
     <section className={cn("panel", className)}>
       {title ? (
-        <header className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+        <header className="border-line flex items-center justify-between gap-3 border-b px-5 py-3.5">
           <h2 className="font-display text-[1.02rem] font-semibold">{title}</h2>
           {action}
         </header>
@@ -135,22 +151,34 @@ export function Panel({ title, action, children, className, bodyClassName }: { t
 export function EmptyState({ icon, title, children, action }: { icon?: React.ReactNode; title: string; children?: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center px-6 py-10 text-center">
-      {icon ? <div className="mb-3 grid size-11 place-items-center rounded-full bg-surface-2 text-ink-3 [&_svg]:size-5">{icon}</div> : null}
+      {icon ? <div className="bg-surface-2 text-ink-3 mb-3 grid size-11 place-items-center rounded-full [&_svg]:size-5">{icon}</div> : null}
       <p className="font-display font-semibold">{title}</p>
-      {children ? <p className="mt-1 max-w-[42ch] text-sm text-ink-2">{children}</p> : null}
+      {children ? <p className="text-ink-2 mt-1 max-w-[42ch] text-sm">{children}</p> : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }
 
-export function Field({ label, htmlFor, hint, children, className }: { label: string; htmlFor: string; hint?: string; children: React.ReactNode; className?: string }) {
+export function Field({
+  label,
+  htmlFor,
+  hint,
+  children,
+  className,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={className}>
       <label className="label" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {hint ? <p className="mt-1 text-xs text-ink-3">{hint}</p> : null}
+      {hint ? <p className="text-ink-3 mt-1 text-xs">{hint}</p> : null}
     </div>
   );
 }
@@ -159,8 +187,20 @@ export function Progress({ value, tone: t = "ink", label }: { value: number; ton
   const pct = Math.max(0, Math.min(1, value));
   const color = { ink: "bg-ink", teal: "bg-teal", marigold: "bg-marigold", rose: "bg-rose" }[t];
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct * 100)} aria-label={label}>
-      <motion.div className={cn("h-full rounded-full", color)} initial={{ width: 0 }} animate={{ width: `${pct * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 22 }} />
+    <div
+      className="bg-surface-2 h-1.5 w-full overflow-hidden rounded-full"
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(pct * 100)}
+      aria-label={label}
+    >
+      <motion.div
+        className={cn("h-full rounded-full", color)}
+        initial={{ width: 0 }}
+        animate={{ width: `${pct * 100}%` }}
+        transition={{ type: "spring", stiffness: 120, damping: 22 }}
+      />
     </div>
   );
 }
@@ -171,25 +211,41 @@ export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
 
-export function DialogContent({ title, description, children, side, className }: { title: string; description?: string; children: React.ReactNode; side?: "right"; className?: string }) {
+export function DialogContent({
+  title,
+  description,
+  children,
+  side,
+  className,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  side?: "right";
+  className?: string;
+}) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[#0b1020]/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+      <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 z-50 bg-[#0b1020]/40 backdrop-blur-[2px]" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex flex-col bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.45)] focus:outline-none",
+          "bg-surface fixed z-50 flex flex-col shadow-[0_24px_60px_-20px_rgb(0_0_0/0.45)] focus:outline-none",
           side === "right"
-            ? "inset-y-0 right-0 w-full max-w-xl border-l border-line data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right"
-            : "top-1/2 left-1/2 max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-panel)] border border-line data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+            ? "border-line data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right inset-y-0 right-0 w-full max-w-xl border-l"
+            : "border-line data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 top-1/2 left-1/2 max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-panel)] border",
           className,
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+        <div className="border-line flex items-start justify-between gap-4 border-b px-5 py-4">
           <div>
             <DialogPrimitive.Title className="font-display text-lg font-semibold">{title}</DialogPrimitive.Title>
-            {description ? <DialogPrimitive.Description className="mt-0.5 text-sm text-ink-2">{description}</DialogPrimitive.Description> : <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>}
+            {description ? (
+              <DialogPrimitive.Description className="text-ink-2 mt-0.5 text-sm">{description}</DialogPrimitive.Description>
+            ) : (
+              <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
+            )}
           </div>
-          <DialogPrimitive.Close className="-mr-1 rounded-md p-1 text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Close">
+          <DialogPrimitive.Close className="text-ink-3 hover:bg-surface-2 hover:text-ink -mr-1 rounded-md p-1" aria-label="Close">
             <X className="size-5" />
           </DialogPrimitive.Close>
         </div>
@@ -201,10 +257,20 @@ export function DialogContent({ title, description, children, side, className }:
 
 /* ---------------- Tabs (link-free, local state) ---------------- */
 
-export function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { value: T; label: string; count?: number }[]; label: string }) {
+export function Segmented<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string; count?: number }[];
+  label: string;
+}) {
   const id = React.useId();
   return (
-    <div role="tablist" aria-label={label} className="inline-flex rounded-[10px] border border-line bg-surface p-1">
+    <div role="tablist" aria-label={label} className="border-line bg-surface inline-flex rounded-[10px] border p-1">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -215,10 +281,16 @@ export function Segmented<T extends string>({ value, onChange, options, label }:
             onClick={() => onChange(o.value)}
             className={cn("relative rounded-[7px] px-3 py-1.5 text-sm font-medium transition-colors", active ? "text-paper" : "text-ink-2 hover:text-ink")}
           >
-            {active ? <motion.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-[7px] bg-ink" transition={{ type: "spring", stiffness: 420, damping: 34 }} /> : null}
+            {active ? (
+              <motion.span
+                layoutId={`seg-${id}`}
+                className="bg-ink absolute inset-0 rounded-[7px]"
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+              />
+            ) : null}
             <span className="relative">
               {o.label}
-              {o.count !== undefined ? <span className={cn("ml-1.5 tabular", active ? "text-paper/70" : "text-ink-3")}>{o.count}</span> : null}
+              {o.count !== undefined ? <span className={cn("tabular ml-1.5", active ? "text-paper/70" : "text-ink-3")}>{o.count}</span> : null}
             </span>
           </button>
         );
@@ -258,13 +330,13 @@ export function AnimatedItem({ children, className, ...rest }: { children: React
 export function Stat({ label, value, sub, href }: { label: string; value: React.ReactNode; sub?: React.ReactNode; href?: string }) {
   const body = (
     <>
-      <p className="text-sm text-ink-2">{label}</p>
-      <p className="mt-1 font-display text-3xl font-semibold tabular">{value}</p>
-      {sub ? <p className="mt-0.5 text-xs text-ink-3">{sub}</p> : null}
+      <p className="text-ink-2 text-sm">{label}</p>
+      <p className="font-display tabular mt-1 text-3xl font-semibold">{value}</p>
+      {sub ? <p className="text-ink-3 mt-0.5 text-xs">{sub}</p> : null}
     </>
   );
   return href ? (
-    <a href={href} className="block rounded-[10px] px-1 py-1 transition-colors hover:bg-surface-2">
+    <a href={href} className="hover:bg-surface-2 block rounded-[10px] px-1 py-1 transition-colors">
       {body}
     </a>
   ) : (

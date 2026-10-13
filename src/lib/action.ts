@@ -19,7 +19,14 @@ export async function run<T>(fn: () => Promise<{ message?: string; data?: T } | 
     }
     if (err instanceof UserError || err instanceof ForbiddenError) return { ok: false, error: err.message };
     // Let Next.js redirects and notFound propagate.
-    if (err && typeof err === "object" && "digest" in err && typeof (err as { digest: unknown }).digest === "string" && String((err as { digest: string }).digest).startsWith("NEXT_")) throw err;
+    if (
+      err &&
+      typeof err === "object" &&
+      "digest" in err &&
+      typeof (err as { digest: unknown }).digest === "string" &&
+      String((err as { digest: string }).digest).startsWith("NEXT_")
+    )
+      throw err;
     console.error("action failed", err);
     return { ok: false, error: "Something went wrong saving that. Try again in a moment." };
   }

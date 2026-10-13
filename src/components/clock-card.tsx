@@ -17,7 +17,17 @@ function duration(fromIso: string, toIso?: string | null) {
   return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
 }
 
-export function ClockCard({ today, isWorkday, onLeave, holiday }: { today: { checkIn: string | null; checkOut: string | null; mode: Mode } | null; isWorkday: boolean; onLeave?: string | null; holiday?: string | null }) {
+export function ClockCard({
+  today,
+  isWorkday,
+  onLeave,
+  holiday,
+}: {
+  today: { checkIn: string | null; checkOut: string | null; mode: Mode } | null;
+  isWorkday: boolean;
+  onLeave?: string | null;
+  holiday?: string | null;
+}) {
   const clock = useIstClock();
   const [mode, setMode] = useState<Mode>(today?.mode ?? "office");
   const [pending, start] = useTransition();
@@ -51,7 +61,17 @@ export function ClockCard({ today, isWorkday, onLeave, holiday }: { today: { che
     });
 
   const sub =
-    status === "in" ? `Working ${duration(today!.checkIn!)}` : status === "done" ? `Worked ${duration(today!.checkIn!, today!.checkOut)}` : holiday ? holiday : onLeave ? onLeave : isWorkday ? "Not clocked in" : "Weekend";
+    status === "in"
+      ? `Working ${duration(today!.checkIn!)}`
+      : status === "done"
+        ? `Worked ${duration(today!.checkIn!, today!.checkOut)}`
+        : holiday
+          ? holiday
+          : onLeave
+            ? onLeave
+            : isWorkday
+              ? "Not clocked in"
+              : "Weekend";
 
   return (
     <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
@@ -71,9 +91,9 @@ export function ClockCard({ today, isWorkday, onLeave, holiday }: { today: { che
                     { value: "field", label: "Field" },
                   ]}
                 />
-                <label className="flex items-center gap-2 text-sm text-ink-2">
+                <label className="text-ink-2 flex items-center gap-2 text-sm">
                   <input type="checkbox" className="size-4 accent-[var(--ink)]" checked={useLocation} onChange={(e) => setUseLocation(e.target.checked)} />
-                  <MapPin className="size-4 text-ink-3" aria-hidden /> Attach my approximate location
+                  <MapPin className="text-ink-3 size-4" aria-hidden /> Attach my approximate location
                 </label>
                 <Button variant="accent" size="lg" className="w-full" onClick={doClockIn} disabled={pending}>
                   {pending ? <Loader2 className="animate-spin" aria-hidden /> : mode === "office" ? <Building2 aria-hidden /> : <House aria-hidden />}
@@ -82,8 +102,9 @@ export function ClockCard({ today, isWorkday, onLeave, holiday }: { today: { che
               </div>
             ) : status === "in" ? (
               <div className="space-y-3">
-                <p className="text-sm text-ink-2">
-                  In since <span className="font-medium text-ink">{formatTime(today!.checkIn)}</span>, {today!.mode === "office" ? "at the office" : today!.mode === "remote" ? "working remotely" : "in the field"}.
+                <p className="text-ink-2 text-sm">
+                  In since <span className="text-ink font-medium">{formatTime(today!.checkIn)}</span>,{" "}
+                  {today!.mode === "office" ? "at the office" : today!.mode === "remote" ? "working remotely" : "in the field"}.
                 </p>
                 <Button variant="primary" size="lg" className="w-full" onClick={doClockOut} disabled={pending}>
                   {pending ? <Loader2 className="animate-spin" aria-hidden /> : <LogOutIcon aria-hidden />}
@@ -92,7 +113,7 @@ export function ClockCard({ today, isWorkday, onLeave, holiday }: { today: { che
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm text-ink-2">
+                <p className="text-ink-2 text-sm">
                   {formatTime(today!.checkIn)} to {formatTime(today!.checkOut)}. Done for the day.
                 </p>
                 <Button variant="outline" className="w-full" onClick={doClockIn} disabled={pending}>

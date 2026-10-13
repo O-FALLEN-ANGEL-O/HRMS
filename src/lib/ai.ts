@@ -57,7 +57,7 @@ async function runText(messages: Msg[]): Promise<string | null> {
 /* ---------------- Text utilities for the fallbacks ---------------- */
 
 const STOP = new Set(
-  "a an and are as at be by for from has have in is it its of on or our the their to with you your we will this that years year experience strong plus nice comfortable good".split(
+  "a an and are as at be by for from has have in is it its of on or our the their to with you your we will this that years year experience strong plus nice comfortable good can could do does did my me what how when where which who why much many get got need about any some there should would".split(
     " ",
   ),
 );
@@ -85,7 +85,10 @@ export interface ResumeMatch {
 }
 
 export function matchResumeRules(job: { title: string; requirements: string }, resume: string): ResumeMatch {
-  const reqLines = job.requirements.split("\n").map((l) => l.trim()).filter(Boolean);
+  const reqLines = job.requirements
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   const resumeTokens = new Set(tokens(resume));
   const yearsInResume = Math.max(0, ...[...resume.matchAll(/(\d+)\+?\s*years?/gi)].map((m) => Number(m[1])));
   const met: string[] = [];
@@ -192,8 +195,15 @@ export function triageTicketRules(subject: string, description: string): { categ
 export async function triageTicket(subject: string, description: string) {
   const ai = await runJson<{ category: string; priority: string }>(
     [
-      { role: "system", content: "You triage internal helpdesk tickets for an Indian company. Harassment, safety, pay not received, or someone unable to work is high priority." },
-      { role: "user", content: `Subject: ${subject}\nDescription: ${description}\n\nReturn JSON: category (one of ${TICKET_CATEGORIES.join(", ")}) and priority (low, medium, high).` },
+      {
+        role: "system",
+        content:
+          "You triage internal helpdesk tickets for an Indian company. Harassment, safety, pay not received, or someone unable to work is high priority.",
+      },
+      {
+        role: "user",
+        content: `Subject: ${subject}\nDescription: ${description}\n\nReturn JSON: category (one of ${TICKET_CATEGORIES.join(", ")}) and priority (low, medium, high).`,
+      },
     ],
     {
       type: "object",
@@ -215,11 +225,14 @@ export interface Policy {
 }
 
 export function retrievePolicies(question: string, policies: Policy[], k = 3): Policy[] {
-  const q = tokens(question);
+  const q = [...new Set(tokens(question))];
+  const docs = policies.map((p) => tokens(`${p.title} ${p.title} ${p.body}`));
+  const hit = (doc: string[], w: string) => doc.filter((x) => x === w || (w.length >= 6 && x.length >= 6 && x.slice(0, 6) === w.slice(0, 6))).length;
+  // Rare words (like "internet") count for more than words every policy uses.
+  const idf = new Map(q.map((w) => [w, Math.log((policies.length + 1) / (1 + docs.filter((d) => hit(d, w) > 0).length)) + 0.1]));
   return policies
-    .map((p) => {
-      const pt = tokens(`${p.title} ${p.title} ${p.body}`);
-      const score = q.reduce((s, w) => s + pt.filter((x) => x === w || (w.length > 4 && x.startsWith(w.slice(0, 5)))).length, 0);
+    .map((p, i) => {
+      const score = q.reduce((s, w) => s + Math.min(3, hit(docs[i]!, w)) * idf.get(w)!, 0);
       return { p, score };
     })
     .filter((x) => x.score > 0)
@@ -234,7 +247,15 @@ export async function askAssistant(input: {
   policies: Policy[];
   context: string;
 }): Promise<{ answer: string; sources: string[]; source: AiSource }> {
-  const relevant = retrievePolicies(input.question + " " + input.history.slice(-2).map((h) => h.content).join(" "), input.policies);
+  const relevant = retrievePolicies(
+    input.question +
+      " " +
+      input.history
+        .slice(-2)
+        .map((h) => h.content)
+        .join(" "),
+    input.policies,
+  );
   const docs = (relevant.length ? relevant : input.policies.slice(0, 3)).map((p) => `## ${p.title}\n${p.body}`).join("\n\n");
   const answer = await runText([
     {
@@ -245,6 +266,17 @@ export async function askAssistant(input: {
     { role: "user", content: input.question },
   ]);
   if (answer) return { answer, sources: relevant.map((p) => p.title), source: "ai" };
+
+  // Questions about the asker's own balance are answered from their context, not policy text.
+  const balanceLine = input.context.match(/Leave left this year: ([^.]+)\./)?.[1];
+  if (balanceLine && /\b(left|remaining|balance|how many)\b/i.test(input.question) && /leave|days|off/i.test(input.question)) {
+    const policyBit = relevant[0]?.title === "Leave policy" ? " Casual and sick leave lapse at year end; up to 10 days of earned leave carry forward." : "";
+    return {
+      answer: `You have ${balanceLine.replace(/ of /g, " left of ")} this year.${policyBit}`,
+      sources: relevant.slice(0, 1).map((p) => p.title),
+      source: "rules",
+    };
+  }
 
   if (!relevant.length) {
     return {
@@ -279,7 +311,11 @@ export async function draftReview(input: {
   const ruleRating = avg >= 0.9 ? 5 : avg >= 0.75 ? 4 : avg >= 0.5 ? 3 : avg >= 0.3 ? 2 : 1;
   const ai = await runJson<{ summary: string; rating: number }>(
     [
-      { role: "system", content: "You help managers write fair, specific performance reviews. Use only the facts given. 4-6 sentences, second paragraph optional. No clichés. Rating 1-5 where 3 means met expectations." },
+      {
+        role: "system",
+        content:
+          "You help managers write fair, specific performance reviews. Use only the facts given. 4-6 sentences, second paragraph optional. No clichés. Rating 1-5 where 3 means met expectations.",
+      },
       {
         role: "user",
         content: `Employee: ${input.name}, ${input.title}\nManager's notes on strengths: ${input.strengths || "(none)"}\nManager's notes on growth areas: ${input.growth || "(none)"}\nGoals and progress: ${input.goals.map((g) => `${g.title} (${Math.round(g.progress * 100)}%)`).join("; ") || "(none)"}\nRecognition from peers: ${input.kudos.join(" | ") || "(none)"}\n\nReturn JSON with summary and rating.`,
@@ -316,20 +352,33 @@ export function payrollChecks(
   const findings: PayrollFinding[] = [];
   for (const r of rows) {
     if (r.net <= 0) findings.push({ employee: r.name, severity: "error", message: "Net pay is zero or negative." });
-    if (r.daysPayable < r.daysInMonth) findings.push({ employee: r.name, severity: "info", message: `${r.daysInMonth - r.daysPayable} unpaid day(s) deducted.` });
+    if (r.daysPayable < r.daysInMonth)
+      findings.push({ employee: r.name, severity: "info", message: `${r.daysInMonth - r.daysPayable} unpaid day(s) deducted.` });
     if (r.prevNet && r.net > 0) {
       const change = (r.net - r.prevNet) / r.prevNet;
       if (Math.abs(change) >= 0.15)
-        findings.push({ employee: r.name, severity: "warning", message: `Net pay ${change > 0 ? "up" : "down"} ${Math.round(Math.abs(change) * 100)}% from last month.` });
+        findings.push({
+          employee: r.name,
+          severity: "warning",
+          message: `Net pay ${change > 0 ? "up" : "down"} ${Math.round(Math.abs(change) * 100)}% from last month.`,
+        });
     }
     if (r.prevNet === null) findings.push({ employee: r.name, severity: "info", message: "First payroll for this employee." });
   }
   return findings;
 }
 
-export async function summarizePayroll(month: string, totals: { headcount: number; gross: number; net: number; prevNet: number | null }, findings: PayrollFinding[]) {
+export async function summarizePayroll(
+  month: string,
+  totals: { headcount: number; gross: number; net: number; prevNet: number | null },
+  findings: PayrollFinding[],
+) {
   const text = await runText([
-    { role: "system", content: "You are a payroll auditor. Write 2-3 short sentences for the HR team summarising risks in this run. Mention the most important findings by name. No preamble." },
+    {
+      role: "system",
+      content:
+        "You are a payroll auditor. Write 2-3 short sentences for the HR team summarising risks in this run. Mention the most important findings by name. No preamble.",
+    },
     {
       role: "user",
       content: `Month ${month}. Headcount ${totals.headcount}. Gross ₹${totals.gross}. Net ₹${totals.net}. Previous net ₹${totals.prevNet ?? "n/a"}.\nFindings:\n${findings.map((f) => `- [${f.severity}] ${f.employee}: ${f.message}`).join("\n") || "none"}`,
@@ -343,7 +392,12 @@ export async function summarizePayroll(month: string, totals: { headcount: numbe
     summary: [
       `${totals.headcount} payslips${change === null ? "" : `, net payout ${change >= 0 ? "up" : "down"} ${Math.abs(change)}% on last month`}.`,
       errors ? `${errors} payslip(s) have zero or negative net pay — fix before finalizing.` : "No blocking errors.",
-      warnings.length ? `Check ${warnings.slice(0, 3).map((w) => w.employee).join(", ")} for large month-on-month changes.` : "",
+      warnings.length
+        ? `Check ${warnings
+            .slice(0, 3)
+            .map((w) => w.employee)
+            .join(", ")} for large month-on-month changes.`
+        : "",
     ]
       .filter(Boolean)
       .join(" "),
