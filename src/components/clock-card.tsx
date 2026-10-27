@@ -74,55 +74,57 @@ export function ClockCard({
               : "Weekend";
 
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
-      <ShiftDial size={220} checkIn={today?.checkIn} checkOut={today?.checkOut} label={clock || " "} sublabel={sub} />
-      <div className="w-full max-w-xs space-y-4">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={status} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
-            {status === "out" ? (
-              <div className="space-y-3">
-                <Segmented
-                  label="Where are you working?"
-                  value={mode}
-                  onChange={setMode}
-                  options={[
-                    { value: "office", label: "Office" },
-                    { value: "remote", label: "Remote" },
-                    { value: "field", label: "Field" },
-                  ]}
-                />
-                <label className="text-ink-2 flex items-center gap-2 text-sm">
-                  <input type="checkbox" className="size-4 accent-[var(--ink)]" checked={useLocation} onChange={(e) => setUseLocation(e.target.checked)} />
-                  <MapPin className="text-ink-3 size-4" aria-hidden /> Attach my approximate location
-                </label>
-                <Button variant="accent" size="lg" className="w-full" onClick={doClockIn} disabled={pending}>
-                  {pending ? <Loader2 className="animate-spin" aria-hidden /> : mode === "office" ? <Building2 aria-hidden /> : <House aria-hidden />}
-                  Clock in
-                </Button>
-              </div>
-            ) : status === "in" ? (
-              <div className="space-y-3">
-                <p className="text-ink-2 text-sm">
-                  In since <span className="text-ink font-medium">{formatTime(today!.checkIn)}</span>,{" "}
-                  {today!.mode === "office" ? "at the office" : today!.mode === "remote" ? "working remotely" : "in the field"}.
-                </p>
-                <Button variant="primary" size="lg" className="w-full" onClick={doClockOut} disabled={pending}>
-                  {pending ? <Loader2 className="animate-spin" aria-hidden /> : <LogOutIcon aria-hidden />}
-                  Clock out
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-ink-2 text-sm">
-                  {formatTime(today!.checkIn)} to {formatTime(today!.checkOut)}. Done for the day.
-                </p>
-                <Button variant="outline" className="w-full" onClick={doClockIn} disabled={pending}>
-                  Resume working
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+    <div className="@container w-full">
+      <div className="flex flex-col items-center justify-center gap-6 @min-[560px]:flex-row @min-[560px]:items-center">
+        <ShiftDial size={220} checkIn={today?.checkIn} checkOut={today?.checkOut} label={clock || " "} sublabel={sub} />
+        <div className="w-full max-w-xs space-y-4">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={status} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+              {status === "out" ? (
+                <div className="space-y-3">
+                  <Segmented
+                    label="Where are you working?"
+                    value={mode}
+                    onChange={setMode}
+                    options={[
+                      { value: "office", label: "Office" },
+                      { value: "remote", label: "Remote" },
+                      { value: "field", label: "Field" },
+                    ]}
+                  />
+                  <label className="text-ink-2 flex items-center gap-2 text-sm">
+                    <input type="checkbox" className="size-4 accent-[var(--ink)]" checked={useLocation} onChange={(e) => setUseLocation(e.target.checked)} />
+                    <MapPin className="text-ink-3 size-4" aria-hidden /> Attach my approximate location
+                  </label>
+                  <Button variant="accent" size="lg" className="w-full" onClick={doClockIn} disabled={pending}>
+                    {pending ? <Loader2 className="animate-spin" aria-hidden /> : mode === "office" ? <Building2 aria-hidden /> : <House aria-hidden />}
+                    Clock in
+                  </Button>
+                </div>
+              ) : status === "in" ? (
+                <div className="space-y-3">
+                  <p className="text-ink-2 text-sm">
+                    In since <span className="text-ink font-medium">{formatTime(today!.checkIn)}</span>,{" "}
+                    {today!.mode === "office" ? "at the office" : today!.mode === "remote" ? "working remotely" : "in the field"}.
+                  </p>
+                  <Button variant="primary" size="lg" className="w-full" onClick={doClockOut} disabled={pending}>
+                    {pending ? <Loader2 className="animate-spin" aria-hidden /> : <LogOutIcon aria-hidden />}
+                    Clock out
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-ink-2 text-sm">
+                    {formatTime(today!.checkIn)} to {formatTime(today!.checkOut)}. Done for the day.
+                  </p>
+                  <Button variant="outline" className="w-full" onClick={doClockIn} disabled={pending}>
+                    Resume working
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

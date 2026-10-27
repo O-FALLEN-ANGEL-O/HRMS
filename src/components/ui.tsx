@@ -140,7 +140,7 @@ export function Panel({
       {title ? (
         <header className="border-line flex items-center justify-between gap-3 border-b px-5 py-3.5">
           <h2 className="font-display text-[1.02rem] font-semibold">{title}</h2>
-          {action}
+          {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
         </header>
       ) : null}
       <div className={cn("p-5", bodyClassName)}>{children}</div>
