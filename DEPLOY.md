@@ -48,3 +48,26 @@ npm run deploy
 ## Vercel
 
 The old Vercel project (hrms-five-alpha.vercel.app) can't run this version, which needs Cloudflare's runtime. Disconnect the repo in Vercel (or delete the project) once the Cloudflare deploy is up.
+
+# Deploying HR+ to Vercel
+
+The same code runs on Vercel. Outside Cloudflare, `src/db/node-runtime.ts` stands in for the Worker bindings, so nothing else changes.
+
+| Setup                                            | Database                                                                           | AI features          |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- | -------------------- |
+| No env vars                                      | SQLite in the function's `/tmp` (self-seeding, per instance, resets on cold start) | Rule-based fallbacks |
+| `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` | The **same D1 database** as the Worker, over Cloudflare's REST API                 | Workers AI over REST |
+
+With the Cloudflare variables set, the Vercel and Cloudflare deployments share one database. Use the second row for a demo people will click through: serverless instances don't share `/tmp`.
+
+## Steps
+
+1. vercel.com → Add New → Project → import `O-FALLEN-ANGEL-O/HRMS`. Framework: Next.js (from `vercel.json`). Leave build settings at their defaults.
+2. Environment variables (Production and Preview):
+   - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare dashboard → Workers & Pages → Account ID in the right sidebar.
+   - `CLOUDFLARE_API_TOKEN`: My Profile → API Tokens → Create Token → Custom token with **Account · D1 · Edit** and **Account · Workers AI · Read**.
+   - `D1_DATABASE_ID` (optional): defaults to the `database_id` in `wrangler.jsonc`.
+   - `CRON_SECRET`: any long random string. Vercel's cron sends it to `/api/cron/reset`, which reseeds the demo nightly at 02:00 IST (`DEMO_MODE=false` turns that off).
+3. Deploy. Every push to `master` redeploys.
+
+Run the Node build locally with `npm run dev:node` or `npm run build && npm run start:node`. Without the Cloudflare variables it uses `.data/hr-plus.sqlite`.

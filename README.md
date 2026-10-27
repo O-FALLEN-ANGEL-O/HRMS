@@ -6,30 +6,30 @@ Pick a person on the landing page (admin, HR, manager, employee or recruiter) an
 
 ![Landing page with the shift dial and the five demo people](docs/screenshots/01-landing.png)
 
-| | |
-| --- | --- |
-| ![Manager's home](docs/screenshots/02-home-manager.png) | ![Approvals inbox](docs/screenshots/03-approvals.png) |
+|                                                             |                                                                               |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| ![Manager's home](docs/screenshots/02-home-manager.png)     | ![Approvals inbox](docs/screenshots/03-approvals.png)                         |
 | ![Payroll run with checks](docs/screenshots/06-payroll.png) | ![Recruitment pipeline and resume match](docs/screenshots/05-recruitment.png) |
-| ![Analytics](docs/screenshots/07-analytics.png) | ![Attendance in dark mode](docs/screenshots/10-attendance-dark.png) |
+| ![Analytics](docs/screenshots/07-analytics.png)             | ![Attendance in dark mode](docs/screenshots/10-attendance-dark.png)           |
 
 ## What's in it
 
-| Area | What works |
-| --- | --- |
-| Workday | Clock in/out (office, remote, field, optional location), monthly attendance heatmap, corrections with manager approval, CSV export |
-| Time off | Balances per leave type, half days, holiday-aware day counts, overlap and balance checks, team calendar, cancel |
-| Approvals | One inbox for leave, attendance and expenses, with who-else-is-off context and bulk approve |
-| Expenses | Claims with policy limits (internet ₹1,000, 30-day window), learning budget, paid through payroll |
-| Payroll | Salary structures from CTC, PF, ESI, Karnataka PT, new-regime TDS estimate, LOP and joiner proration, reimbursements, payroll check, finalize and printable payslips |
-| People | Directory, profiles with reporting line, editable org chart, add employee, start exit |
-| Joiners & leavers | Onboarding/offboarding checklists created automatically; status updates when the last step is done |
-| Recruitment | Roles, drag-and-drop pipeline, resume match scores with interview questions, hiring creates the employee and onboarding checklist |
-| Goals & reviews | OKRs with key results, team and company goals, manager reviews with an AI-drafted summary |
-| Helpdesk | Tickets sorted into IT/HR/Payroll/Facilities and prioritised automatically, routed, threaded replies |
-| HR assistant | Chat answers grounded in the policies in Settings plus your own leave balance |
-| Engagement | Announcements, kudos, eNPS and pulse surveys (anonymous totals) |
-| Analytics | Headcount, attrition, tenure, attendance and leave trends, each chart with a table view |
-| Admin | Policies (the assistant's knowledge), leave types, holidays, activity log, demo reset |
+| Area              | What works                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workday           | Clock in/out (office, remote, field, optional location), monthly attendance heatmap, corrections with manager approval, CSV export                                   |
+| Time off          | Balances per leave type, half days, holiday-aware day counts, overlap and balance checks, team calendar, cancel                                                      |
+| Approvals         | One inbox for leave, attendance and expenses, with who-else-is-off context and bulk approve                                                                          |
+| Expenses          | Claims with policy limits (internet ₹1,000, 30-day window), learning budget, paid through payroll                                                                    |
+| Payroll           | Salary structures from CTC, PF, ESI, Karnataka PT, new-regime TDS estimate, LOP and joiner proration, reimbursements, payroll check, finalize and printable payslips |
+| People            | Directory, profiles with reporting line, editable org chart, add employee, start exit                                                                                |
+| Joiners & leavers | Onboarding/offboarding checklists created automatically; status updates when the last step is done                                                                   |
+| Recruitment       | Roles, drag-and-drop pipeline, resume match scores with interview questions, hiring creates the employee and onboarding checklist                                    |
+| Goals & reviews   | OKRs with key results, team and company goals, manager reviews with an AI-drafted summary                                                                            |
+| Helpdesk          | Tickets sorted into IT/HR/Payroll/Facilities and prioritised automatically, routed, threaded replies                                                                 |
+| HR assistant      | Chat answers grounded in the policies in Settings plus your own leave balance                                                                                        |
+| Engagement        | Announcements, kudos, eNPS and pulse surveys (anonymous totals)                                                                                                      |
+| Analytics         | Headcount, attrition, tenure, attendance and leave trends, each chart with a table view                                                                              |
+| Admin             | Policies (the assistant's knowledge), leave types, holidays, activity log, demo reset                                                                                |
 
 ## Stack
 
@@ -57,7 +57,7 @@ Other scripts: `npm test`, `npm run typecheck`, `npm run format`, `npm run previ
 
 ## Deploy
 
-See [DEPLOY.md](DEPLOY.md) for Cloudflare setup, Git-based deploys and the custom domain.
+See [DEPLOY.md](DEPLOY.md) for Cloudflare setup, Git-based deploys and the custom domain. The same code also deploys to Vercel; DEPLOY.md covers that too.
 
 ## Project layout
 
@@ -67,6 +67,7 @@ src/app/actions/      server actions, one file per area, all validated with zod
 src/db/               schema, client, seed and reset
 src/lib/              auth and permissions, payroll engine, AI helpers, queries
 worker.ts             Worker entry: the Next.js app plus the nightly reset cron
+src/db/node-runtime.ts  D1 and Workers AI stand-ins for Vercel and other Node hosts
 drizzle/migrations/   SQL migrations applied by wrangler
 ```
 
