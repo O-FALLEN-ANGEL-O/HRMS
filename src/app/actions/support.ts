@@ -177,10 +177,14 @@ export async function ask(question: string, history: { role: "user" | "assistant
     const context = [
       `Name: ${user.name}. Role: ${user.title}, ${user.departmentName ?? ""}. Location: ${user.location}. Joined ${formatDate(user.joinedOn, { day: "numeric", month: "long", year: "numeric" })}. Employment: ${user.employmentType.replace("_", "-")}.`,
       manager ? `Manager: ${manager.name}.` : "",
-      `Leave left this year: ${balances
+      // Spelled out so the model can't read "12 of 12" as "12 used".
+      `Leave balances this year: ${balances
         .filter((b) => b.code !== "LOP")
-        .map((b) => `${b.name} ${b.remaining} of ${b.annualQuota}`)
-        .join(", ")}.`,
+        .map(
+          (b) =>
+            `${b.name}: ${b.remaining} days remaining (yearly quota ${b.annualQuota}, ${b.used} used${b.pending ? `, ${b.pending} pending approval` : ""})`,
+        )
+        .join("; ")}.`,
       `Today is ${formatDate(todayIST(), { weekday: "long", day: "numeric", month: "long", year: "numeric" })}.`,
     ].join(" ");
     const res = await askAssistant({ question: q, history: h, policies: pols, context });

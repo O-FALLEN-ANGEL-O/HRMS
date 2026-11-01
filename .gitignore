@@ -10,3 +10,4 @@ next-env.d.ts
 !.dev.vars.example
 drizzle/seed.sql
 .DS_Store
+.data/

@@ -53,6 +53,14 @@ describe("policy assistant fallback", () => {
     ]);
     expect(r[0]?.title).toBe("Expenses");
   });
+  it("answers balance questions from the employee context without misreading quota as used", async () => {
+    const context =
+      "Leave balances this year: Casual leave: 12 days remaining (yearly quota 12, 0 used); Earned leave: 15 days remaining (yearly quota 18, 0 used, 3 pending approval).";
+    const r = await ai.askAssistant({ question: "How many casual leave days do I have left?", history: [], policies, context });
+    expect(r.source).toBe("rules");
+    expect(r.answer).toContain("Casual leave: 12 days remaining");
+  });
+
   it("admits when nothing matches", async () => {
     const r = await ai.askAssistant({ question: "Quantum zebra?", history: [], policies, context: "" });
     expect(r.answer).toMatch(/couldn't find/);

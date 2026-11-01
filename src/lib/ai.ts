@@ -268,11 +268,11 @@ export async function askAssistant(input: {
   if (answer) return { answer, sources: relevant.map((p) => p.title), source: "ai" };
 
   // Questions about the asker's own balance are answered from their context, not policy text.
-  const balanceLine = input.context.match(/Leave left this year: ([^.]+)\./)?.[1];
+  const balanceLine = input.context.match(/Leave balances this year: ([^.]+)\./)?.[1];
   if (balanceLine && /\b(left|remaining|balance|how many)\b/i.test(input.question) && /leave|days|off/i.test(input.question)) {
     const policyBit = relevant[0]?.title === "Leave policy" ? " Casual and sick leave lapse at year end; up to 10 days of earned leave carry forward." : "";
     return {
-      answer: `You have ${balanceLine.replace(/ of /g, " left of ")} this year.${policyBit}`,
+      answer: `Your leave this year: ${balanceLine}.${policyBit}`,
       sources: relevant.slice(0, 1).map((p) => p.title),
       source: "rules",
     };
