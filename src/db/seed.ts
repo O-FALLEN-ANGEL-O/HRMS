@@ -604,7 +604,8 @@ export function buildSeedStatements(today: string, opts: { includeDeletes?: bool
   ];
   const leaveRows = lrs.map((l, i) => {
     let start = addDays(today, l.start);
-    while (isWeekend(start)) start = addDays(start, 1);
+    // Never start leave on a weekend or holiday: a one-day request there would count 0 days.
+    while (isWeekend(start) || holidayDates.includes(start)) start = addDays(start, 1);
     let end = start;
     let added = 1;
     while (added < l.len) {
