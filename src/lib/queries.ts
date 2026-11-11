@@ -1,4 +1,6 @@
 import "server-only";
+import { getRules } from "./settings";
+import { appUrl, compose, sendEmail } from "./email";
 import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { getDb, schema } from "@/db/client";
@@ -108,9 +110,24 @@ export async function leaveBalances(employeeId: string, year: string) {
   });
 }
 
+/** In-app notification, plus an email when the company has email notifications on. */
 export async function notify(employeeId: string, title: string, href?: string) {
   const db = await getDb();
   await db.insert(schema.notifications).values({ id: `nt_${crypto.randomUUID().slice(0, 12)}`, employeeId, title, href: href ?? null });
+  if (!(await getRules()).emailNotifications) return;
+  const to = await db.query.employees.findFirst({ where: eq(employees.id, employeeId), columns: { email: true, name: true, status: true } });
+  if (!to || to.status === "exited") return;
+  try {
+    const base = await appUrl();
+    await sendEmail({
+      to: to.email,
+      toEmployeeId: employeeId,
+      subject: title,
+      text: compose({ name: to.name, lines: [title + "."], link: href && base ? base + href : undefined, notification: true }),
+    });
+  } catch (err) {
+    console.error("notify: email failed", err); // never block the action that notified
+  }
 }
 
 export async function audit(actorId: string, action: string, entity: string, entityId: string, detail?: unknown) {

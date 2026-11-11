@@ -4,6 +4,8 @@ import { getDb, schema } from "@/db/client";
 import { getCurrentUser } from "@/lib/auth";
 import { todayIST } from "@/lib/utils";
 import { Landing, type Persona } from "./landing";
+import { DEMO_PASSWORD } from "@/db/seed";
+import { isDemoMode } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -66,17 +68,19 @@ async function loadLanding() {
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ error?: string; reset?: string }> }) {
-  const [user, data, sp] = await Promise.all([getCurrentUser().catch(() => null), loadLanding(), searchParams]);
+  const [user, data, sp, demo] = await Promise.all([getCurrentUser().catch(() => null), loadLanding(), searchParams, isDemoMode().catch(() => true)]);
   const hueByCode = new Map(data.everyone.map((e) => [e.code, e.hue]));
   const personas = PERSONAS.map((p) => ({ ...p, hue: hueByCode.get(p.code) ?? 210 }));
 
   return (
     <Landing
       personas={personas}
-      everyone={data.everyone}
+      everyone={demo ? data.everyone : []}
       people={data.people}
       present={data.present}
       dbOk={data.ok}
+      demo={demo}
+      demoPassword={DEMO_PASSWORD}
       error={sp.error}
       reset={sp.reset === "1"}
       continueAs={user ? { name: user.name, href: "/home" } : null}

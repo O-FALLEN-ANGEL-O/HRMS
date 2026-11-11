@@ -2,7 +2,7 @@
 
 import { useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Check, X, Inbox, AlertTriangle } from "lucide-react";
+import { Check, X, Inbox, AlertTriangle, Paperclip } from "lucide-react";
 import { approveAll, decide } from "@/app/actions/workday";
 import { AnimatedItem, AnimatedList, Avatar, Button, EmptyState, Segmented } from "@/components/ui";
 import { timeAgo } from "@/lib/utils";
@@ -20,6 +20,7 @@ export type ApprovalRow = {
   createdAt: string;
   context: string[];
   warn: boolean;
+  receiptUrl?: string | null;
 };
 
 type Tab = "leave" | "regularization" | "expense";
@@ -57,6 +58,15 @@ function Row({ row, onDone }: { row: ApprovalRow; onDone: (id: string) => void }
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {row.kind === "expense" ? (
+              row.receiptUrl ? (
+                <a href={row.receiptUrl} target="_blank" rel="noopener" className="link mt-2 inline-flex items-center gap-1.5 text-sm">
+                  <Paperclip className="size-3.5" aria-hidden /> View receipt
+                </a>
+              ) : (
+                <p className="text-ink-3 mt-2 text-sm">No receipt attached</p>
+              )
             ) : null}
             <p className="text-ink-3 mt-2 text-xs">Requested {timeAgo(row.createdAt)}</p>
           </div>

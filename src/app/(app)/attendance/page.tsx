@@ -10,6 +10,8 @@ import { Avatar, Button, PageHeader, Panel, Pill, StatusPill } from "@/component
 import { addDays, formatDate, formatTime, isWeekend, todayIST } from "@/lib/utils";
 import { CorrectionDialog, MonthGrid } from "./client";
 
+import { getRules, toMinutes } from "@/lib/settings";
+
 export const metadata = { title: "Attendance" };
 
 export default async function AttendancePage() {
@@ -64,7 +66,9 @@ export default async function AttendancePage() {
   }
   const worked = days.filter((d) => d.hours !== null);
   const avg = worked.length ? worked.reduce((s, d) => s + d.hours!, 0) / worked.length : 0;
-  const late = days.filter((d) => d.checkIn && (new Date(d.checkIn).getUTCHours() * 60 + new Date(d.checkIn).getUTCMinutes() + 330) % 1440 > 11 * 60).length;
+  const rules = await getRules();
+  const lateAfter = toMinutes(rules.coreStart);
+  const late = days.filter((d) => d.checkIn && (new Date(d.checkIn).getUTCHours() * 60 + new Date(d.checkIn).getUTCMinutes() + 330) % 1440 > lateAfter).length;
   const missing = days.filter((d) => d.state === "missing" || d.state === "partial");
 
   // Team today (managers see reports, People team sees everyone)
@@ -112,7 +116,7 @@ export default async function AttendancePage() {
     <>
       <PageHeader
         title="Attendance"
-        description="Clock in when you start, out when you finish. Core hours are 11:00 to 16:00 IST."
+        description={`Clock in when you start, out when you finish. Core hours are ${rules.coreStart} to ${rules.coreEnd} IST.`}
         actions={
           <>
             {isPeopleTeam(user) ? (
@@ -134,6 +138,7 @@ export default async function AttendancePage() {
             today={todayRow ? { checkIn: todayRow.checkIn, checkOut: todayRow.checkOut, mode: todayRow.mode } : null}
             isWorkday={!isWeekend(today) && !hol.includes(today)}
             holiday={hol.includes(today) ? "Company holiday" : null}
+            coreHours={[rules.coreStart, rules.coreEnd]}
           />
         </Panel>
         <Panel title={formatDate(monthStart, { month: "long", year: "numeric" })}>
@@ -146,7 +151,7 @@ export default async function AttendancePage() {
               </dd>
             </div>
             <div>
-              <dt className="text-ink-2">After 11:00</dt>
+              <dt className="text-ink-2">After {rules.coreStart}</dt>
               <dd className="font-display tabular text-xl font-semibold">{late}</dd>
             </div>
             <div>

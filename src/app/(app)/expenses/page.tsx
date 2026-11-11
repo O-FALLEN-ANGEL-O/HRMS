@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import { and, desc, eq } from "drizzle-orm";
-import { Receipt } from "lucide-react";
+import { Paperclip, Receipt } from "lucide-react";
 import { getDb, schema } from "@/db/client";
 import { requireUser, isPeopleTeam } from "@/lib/auth";
 import { Avatar, EmptyState, PageHeader, Panel, Stat, StatusPill } from "@/components/ui";
 import { formatDate, formatINR, todayIST } from "@/lib/utils";
+import { getRules } from "@/lib/settings";
 import { NewExpense } from "./client";
 
 export const metadata = { title: "Expenses" };
@@ -15,6 +16,7 @@ export default async function ExpensesPage() {
   const user = await requireUser();
   const db = await getDb();
   const year = todayIST().slice(0, 4);
+  const rules = await getRules();
   const mine = await db.select().from(schema.expenses).where(eq(schema.expenses.employeeId, user.id)).orderBy(desc(schema.expenses.spentOn));
   const thisYear = mine.filter((e) => e.spentOn.startsWith(year));
   const sum = (s: string[]) => thisYear.filter((e) => s.includes(e.status)).reduce((a, e) => a + e.amount, 0);
@@ -35,10 +37,10 @@ export default async function ExpensesPage() {
     <>
       <PageHeader
         title="Expenses"
-        description="File claims within 30 days. Approved claims are paid with the next payroll run."
+        description={`File claims within ${rules.claimWindowDays} days. Approved claims are paid with the next payroll run.`}
         actions={
           <Suspense>
-            <NewExpense today={todayIST()} />
+            <NewExpense today={todayIST()} rules={rules} />
           </Suspense>
         }
       />
@@ -66,6 +68,9 @@ export default async function ExpensesPage() {
                     <th className="px-3 py-2.5 font-medium">What for</th>
                     <th className="px-3 py-2.5 font-medium">Category</th>
                     <th className="px-3 py-2.5 text-right font-medium">Amount</th>
+                    <th className="px-3 py-2.5 font-medium">
+                      <span className="sr-only">Receipt</span>
+                    </th>
                     <th className="px-5 py-2.5 text-right font-medium">Status</th>
                   </tr>
                 </thead>
@@ -76,6 +81,19 @@ export default async function ExpensesPage() {
                       <td className="max-w-[28ch] px-3 py-3">{e.description}</td>
                       <td className="text-ink-2 px-3 py-3">{CAT[e.category]}</td>
                       <td className="tabular px-3 py-3 text-right font-medium">{formatINR(e.amount)}</td>
+                      <td className="px-3 py-3">
+                        {e.receiptFileId ? (
+                          <a
+                            href={`/files/${e.receiptFileId}`}
+                            target="_blank"
+                            rel="noopener"
+                            className="text-ink-2 hover:text-ink inline-flex"
+                            title="Open receipt"
+                          >
+                            <Paperclip className="size-4" aria-label="Open receipt" />
+                          </a>
+                        ) : null}
+                      </td>
                       <td className="px-5 py-3 text-right">
                         <StatusPill status={e.status} />
                       </td>

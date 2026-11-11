@@ -3,14 +3,16 @@ import { getDb, schema } from "@/db/client";
 import { requireRole, isPeopleTeam } from "@/lib/auth";
 import { PageHeader, Panel } from "@/components/ui";
 import { formatDate, timeAgo } from "@/lib/utils";
-import { PolicyEditor, ResetDemo } from "./client";
+import { PolicyEditor, ResetDemo, RulesForm } from "./client";
+import { getRules } from "@/lib/settings";
+import { emailProvider } from "@/lib/email";
 
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const user = await requireRole(isPeopleTeam);
   const db = await getDb();
-  const [types, holidays, policies, log] = await Promise.all([
+  const [types, holidays, policies, log, rules, provider, outbox] = await Promise.all([
     db.select().from(schema.leaveTypes),
     db.select().from(schema.holidays).orderBy(schema.holidays.date),
     db.select().from(schema.policies),
@@ -20,11 +22,60 @@ export default async function SettingsPage() {
       .leftJoin(schema.employees, eq(schema.auditLog.actorId, schema.employees.id))
       .orderBy(desc(schema.auditLog.createdAt))
       .limit(25),
+    getRules(),
+    emailProvider(),
+    db
+      .select({
+        id: schema.emailOutbox.id,
+        toEmail: schema.emailOutbox.toEmail,
+        subject: schema.emailOutbox.subject,
+        body: schema.emailOutbox.body,
+        status: schema.emailOutbox.status,
+        createdAt: schema.emailOutbox.createdAt,
+      })
+      .from(schema.emailOutbox)
+      .orderBy(desc(schema.emailOutbox.createdAt))
+      .limit(15),
   ]);
 
   return (
     <>
-      <PageHeader title="Settings" description="Company policies, leave rules and holidays. Policies are also what the HR assistant answers from." />
+      <PageHeader title="Settings" description="Company rules, policies, leave types and holidays. Policies are also what the HR assistant answers from." />
+      <div className="mb-6 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <Panel title="Rules" action={<span className="text-ink-3 text-xs">Apply to everyone from the moment you save</span>}>
+          <RulesForm rules={rules} />
+        </Panel>
+        <Panel title="Email" bodyClassName="p-0">
+          <p className={`mx-5 mt-4 mb-3 rounded-lg px-3 py-2 text-sm ${provider.ready ? "bg-teal-soft text-teal" : "bg-surface-2 text-ink-2"}`}>
+            {provider.ready ? `Sending from ${provider.from} through Resend.` : provider.reason}
+          </p>
+          {outbox.length ? (
+            <ul className="divide-line max-h-96 divide-y overflow-y-auto border-t text-sm">
+              {outbox.map((m) => (
+                <li key={m.id} className="px-5 py-2.5">
+                  <details>
+                    <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">{m.subject}</span>
+                        <span className="text-ink-3 block truncate text-xs">to {m.toEmail}</span>
+                      </span>
+                      <span className="shrink-0 text-right text-xs">
+                        <span className={m.status === "sent" ? "text-teal" : m.status === "failed" ? "text-rose" : "text-ink-3"}>
+                          {m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Not sent"}
+                        </span>
+                        <span className="text-ink-3 block">{timeAgo(m.createdAt)}</span>
+                      </span>
+                    </summary>
+                    <pre className="bg-surface-2 mt-2 rounded-lg p-3 font-sans text-xs whitespace-pre-wrap">{m.body}</pre>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-ink-2 border-line border-t px-5 py-6 text-sm">No emails yet. Approvals, decisions, payslips and invites send them.</p>
+          )}
+        </Panel>
+      </div>
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <Panel title="Policies" bodyClassName="p-0">
           <ul className="divide-line divide-y">

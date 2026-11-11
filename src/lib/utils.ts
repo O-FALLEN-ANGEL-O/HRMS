@@ -27,6 +27,11 @@ export function todayIST(): string {
   return nowIST().toISOString().slice(0, 10);
 }
 
+/** The IST calendar date of a UTC timestamp. */
+export function istDate(iso: string): string {
+  return new Date(new Date(iso).getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
 export function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);

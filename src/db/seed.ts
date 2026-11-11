@@ -414,6 +414,11 @@ export const DEMO_PEOPLE: Person[] = [
   },
 ];
 
+/** The demo's shared password, shown on the sign-in screen while demo mode is on. */
+export const DEMO_PASSWORD = "northwind-demo";
+// hashPassword(DEMO_PASSWORD) with a fixed salt, precomputed so seeding stays synchronous.
+const DEMO_PASSWORD_HASH = "pbkdf2-sha256$100000$BwcHBwcHBwcHBwcHBwcHBw==$GkNox6uVjQDEZMlwXLTLpBwVdQrvQgmHcQ9nopOAbi0=";
+
 export const DEMO_LOGINS = {
   admin: "E001",
   hr: "E002",
@@ -500,6 +505,13 @@ function insert(table: string, rows: Row[]): string[] {
 }
 
 const TABLES_IN_DELETE_ORDER = [
+  "email_outbox",
+  "login_attempts",
+  "auth_tokens",
+  "credentials",
+  "app_settings",
+  "employee_documents",
+  "employee_private",
   "audit_log",
   "notifications",
   "policies",
@@ -520,6 +532,7 @@ const TABLES_IN_DELETE_ORDER = [
   "payroll_runs",
   "salary_structures",
   "expenses",
+  "files",
   "regularizations",
   "attendance",
   "holidays",
@@ -576,6 +589,60 @@ export function buildSeedStatements(today: string, opts: { includeDeletes?: bool
   });
   out.push(...insert("employees", people));
 
+  // Everyone still at the company can sign in with email + DEMO_PASSWORD.
+  out.push(
+    ...insert(
+      "credentials",
+      people.filter((p) => p.status !== "exited").map((p) => ({ employee_id: p.id, password_hash: DEMO_PASSWORD_HASH, updated_at: nowIso })),
+    ),
+  );
+
+  // Personal and statutory details. New joiners haven't filled theirs in yet.
+  const BANKS = [
+    ["HDFC Bank", "HDFC"],
+    ["ICICI Bank", "ICIC"],
+    ["State Bank of India", "SBIN"],
+    ["Canara Bank", "CNRB"],
+    ["Axis Bank", "UTIB"],
+  ] as const;
+  const RELATIONS = ["Mother", "Father", "Spouse", "Brother", "Sister"];
+  const L = "ABCDEFGHJKLMNPRSTUVWXYZ";
+  // A separate random stream, so adding these details leaves the rest of the demo story unchanged.
+  const r2 = rng(Number(today.replace(/-/g, "")) + 7919);
+  const pick2 = <T>(arr: readonly T[]) => arr[Math.floor(r2() * arr.length)]!;
+  out.push(
+    ...insert(
+      "employee_private",
+      people
+        .filter((p) => p.status === "active" || p.status === "offboarding")
+        .map((p, i) => {
+          const [bank, code] = BANKS[i % BANKS.length]!;
+          const surname = p.name.split(" ").at(-1)!;
+          const n = (k: number, len: number) =>
+            String(Math.floor(r2() * 10 ** len) + k)
+              .padStart(len, "0")
+              .slice(-len);
+          return {
+            employee_id: p.id,
+            personal_email: `${p.name.split(" ")[0]!.toLowerCase()}.${surname.toLowerCase()}@mail.example`,
+            address: `${10 + i}, ${pick2(["2nd Cross", "Main Road", "Temple Street", "Lake View Layout"])}, ${pick2(["Indiranagar", "Koramangala", "Kadri", "Bejai"])}, ${p.location}`,
+            emergency_name: `${pick2(["Lakshmi", "Suresh", "Anita", "Ravi", "Meena"])} ${surname}`,
+            emergency_relation: RELATIONS[i % RELATIONS.length],
+            emergency_phone: `+91 97${n(i, 8)}`,
+            blood_group: pick2(["A+", "B+", "O+", "AB+", "O-", "B-"]),
+            pan: `${L[i % L.length]}${L[(i * 7) % L.length]}${L[(i * 3 + 5) % L.length]}P${surname[0]!.toUpperCase()}${n(i, 4)}${L[(i * 11) % L.length]}`,
+            aadhaar_last4: n(i * 13, 4),
+            uan: `1009${n(i, 8)}`,
+            esi_number: null,
+            bank_name: bank,
+            bank_account: `${5010}${n(i, 10)}`,
+            ifsc: `${code}0${n(i * 31, 6)}`,
+            updated_at: nowIso,
+          };
+        }),
+    ),
+  );
+
   out.push(...insert("leave_types", LEAVE_TYPES));
   out.push(
     ...insert(
@@ -604,7 +671,8 @@ export function buildSeedStatements(today: string, opts: { includeDeletes?: bool
   ];
   const leaveRows = lrs.map((l, i) => {
     let start = addDays(today, l.start);
-    while (isWeekend(start)) start = addDays(start, 1);
+    // Never start leave on a weekend or holiday: a one-day request there would count 0 days.
+    while (isWeekend(start) || holidayDates.includes(start)) start = addDays(start, 1);
     let end = start;
     let added = 1;
     while (added < l.len) {

@@ -22,9 +22,11 @@ export function ClockCard({
   isWorkday,
   onLeave,
   holiday,
+  coreHours,
 }: {
   today: { checkIn: string | null; checkOut: string | null; mode: Mode } | null;
   isWorkday: boolean;
+  coreHours?: [string, string];
   onLeave?: string | null;
   holiday?: string | null;
 }) {
@@ -76,7 +78,7 @@ export function ClockCard({
   return (
     <div className="@container w-full">
       <div className="flex flex-col items-center justify-center gap-6 @min-[560px]:flex-row @min-[560px]:items-center">
-        <ShiftDial size={220} checkIn={today?.checkIn} checkOut={today?.checkOut} label={clock || " "} sublabel={sub} />
+        <ShiftDial size={220} coreHours={coreHours} checkIn={today?.checkIn} checkOut={today?.checkOut} label={clock || " "} sublabel={sub} />
         <div className="w-full max-w-xs space-y-4">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={status} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>

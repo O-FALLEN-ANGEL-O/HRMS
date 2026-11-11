@@ -2,14 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
-import { CalendarDays, Mail, MapPin, Phone, Briefcase } from "lucide-react";
+import { BadgeCheck, CalendarDays, Clock3, FileText, Mail, MapPin, Phone, Briefcase } from "lucide-react";
 import { getDb, schema } from "@/db/client";
 import { requireUser, isPeopleTeam } from "@/lib/auth";
 import { leaveBalances } from "@/lib/queries";
 import { salaryBreakup } from "@/lib/payroll";
 import { Avatar, Panel, Pill, Progress, StatusPill } from "@/components/ui";
-import { daysBetween, formatDate, formatINR, plural, todayIST } from "@/lib/utils";
+import { daysBetween, formatDate, formatINR, istDate, plural, todayIST } from "@/lib/utils";
 import { EditProfile, Offboard } from "./client";
+import { ChangePassword, DocumentActions, EditPrivateDetails, InviteButton, UploadDocument } from "./private";
+import { DOC_LABEL } from "@/lib/documents";
 
 const fromEmp = alias(schema.employees, "from_emp");
 
@@ -73,6 +75,55 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     })(),
   ]);
   const balances = canSeePrivate ? await leaveBalances(emp.id, today.slice(0, 4)) : [];
+
+  // Personal details, documents and sign-in: the person and the People team only (not managers).
+  const canSeePersonal = self || isPeopleTeam(user);
+  const [personal, docs, cred] = canSeePersonal
+    ? await Promise.all([
+        db.query.employeePrivate.findFirst({ where: eq(schema.employeePrivate.employeeId, emp.id) }),
+        db
+          .select({
+            id: schema.employeeDocuments.id,
+            kind: schema.employeeDocuments.kind,
+            verifiedAt: schema.employeeDocuments.verifiedAt,
+            fileId: schema.files.id,
+            name: schema.files.name,
+            size: schema.files.size,
+            createdAt: schema.files.createdAt,
+          })
+          .from(schema.employeeDocuments)
+          .innerJoin(schema.files, eq(schema.employeeDocuments.fileId, schema.files.id))
+          .where(eq(schema.employeeDocuments.employeeId, emp.id))
+          .orderBy(desc(schema.files.createdAt)),
+        db.query.credentials.findFirst({ where: eq(schema.credentials.employeeId, emp.id), columns: { updatedAt: true } }),
+      ])
+    : [null, [], null];
+  const mask = (v: string | null | undefined, keep = 4) => (v ? `•••• ${v.slice(-keep)}` : null);
+  const personalRows: [string, string | null][] = personal
+    ? [
+        ["Personal email", personal.personalEmail],
+        ["Address", personal.address],
+        [
+          "Emergency contact",
+          personal.emergencyName
+            ? `${personal.emergencyName}${personal.emergencyRelation ? ` (${personal.emergencyRelation})` : ""}${personal.emergencyPhone ? `, ${personal.emergencyPhone}` : ""}`
+            : null,
+        ],
+        ["Blood group", personal.bloodGroup],
+        ["PAN", personal.pan ? `${personal.pan.slice(0, 2)}•••••${personal.pan.slice(-3)}` : null],
+        ["Aadhaar", personal.aadhaarLast4 ? `•••• •••• ${personal.aadhaarLast4}` : null],
+        ["UAN", mask(personal.uan)],
+        ["ESI number", mask(personal.esiNumber)],
+        [
+          "Bank",
+          personal.bankName
+            ? `${personal.bankName}${personal.bankAccount ? `, ${mask(personal.bankAccount)}` : ""}${personal.ifsc ? `, ${personal.ifsc}` : ""}`
+            : null,
+        ],
+      ]
+    : [];
+  const needed = ["PAN", "UAN", "Bank", "Emergency contact"];
+  const missing = needed.filter((k) => !personalRows.find(([l, v]) => l === k && v));
 
   const objectives = new Map<string, { title: string; p: number[] }>();
   for (const g of goals) {
@@ -302,6 +353,83 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                   </li>
                 ))}
               </ul>
+            </Panel>
+          ) : null}
+
+          {canSeePersonal ? (
+            <Panel
+              title={self ? "Your personal details" : "Personal details"}
+              action={<EditPrivateDetails employeeId={emp.id} details={personal ?? null} self={self} />}
+            >
+              {missing.length ? (
+                <p className="bg-marigold-soft text-marigold-ink mb-4 rounded-lg px-3 py-2 text-sm">Missing for payroll: {missing.join(", ")}.</p>
+              ) : null}
+              {personal ? (
+                <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                  {personalRows.map(([label, value]) => (
+                    <div key={label} className={label === "Address" ? "sm:col-span-2" : ""}>
+                      <dt className="text-ink-3 text-xs">{label}</dt>
+                      <dd className={value ? "tabular break-words" : "text-ink-3"}>{value ?? "Not added"}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-ink-2 text-sm">
+                  No details yet. {self ? "Add your bank account, PAN and UAN so payroll can pay you." : "Ask them to add these, or add them yourself."}
+                </p>
+              )}
+              <p className="text-ink-3 mt-4 text-xs">Only {self ? "you" : emp.name.split(" ")[0]} and the People team can see this. Managers can&apos;t.</p>
+            </Panel>
+          ) : null}
+
+          {canSeePersonal ? (
+            <Panel title="Documents" bodyClassName="p-0" action={<UploadDocument employeeId={emp.id} />}>
+              {docs.length ? (
+                <ul className="divide-line divide-y text-sm">
+                  {docs.map((d) => (
+                    <li key={d.id} className="flex items-center gap-3 px-5 py-3">
+                      <FileText className="text-ink-3 size-4 shrink-0" aria-hidden />
+                      <div className="min-w-0 flex-1">
+                        <a href={`/files/${d.fileId}`} target="_blank" rel="noopener" className="link block truncate font-medium">
+                          {DOC_LABEL[d.kind]}
+                        </a>
+                        <span className="text-ink-3 block truncate text-xs">
+                          {d.name}, {Math.max(1, Math.round(d.size / 1000))} KB, {formatDate(istDate(d.createdAt))}
+                        </span>
+                      </div>
+                      {d.verifiedAt ? (
+                        <span className="text-teal inline-flex items-center gap-1 text-xs font-medium">
+                          <BadgeCheck className="size-3.5" aria-hidden /> Verified
+                        </span>
+                      ) : (
+                        <span className="text-marigold-ink inline-flex items-center gap-1 text-xs font-medium">
+                          <Clock3 className="size-3.5" aria-hidden /> Waiting for HR
+                        </span>
+                      )}
+                      <DocumentActions
+                        id={d.id}
+                        canVerify={isPeopleTeam(user) && !d.verifiedAt && !self}
+                        canDelete={isPeopleTeam(user) || (self && !d.verifiedAt)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-ink-2 px-5 py-6 text-sm">
+                  {self ? "Upload your Aadhaar, PAN card and a cancelled cheque so HR can complete your file." : "No documents uploaded yet."}
+                </p>
+              )}
+            </Panel>
+          ) : null}
+
+          {canSeePersonal && emp.status !== "exited" ? (
+            <Panel title="Sign-in">
+              <p className="text-ink-2 mb-3 text-sm">
+                {cred
+                  ? `${self ? "You sign" : `${emp.name.split(" ")[0]} signs`} in with ${emp.email}. Password last changed ${formatDate(cred.updatedAt.slice(0, 10), { day: "numeric", month: "short", year: "numeric" })}.`
+                  : `${self ? "You haven't" : `${emp.name.split(" ")[0]} hasn't`} set a password yet.`}
+              </p>
+              {self ? <ChangePassword hasPassword={!!cred} /> : isPeopleTeam(user) ? <InviteButton employeeId={emp.id} hasPassword={!!cred} /> : null}
             </Panel>
           ) : null}
 

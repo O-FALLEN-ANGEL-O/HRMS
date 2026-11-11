@@ -14,6 +14,7 @@ export function ShiftDial({
   label,
   sublabel,
   animateIn = true,
+  coreHours = ["11:00", "16:00"],
 }: {
   size?: number;
   checkIn?: string | null; // ISO
@@ -21,6 +22,8 @@ export function ShiftDial({
   label?: React.ReactNode;
   sublabel?: React.ReactNode;
   animateIn?: boolean;
+  /** Core hours in IST, "HH:MM" (from Settings). */
+  coreHours?: [string, string];
 }) {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
@@ -41,7 +44,8 @@ export function ShiftDial({
   const outF = checkOut ? istHours(new Date(checkOut)) : nowF;
   const workedF = inF !== null && outF !== null ? Math.max(0, outF - inF) : 0;
 
-  const core = { start: 11 / 24, len: 5 / 24 };
+  const mins = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const core = { start: mins(coreHours[0]) / 1440, len: Math.max(0, mins(coreHours[1]) - mins(coreHours[0])) / 1440 };
 
   const arc = (start: number, len: number) => ({
     strokeDasharray: `${len * circ} ${circ}`,

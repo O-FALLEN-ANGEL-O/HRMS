@@ -8,6 +8,8 @@ import { assert, canApproveFor, requireUser } from "@/lib/auth";
 import { dateStr, formObject, run, timeStr, UserError } from "@/lib/action";
 import { audit, holidayDates, leaveBalances, notify } from "@/lib/queries";
 import { addDays, daysBetween, formatDate, formatINR, newId, todayIST, workingDays } from "@/lib/utils";
+import { getRules } from "@/lib/settings";
+import { storeUpload } from "@/lib/files";
 
 const { attendance, leaveRequests, regularizations, expenses, employees, leaveTypes } = schema;
 
@@ -111,7 +113,9 @@ export async function applyLeave(_: unknown, fd: FormData) {
     const db = await getDb();
     const type = await db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, v.leaveTypeId) });
     if (!type) throw new UserError("That leave type doesn't exist.");
-    if (v.startDate < addDays(todayIST(), -30)) throw new UserError("Leave can be backdated by 30 days at most.");
+    const rules = await getRules();
+    if (v.startDate < addDays(todayIST(), -rules.leaveBackdateDays))
+      throw new UserError(rules.leaveBackdateDays ? `Leave can be backdated by ${rules.leaveBackdateDays} days at most.` : "Leave can't be backdated.");
     const hol = await holidayDates();
     const halfDay = v.halfDay === "on";
     if (halfDay && v.startDate !== v.endDate) throw new UserError("A half day must start and end on the same date.");
@@ -178,11 +182,23 @@ export async function submitExpense(_: unknown, fd: FormData) {
     const user = await requireUser();
     const v = expenseSchema.parse(formObject(fd));
     if (v.spentOn > todayIST()) throw new UserError("The date can't be in the future.");
-    if (daysBetween(v.spentOn, todayIST()) > 30) throw new UserError("Claims must be filed within 30 days of spending.");
-    if (v.category === "internet" && v.amount > 1000) throw new UserError("Internet is reimbursed up to ₹1,000 a month.");
+    const rules = await getRules();
+    if (daysBetween(v.spentOn, todayIST()) > rules.claimWindowDays)
+      throw new UserError(`Claims must be filed within ${rules.claimWindowDays} days of spending.`);
+    if (v.category === "internet" && v.amount > rules.internetMonthlyLimit)
+      throw new UserError(`Internet is reimbursed up to ${formatINR(rules.internetMonthlyLimit)} a month.`);
+    const receipt = fd.get("receipt");
+    const hasReceipt = receipt instanceof File && receipt.size > 0;
+    if (!hasReceipt && v.amount > rules.receiptRequiredAbove)
+      throw new UserError(
+        rules.receiptRequiredAbove
+          ? `Attach the bill: claims over ${formatINR(rules.receiptRequiredAbove)} need a receipt.`
+          : "Attach the bill for this claim.",
+      );
+    const receiptFileId = hasReceipt ? await storeUpload(receipt, { employeeId: user.id, purpose: "receipt", uploadedBy: user.id }) : null;
     const db = await getDb();
     const id = newId("exp");
-    await db.insert(expenses).values({ id, employeeId: user.id, ...v });
+    await db.insert(expenses).values({ id, employeeId: user.id, ...v, receiptFileId });
     if (user.managerId) await notify(user.managerId, `${user.name.split(" ")[0]} filed a ${formatINR(v.amount)} ${v.category} expense`, "/approvals");
     refresh("/expenses");
     return { message: `Filed ${formatINR(v.amount)} for approval.` };
