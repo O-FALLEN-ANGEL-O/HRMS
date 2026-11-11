@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ActionForm, useActionForm } from "./action-form";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTrigger } from "./ui";
@@ -33,7 +34,8 @@ export function FormDialog({
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useActionState(action, null);
+  const form = useActionForm(action);
+  const state = form.state;
   const formRef = useRef<HTMLFormElement>(null);
   const handled = useRef<Result>(null);
 
@@ -58,14 +60,14 @@ export function FormDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent title={title} description={description} side={side}>
-        <form ref={formRef} action={formAction} className="space-y-4" noValidate={false}>
+        <ActionForm ref={formRef} form={form} className="space-y-4" noValidate={false}>
           {children({ fieldErrors: state && !state.ok ? state.fieldErrors : undefined })}
           {state && !state.ok ? (
             <p role="alert" className="bg-rose-soft text-rose rounded-lg px-3 py-2 text-sm">
               {state.error}
             </p>
           ) : null}
-        </form>
+        </ActionForm>
       </DialogContent>
     </Dialog>
   );

@@ -4,6 +4,8 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const nextConfig: NextConfig = {
   images: { unoptimized: true },
   poweredByHeader: false,
+  // Receipts and documents are posted to server actions; files are capped at 1 MB in src/lib/files.ts.
+  experimental: { serverActions: { bodySizeLimit: "2mb" } },
 };
 
 export default nextConfig;

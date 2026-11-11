@@ -151,6 +151,7 @@ export const expenses = sqliteTable("expenses", {
     .default("pending"),
   approverId: text("approver_id"),
   decidedAt: text("decided_at"),
+  receiptFileId: text("receipt_file_id"),
   createdAt: createdAt(),
 });
 
@@ -439,3 +440,134 @@ export const auditLog = sqliteTable("audit_log", {
   detail: text("detail"),
   createdAt: createdAt(),
 });
+
+/* ---------------- Sign-in ---------------- */
+
+/** One password per person. Hash format: pbkdf2-sha256$<iterations>$<salt b64>$<hash b64>. */
+export const credentials = sqliteTable("credentials", {
+  employeeId: text("employee_id")
+    .primaryKey()
+    .references(() => employees.id, { onDelete: "cascade" }),
+  passwordHash: text("password_hash").notNull(),
+  updatedAt: text("updated_at").notNull().$defaultFn(now),
+});
+
+/** Single-use links for invites and password resets. Only a SHA-256 of the token is stored. */
+export const authTokens = sqliteTable(
+  "auth_tokens",
+  {
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    purpose: text("purpose", { enum: ["invite", "reset"] }).notNull(),
+    expiresAt: text("expires_at").notNull(),
+    usedAt: text("used_at"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("auth_tokens_emp_idx").on(t.employeeId)],
+);
+
+/** Failed sign-ins, for rate limiting by email. */
+export const loginAttempts = sqliteTable(
+  "login_attempts",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("login_attempts_email_idx").on(t.email, t.createdAt)],
+);
+
+/* ---------------- Settings ---------------- */
+
+/** Company rules editable in Settings. Values are JSON; defaults live in src/lib/settings.ts. */
+export const appSettings = sqliteTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedBy: text("updated_by"),
+  updatedAt: text("updated_at").notNull().$defaultFn(now),
+});
+
+/* ---------------- Files, documents, personal details ---------------- */
+
+/**
+ * Uploaded files, stored in D1 as base64 (max ~1 MB each) so uploads work on
+ * Cloudflare and Vercel with no extra storage account.
+ */
+export const files = sqliteTable(
+  "files",
+  {
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    purpose: text("purpose", { enum: ["document", "receipt"] }).notNull(),
+    name: text("name").notNull(),
+    mime: text("mime").notNull(),
+    size: integer("size").notNull(),
+    data: text("data").notNull(),
+    uploadedBy: text("uploaded_by").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("files_emp_idx").on(t.employeeId)],
+);
+
+export const DOCUMENT_KINDS = ["aadhaar", "pan", "bank_proof", "photo", "education", "experience", "offer_letter", "other"] as const;
+
+export const employeeDocuments = sqliteTable(
+  "employee_documents",
+  {
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: DOCUMENT_KINDS }).notNull(),
+    fileId: text("file_id")
+      .notNull()
+      .references(() => files.id, { onDelete: "cascade" }),
+    verifiedAt: text("verified_at"),
+    verifiedBy: text("verified_by"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("employee_documents_emp_idx").on(t.employeeId)],
+);
+
+/** Personal and statutory details. Seen only by the person and the People team. Aadhaar: last 4 digits only. */
+export const employeePrivate = sqliteTable("employee_private", {
+  employeeId: text("employee_id")
+    .primaryKey()
+    .references(() => employees.id, { onDelete: "cascade" }),
+  personalEmail: text("personal_email"),
+  address: text("address"),
+  emergencyName: text("emergency_name"),
+  emergencyRelation: text("emergency_relation"),
+  emergencyPhone: text("emergency_phone"),
+  bloodGroup: text("blood_group"),
+  pan: text("pan"),
+  aadhaarLast4: text("aadhaar_last4"),
+  uan: text("uan"),
+  esiNumber: text("esi_number"),
+  bankName: text("bank_name"),
+  bankAccount: text("bank_account"),
+  ifsc: text("ifsc"),
+  updatedAt: text("updated_at").notNull().$defaultFn(now),
+});
+
+/* ---------------- Email ---------------- */
+
+/** Every email the app sends is recorded here first; `status` says whether a provider took it. */
+export const emailOutbox = sqliteTable(
+  "email_outbox",
+  {
+    id: text("id").primaryKey(),
+    toEmployeeId: text("to_employee_id"),
+    toEmail: text("to_email").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    status: text("status", { enum: ["sent", "skipped", "failed"] }).notNull(),
+    detail: text("detail"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("email_outbox_created_idx").on(t.createdAt)],
+);

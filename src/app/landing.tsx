@@ -9,6 +9,7 @@ import { Avatar, Button, SubmitButton } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
+import { SignInForm } from "./sign-in-form";
 
 export type Persona = { code: string; role: string; name: string; title: string; does: string; hue: number };
 
@@ -62,6 +63,8 @@ export function Landing({
   reset,
   continueAs,
   footer,
+  demo,
+  demoPassword,
 }: {
   personas: Persona[];
   everyone: { code: string; name: string; title: string; role: string; hue: number }[];
@@ -72,6 +75,8 @@ export function Landing({
   reset?: boolean;
   continueAs: { name: string; href: string } | null;
   footer: React.ReactNode;
+  demo: boolean;
+  demoPassword?: string;
 }) {
   const clock = useIstClock();
   const [showAll, setShowAll] = useState(false);
@@ -109,10 +114,14 @@ export function Landing({
               className="text-ink-2 mt-5 max-w-[52ch] text-lg"
             >
               HR+ handles attendance, time off, expenses, Indian payroll, hiring, onboarding, goals and the helpdesk — with an AI assistant that answers from
-              your own policies. Pick a person below to try it from their side.
+              your own policies.{demo ? " Sign in, or pick a person below to try it from their side." : ""}
             </motion.p>
             {error ? (
-              <p className="bg-rose-soft text-rose mt-4 rounded-lg px-3 py-2 text-sm">That person couldn&apos;t be signed in. Pick someone from the list.</p>
+              <p className="bg-rose-soft text-rose mt-4 rounded-lg px-3 py-2 text-sm">
+                {error === "demo-off"
+                  ? "Sample sign-ins are turned off. Sign in with your email."
+                  : "That person couldn't be signed in. Pick someone from the list."}
+              </p>
             ) : null}
             {reset ? <p className="bg-teal-soft text-teal mt-4 rounded-lg px-3 py-2 text-sm">Demo data was reset. Pick someone to start again.</p> : null}
             {!dbOk ? (
@@ -120,85 +129,100 @@ export function Landing({
                 The database isn&apos;t reachable right now, so sign-in won&apos;t work until it&apos;s back.
               </p>
             ) : null}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5, ease }}
+              className="mt-7 max-w-md"
+            >
+              <SignInForm demoPassword={demo ? demoPassword : undefined} />
+            </motion.div>
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <ShiftDial size={300} checkIn={null} label={clock || " "} sublabel={dbOk ? `${present} of ${people} people clocked in` : "India Standard Time"} />
+            <ShiftDial
+              size={300}
+              checkIn={null}
+              label={clock || " "}
+              sublabel={dbOk && demo ? `${present} of ${people} people clocked in` : "India Standard Time"}
+            />
             <p className="text-ink-3 max-w-[34ch] text-center text-sm">The ring is today in IST. Grey is core hours, the marigold mark is now.</p>
           </div>
         </section>
 
-        <section aria-labelledby="who" className="border-line border-t pt-10">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 id="who" className="text-2xl">
-                Whose day do you want to see?
-              </h2>
-              <p className="text-ink-2 mt-1">Each person sees what their role allows. Approvals flow up the reporting line shown here.</p>
-            </div>
-          </div>
-
-          {/* Reporting tree: Meera → Arjun → Sana, Meera → Kavya → Rohan */}
-          <div className="mx-auto max-w-4xl">
-            <div className="mx-auto max-w-sm">
-              <PersonCard p={by("E001")} i={0} />
-            </div>
-            <div
-              aria-hidden
-              className="border-line-strong relative mx-auto hidden h-6 max-w-[calc(50%+2px)] border-x border-t md:block"
-              style={{ marginTop: 20 }}
-            />
-            <Connector className="md:hidden" />
-            <div className="grid gap-x-8 md:grid-cols-2">
+        {demo ? (
+          <section aria-labelledby="who" className="border-line border-t pt-10">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <PersonCard p={by("E002")} i={1} />
-                <Connector />
-                <PersonCard p={by("E005")} i={3} />
-              </div>
-              <div className="mt-5 md:mt-0">
-                <PersonCard p={by("E003")} i={2} />
-                <Connector />
-                <PersonCard p={by("E004")} i={4} />
+                <h2 id="who" className="text-2xl">
+                  Whose day do you want to see?
+                </h2>
+                <p className="text-ink-2 mt-1">Each person sees what their role allows. Approvals flow up the reporting line shown here.</p>
               </div>
             </div>
-          </div>
 
-          {everyone.length ? (
-            <div className="mx-auto mt-10 max-w-4xl">
-              <button
-                onClick={() => setShowAll((s) => !s)}
-                aria-expanded={showAll}
-                className="text-ink-2 hover:text-ink inline-flex items-center gap-1.5 text-sm font-medium"
-              >
-                <ChevronDown className={cn("size-4 transition-transform", showAll && "rotate-180")} aria-hidden />
-                Or sign in as anyone else at Northwind Labs ({everyone.length})
-              </button>
-              {showAll ? (
-                <motion.ul
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="mt-3 grid gap-1 overflow-hidden sm:grid-cols-2"
-                >
-                  {everyone.map((e) => (
-                    <li key={e.code}>
-                      <form action={signInAs} className="hover:bg-surface flex items-center gap-3 rounded-lg px-2 py-1.5">
-                        <input type="hidden" name="code" value={e.code} />
-                        <Avatar name={e.name} hue={e.hue} size={30} />
-                        <span className="min-w-0 flex-1 text-sm leading-tight">
-                          <span className="block truncate font-medium">{e.name}</span>
-                          <span className="text-ink-3 block truncate text-xs">{e.title}</span>
-                        </span>
-                        <SubmitButton size="sm" variant="ghost" pendingLabel="Signing in">
-                          Sign in
-                        </SubmitButton>
-                      </form>
-                    </li>
-                  ))}
-                </motion.ul>
-              ) : null}
+            {/* Reporting tree: Meera → Arjun → Sana, Meera → Kavya → Rohan */}
+            <div className="mx-auto max-w-4xl">
+              <div className="mx-auto max-w-sm">
+                <PersonCard p={by("E001")} i={0} />
+              </div>
+              <div
+                aria-hidden
+                className="border-line-strong relative mx-auto hidden h-6 max-w-[calc(50%+2px)] border-x border-t md:block"
+                style={{ marginTop: 20 }}
+              />
+              <Connector className="md:hidden" />
+              <div className="grid gap-x-8 md:grid-cols-2">
+                <div>
+                  <PersonCard p={by("E002")} i={1} />
+                  <Connector />
+                  <PersonCard p={by("E005")} i={3} />
+                </div>
+                <div className="mt-5 md:mt-0">
+                  <PersonCard p={by("E003")} i={2} />
+                  <Connector />
+                  <PersonCard p={by("E004")} i={4} />
+                </div>
+              </div>
             </div>
-          ) : null}
-        </section>
+
+            {everyone.length ? (
+              <div className="mx-auto mt-10 max-w-4xl">
+                <button
+                  onClick={() => setShowAll((s) => !s)}
+                  aria-expanded={showAll}
+                  className="text-ink-2 hover:text-ink inline-flex items-center gap-1.5 text-sm font-medium"
+                >
+                  <ChevronDown className={cn("size-4 transition-transform", showAll && "rotate-180")} aria-hidden />
+                  Or sign in as anyone else at Northwind Labs ({everyone.length})
+                </button>
+                {showAll ? (
+                  <motion.ul
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-3 grid gap-1 overflow-hidden sm:grid-cols-2"
+                  >
+                    {everyone.map((e) => (
+                      <li key={e.code}>
+                        <form action={signInAs} className="hover:bg-surface flex items-center gap-3 rounded-lg px-2 py-1.5">
+                          <input type="hidden" name="code" value={e.code} />
+                          <Avatar name={e.name} hue={e.hue} size={30} />
+                          <span className="min-w-0 flex-1 text-sm leading-tight">
+                            <span className="block truncate font-medium">{e.name}</span>
+                            <span className="text-ink-3 block truncate text-xs">{e.title}</span>
+                          </span>
+                          <SubmitButton size="sm" variant="ghost" pendingLabel="Signing in">
+                            Sign in
+                          </SubmitButton>
+                        </form>
+                      </li>
+                    ))}
+                  </motion.ul>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
       </main>
 
       <footer className="border-line border-t">

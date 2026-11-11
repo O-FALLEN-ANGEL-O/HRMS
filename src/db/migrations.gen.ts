@@ -41,4 +41,23 @@ export const MIGRATIONS: { name: string; statements: string[] }[] = [
       "CREATE TABLE `tickets` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`number` integer NOT NULL,\n\t`requester_id` text NOT NULL,\n\t`subject` text NOT NULL,\n\t`description` text NOT NULL,\n\t`category` text DEFAULT 'General' NOT NULL,\n\t`priority` text DEFAULT 'medium' NOT NULL,\n\t`status` text DEFAULT 'open' NOT NULL,\n\t`assignee_id` text,\n\t`triaged_by` text,\n\t`created_at` text NOT NULL,\n\t`updated_at` text NOT NULL,\n\tFOREIGN KEY (`requester_id`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE no action\n);",
     ],
   },
+  {
+    name: "0001_batch1.sql",
+    statements: [
+      "CREATE TABLE `app_settings` (\n\t`key` text PRIMARY KEY NOT NULL,\n\t`value` text NOT NULL,\n\t`updated_by` text,\n\t`updated_at` text NOT NULL\n);",
+      "CREATE TABLE `auth_tokens` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`employee_id` text NOT NULL,\n\t`purpose` text NOT NULL,\n\t`expires_at` text NOT NULL,\n\t`used_at` text,\n\t`created_at` text NOT NULL,\n\tFOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+      "CREATE INDEX `auth_tokens_emp_idx` ON `auth_tokens` (`employee_id`);",
+      "CREATE TABLE `credentials` (\n\t`employee_id` text PRIMARY KEY NOT NULL,\n\t`password_hash` text NOT NULL,\n\t`updated_at` text NOT NULL,\n\tFOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+      "CREATE TABLE `email_outbox` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`to_employee_id` text,\n\t`to_email` text NOT NULL,\n\t`subject` text NOT NULL,\n\t`body` text NOT NULL,\n\t`status` text NOT NULL,\n\t`detail` text,\n\t`created_at` text NOT NULL\n);",
+      "CREATE INDEX `email_outbox_created_idx` ON `email_outbox` (`created_at`);",
+      "CREATE TABLE `employee_documents` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`employee_id` text NOT NULL,\n\t`kind` text NOT NULL,\n\t`file_id` text NOT NULL,\n\t`verified_at` text,\n\t`verified_by` text,\n\t`created_at` text NOT NULL,\n\tFOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE cascade,\n\tFOREIGN KEY (`file_id`) REFERENCES `files`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+      "CREATE INDEX `employee_documents_emp_idx` ON `employee_documents` (`employee_id`);",
+      "CREATE TABLE `employee_private` (\n\t`employee_id` text PRIMARY KEY NOT NULL,\n\t`personal_email` text,\n\t`address` text,\n\t`emergency_name` text,\n\t`emergency_relation` text,\n\t`emergency_phone` text,\n\t`blood_group` text,\n\t`pan` text,\n\t`aadhaar_last4` text,\n\t`uan` text,\n\t`esi_number` text,\n\t`bank_name` text,\n\t`bank_account` text,\n\t`ifsc` text,\n\t`updated_at` text NOT NULL,\n\tFOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+      "CREATE TABLE `files` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`employee_id` text NOT NULL,\n\t`purpose` text NOT NULL,\n\t`name` text NOT NULL,\n\t`mime` text NOT NULL,\n\t`size` integer NOT NULL,\n\t`data` text NOT NULL,\n\t`uploaded_by` text NOT NULL,\n\t`created_at` text NOT NULL,\n\tFOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+      "CREATE INDEX `files_emp_idx` ON `files` (`employee_id`);",
+      "CREATE TABLE `login_attempts` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`email` text NOT NULL,\n\t`created_at` text NOT NULL\n);",
+      "CREATE INDEX `login_attempts_email_idx` ON `login_attempts` (`email`,`created_at`);",
+      "ALTER TABLE `expenses` ADD `receipt_file_id` text;",
+    ],
+  },
 ];

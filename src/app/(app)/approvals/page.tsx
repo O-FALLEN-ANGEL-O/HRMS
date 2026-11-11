@@ -5,6 +5,7 @@ import { holidayDates, leaveBalances, pendingApprovals } from "@/lib/queries";
 import { PageHeader } from "@/components/ui";
 import { ApprovalsBoard, type ApprovalRow } from "./board";
 import { formatDate, formatINR, formatTime, isWeekend, plural } from "@/lib/utils";
+import { getRules } from "@/lib/settings";
 
 export const metadata = { title: "Approvals" };
 
@@ -13,6 +14,7 @@ export default async function ApprovalsPage() {
   const db = await getDb();
   const pending = await pendingApprovals(user);
   const hol = await holidayDates();
+  const rules = await getRules();
 
   // For each leave request, who on the same team (same manager) is already off then.
   const leaveRows: ApprovalRow[] = await Promise.all(
@@ -80,7 +82,8 @@ export default async function ApprovalsPage() {
     detail: `Spent ${formatDate(a.r.spentOn)}`,
     reason: a.r.description,
     createdAt: a.r.createdAt,
-    context: a.r.category === "internet" && a.r.amount > 1000 ? ["Over the ₹1,000 internet limit"] : [],
+    context: a.r.category === "internet" && a.r.amount > rules.internetMonthlyLimit ? [`Over the ${formatINR(rules.internetMonthlyLimit)} internet limit`] : [],
+    receiptUrl: a.r.receiptFileId ? `/files/${a.r.receiptFileId}` : null,
     warn: a.r.amount >= 5000,
   }));
 

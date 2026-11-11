@@ -27,6 +27,8 @@ import { Avatar, StatusPill } from "@/components/ui";
 import { Bento, DayBars, HeroChip, KpiTile, LiveClock, QuickAction, Ring, Tile, type DayBar, type Tone } from "@/components/dashboard";
 import { addDays, cn, formatDate, formatINR, isWeekend, monthLabel, plural, timeAgo, todayIST } from "@/lib/utils";
 
+import { getRules } from "@/lib/settings";
+
 export const metadata = { title: "Home" };
 
 const fromEmp = alias(schema.employees, "from_emp");
@@ -277,6 +279,7 @@ function quickActions(user: CurrentUser) {
 
 export default async function HomePage() {
   const user = await requireUser();
+  const rules = await getRules();
   const db = await getDb();
   const today = todayIST();
   const weekAhead = addDays(today, 14);
@@ -522,6 +525,7 @@ export default async function HomePage() {
           isWorkday={!isWeekend(today) && !holidayToday}
           holiday={holidayToday ? `Holiday: ${holidayToday.name}` : null}
           onLeave={onLeaveToday ? "You're on leave today" : null}
+          coreHours={[rules.coreStart, rules.coreEnd]}
         />
       </Tile>
 

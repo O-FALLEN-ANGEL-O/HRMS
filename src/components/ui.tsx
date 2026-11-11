@@ -8,6 +8,7 @@ import { X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useFormStatus } from "react-dom";
 import { cn, initials } from "@/lib/utils";
+import { useActionFormPending } from "./action-form";
 
 /* ---------------- Button ---------------- */
 
@@ -46,7 +47,9 @@ Button.displayName = "Button";
 
 /** Submit button that shows a spinner while its form's action is pending. */
 export function SubmitButton({ children, pendingLabel, ...props }: ButtonProps & { pendingLabel?: string }) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  const actionFormPending = useActionFormPending();
+  const pending = status.pending || actionFormPending;
   return (
     <Button type="submit" disabled={pending || props.disabled} aria-busy={pending} {...props}>
       {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
